@@ -20,7 +20,9 @@ class PagoDiarioResource extends Resource
 {
     protected static ?string $model = PagoDiario::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
+    protected static ?string $navigationLabel = 'Pagos Diarios';
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $recordTitleAttribute = 'id';
 

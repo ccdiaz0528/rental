@@ -20,7 +20,9 @@ class GastoResource extends Resource
 {
     protected static ?string $model = Gasto::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-receipt-percent';
+    protected static ?string $navigationLabel = 'Gastos';
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $recordTitleAttribute = 'id';
 

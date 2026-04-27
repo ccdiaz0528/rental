@@ -20,7 +20,9 @@ class PersonaResource extends Resource
 {
     protected static ?string $model = Persona::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationLabel = 'Personas';
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'nombre';
 
