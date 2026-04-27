@@ -28,6 +28,9 @@ class PersonasTable
                 TextColumn::make('telefono')
                     ->label('Teléfono'),
 
+                TextColumn::make('direccion')
+                    ->label('Dirección'),
+
                 TextColumn::make('tipo')
                     ->label('Tipo')
                     ->badge()
