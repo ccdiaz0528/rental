@@ -31,6 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->favicon(asset('favicon.png'))
             ->brandLogo(asset('favicon.png'))
+            ->brandName('Rental Manager')
             ->globalSearch()
             ->colors([
                 'primary' => Color::Blue,
