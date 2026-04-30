@@ -31,6 +31,17 @@ class StatsOverview extends BaseWidget
 
         $hoyCalculado = $this->calcularDia($hoy, $vehiculos, $registrosSemana);
         $semanaCalculada = $this->calcularSemana($inicioSemana, $vehiculos, $registrosSemana);
+
+        $inicioMes = now()->startOfMonth();
+        $finMes = now()->endOfMonth();
+        $registrosMes = $vehiculos->isEmpty()
+            ? collect()
+            : ControlDiario::query()
+                ->whereIn('vehiculo_id', $vehiculos->pluck('id'))
+                ->whereBetween('fecha', [$inicioMes->toDateString(), $finMes->toDateString()])
+                ->get();
+        $mesCalculado = $this->calcularMes($inicioMes, $vehiculos, $registrosMes);
+
         $vehiculosActivos = $vehiculos->count();
         $contratosActivos = Contrato::where('estado', 'activo')->count();
         $vehiculosConConductor = $vehiculos->whereNotNull('persona_id')->count();
@@ -56,6 +67,21 @@ class StatsOverview extends BaseWidget
                 ->description('Semana domingo a sábado')
                 ->descriptionIcon('heroicon-o-calendar')
                 ->color('info'),
+
+            Stat::make('Esperado mensual', $this->money($mesCalculado['esperado']))
+                ->description('Mes en curso')
+                ->descriptionIcon('heroicon-o-calendar-days')
+                ->color('info'),
+
+            Stat::make('Gastos mensuales', $this->money($mesCalculado['gastos']))
+                ->description('Gastos del mes')
+                ->descriptionIcon('heroicon-o-receipt-percent')
+                ->color('warning'),
+
+            Stat::make('Neto mensual', $this->money($mesCalculado['neto']))
+                ->description('Ingreso ajustado menos gastos del mes')
+                ->descriptionIcon('heroicon-o-banknotes')
+                ->color($mesCalculado['neto'] >= 0 ? 'success' : 'danger'),
 
             Stat::make('Gastos semanales', $this->money($semanaCalculada['gastos']))
                 ->description('Gastos de la semana actual')
@@ -128,6 +154,32 @@ class StatsOverview extends BaseWidget
             $esperado += $calculado['esperado'];
             $real += $calculado['real'];
             $gastos += $calculado['gastos'];
+        }
+
+        return [
+            'esperado' => $esperado,
+            'real' => $real,
+            'gastos' => $gastos,
+            'neto' => $real - $gastos,
+        ];
+    }
+
+    private function calcularMes(Carbon $inicioMes, Collection $vehiculos, Collection $registrosMes): array
+    {
+        $diasTranscurridos = now()->day;
+        $esperado = 0;
+        $real = 0;
+        $gastos = 0;
+
+        foreach ($vehiculos as $vehiculo) {
+            $esperado += (float) $vehiculo->cuota_diaria * $diasTranscurridos;
+        }
+
+        foreach ($registrosMes as $registro) {
+            if ($registro->trabajo) {
+                $real += (float) $registro->valor_generado;
+            }
+            $gastos += (float) $registro->gasto;
         }
 
         return [

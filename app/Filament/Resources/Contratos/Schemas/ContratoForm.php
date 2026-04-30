@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Contratos\Schemas;
 
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -60,6 +61,12 @@ class ContratoForm
                 ])
                 ->required()
                 ->default('activo'),
+
+            FileUpload::make('documento')
+                ->label('Documento')
+                ->directory('contratos')
+                ->acceptedFileTypes(['application/pdf', 'image/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
+                ->columnSpanFull(),
 
             Textarea::make('observaciones')
                 ->label('Observaciones')

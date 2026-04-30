@@ -15,6 +15,7 @@ class Contrato extends Model
         'valor_diario',
         'estado',
         'observaciones',
+        'documento',
     ];
 
     protected $casts = [

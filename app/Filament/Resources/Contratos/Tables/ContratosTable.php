@@ -49,6 +49,12 @@ class ContratosTable
                     ->date('d/m/Y')
                     ->sortable(),
 
+                TextColumn::make('documento')
+                    ->label('Documento')
+                    ->formatStateUsing(fn ($record) => $record->documento ? '📎 Ver' : '-')
+                    ->url(fn ($record) => $record->documento ? route('contrato.documento', ['path' => ltrim($record->documento, '/')]) : null, true)
+                    ->visible(fn ($record) => $record && (bool) $record->documento),
+
                 TextColumn::make('estado')
                     ->label('Estado')
                     ->badge()

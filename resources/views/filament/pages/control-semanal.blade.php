@@ -197,8 +197,8 @@
             </div>
         </section>
 
-        <div class="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_24rem]">
-            <div class="space-y-6">
+            <div class="grid gap-8 2xl:grid-cols-[minmax(0,1fr)_24rem]">
+                <div class="space-y-6">
                 <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <article class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-gray-900">
                         <p class="text-sm text-slate-500">Esperado semanal</p>

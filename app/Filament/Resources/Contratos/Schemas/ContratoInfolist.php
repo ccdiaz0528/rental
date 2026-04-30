@@ -11,10 +11,10 @@ class ContratoInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('vehiculo_id')
-                    ->numeric(),
-                TextEntry::make('persona_id')
-                    ->numeric(),
+                TextEntry::make('vehiculo.placa')
+                    ->label('Vehículo'),
+                TextEntry::make('persona.nombre')
+                    ->label('Conductor'),
                 TextEntry::make('tipo')
                     ->badge(),
                 TextEntry::make('fecha_inicio')
@@ -26,6 +26,10 @@ class ContratoInfolist
                     ->numeric(),
                 TextEntry::make('estado')
                     ->badge(),
+                TextEntry::make('documento')
+                    ->label('Documento')
+                    ->formatStateUsing(fn ($record) => $record->documento ? '📎 Ver documento' : '-')
+                    ->url(fn ($record) => $record->documento ? route('contrato.documento', ['path' => ltrim($record->documento, '/')]) : null, true),
                 TextEntry::make('observaciones')
                     ->placeholder('-')
                     ->columnSpanFull(),
