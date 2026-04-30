@@ -25,7 +25,12 @@ class ContratoResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $recordTitleAttribute = 'id';
+    protected static ?string $recordTitleAttribute = null;
+
+    public static function getRecordTitle($record): string
+    {
+        return $record->vehiculo->placa.' - '.$record->persona->nombre;
+    }
 
     public static function form(Schema $schema): Schema
     {

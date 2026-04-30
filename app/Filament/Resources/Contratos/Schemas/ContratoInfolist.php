@@ -12,31 +12,40 @@ class ContratoInfolist
         return $schema
             ->components([
                 TextEntry::make('vehiculo.placa')
-                    ->label('Vehículo'),
+                    ->label('Vehículo')
+                    ->icon('heroicon-o-truck'),
                 TextEntry::make('persona.nombre')
-                    ->label('Conductor'),
+                    ->label('Conductor')
+                    ->icon('heroicon-o-user'),
                 TextEntry::make('tipo')
+                    ->label('Tipo')
                     ->badge(),
-                TextEntry::make('fecha_inicio')
-                    ->date(),
-                TextEntry::make('fecha_fin')
-                    ->date()
-                    ->placeholder('-'),
                 TextEntry::make('valor_diario')
-                    ->numeric(),
+                    ->label('Valor diario')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->money('COP'),
+                TextEntry::make('fecha_inicio')
+                    ->label('Fecha inicio'),
+                TextEntry::make('fecha_fin')
+                    ->label('Fecha fin')
+                    ->placeholder('Sin fecha'),
                 TextEntry::make('estado')
+                    ->label('Estado')
                     ->badge(),
                 TextEntry::make('documento')
                     ->label('Documento')
                     ->formatStateUsing(fn ($record) => $record->documento ? '📎 Ver documento' : '-')
                     ->url(fn ($record) => $record->documento ? route('contrato.documento', ['path' => ltrim($record->documento, '/')]) : null, true),
                 TextEntry::make('observaciones')
-                    ->placeholder('-')
+                    ->label('Observaciones')
+                    ->placeholder('Sin observaciones')
                     ->columnSpanFull(),
                 TextEntry::make('created_at')
+                    ->label('Creado')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('updated_at')
+                    ->label('Actualizado')
                     ->dateTime()
                     ->placeholder('-'),
             ]);
