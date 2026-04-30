@@ -21,7 +21,7 @@ class StatsOverview extends BaseWidget
         $finSemana = $inicioSemana->copy()->addDays(6);
         $vehiculos = Vehiculo::query()
             ->where('estado', 'activo')
-            ->get(['id', 'cuota_diaria', 'persona_id']);
+            ->get(['id', 'cuota_diaria', 'persona_id', 'fecha_vencimiento_soat', 'fecha_vencimiento_tecnomecanico']);
         $registrosSemana = $vehiculos->isEmpty()
             ? collect()
             : ControlDiario::query()
@@ -46,6 +46,12 @@ class StatsOverview extends BaseWidget
         $contratosActivos = Contrato::where('estado', 'activo')->count();
         $vehiculosConConductor = $vehiculos->whereNotNull('persona_id')->count();
         $novedadesSemana = $registrosSemana->count();
+
+        $todosVehiculos = Vehiculo::all();
+        $soatPorVencer = $todosVehiculos->filter(fn ($v) => $v->fecha_vencimiento_soat && now()->diffInDays($v->fecha_vencimiento_soat, false) <= 30)->count();
+        $soatVencido = $todosVehiculos->filter(fn ($v) => $v->fecha_vencimiento_soat && now()->gt($v->fecha_vencimiento_soat))->count();
+        $tecnomecanicaPorVencer = $todosVehiculos->filter(fn ($v) => $v->fecha_vencimiento_tecnomecanico && now()->diffInDays($v->fecha_vencimiento_tecnomecanico, false) <= 30)->count();
+        $tecnomecanicaVencida = $todosVehiculos->filter(fn ($v) => $v->fecha_vencimiento_tecnomecanico && now()->gt($v->fecha_vencimiento_tecnomecanico))->count();
 
         return [
             Stat::make('Esperado hoy', $this->money($hoyCalculado['esperado']))
@@ -97,6 +103,26 @@ class StatsOverview extends BaseWidget
                 ->description('En operación actualmente')
                 ->descriptionIcon('heroicon-o-truck')
                 ->color('success'),
+
+            Stat::make('SOAT por vencer', $soatPorVencer)
+                ->description('Vence en 30 días o menos')
+                ->descriptionIcon('heroicon-o-shield-check')
+                ->color($soatPorVencer > 0 ? 'warning' : 'gray'),
+
+            Stat::make('SOAT vencido', $soatVencido)
+                ->description('Ya vencido')
+                ->descriptionIcon('heroicon-o-shield-exclamation')
+                ->color($soatVencido > 0 ? 'danger' : 'gray'),
+
+            Stat::make('Tecnomecánica por vencer', $tecnomecanicaPorVencer)
+                ->description('Vence en 30 días o menos')
+                ->descriptionIcon('heroicon-o-wrench-screwdriver')
+                ->color($tecnomecanicaPorVencer > 0 ? 'warning' : 'gray'),
+
+            Stat::make('Tecnomecánica vencida', $tecnomecanicaVencida)
+                ->description('Ya vencida')
+                ->descriptionIcon('heroicon-o-wrench-screwdriver')
+                ->color($tecnomecanicaVencida > 0 ? 'danger' : 'gray'),
 
             Stat::make('Contratos activos', $contratosActivos)
                 ->description('Contratos vigentes')

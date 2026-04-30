@@ -30,6 +30,17 @@ class VehiculoInfolist
                     ->label('Color')
                     ->icon('heroicon-o-paint-brush')
                     ->placeholder('-'),
+
+                TextEntry::make('fecha_vencimiento_soat')
+                    ->label('Vencimiento SOAT')
+                    ->icon('heroicon-o-shield-check')
+                    ->date(),
+
+                TextEntry::make('fecha_vencimiento_tecnomecanico')
+                    ->label('Vencimiento Tecnomecánica')
+                    ->icon('heroicon-o-wrench-screwdriver')
+                    ->date(),
+
                 TextEntry::make('persona.nombre')
                     ->label('Conductor')
                     ->icon('heroicon-o-user')

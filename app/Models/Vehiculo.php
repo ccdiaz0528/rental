@@ -16,6 +16,13 @@ class Vehiculo extends Model
         'cuota_diaria',
         'estado',
         'observaciones',
+        'fecha_vencimiento_soat',
+        'fecha_vencimiento_tecnomecanico',
+    ];
+
+    protected $casts = [
+        'fecha_vencimiento_soat' => 'date',
+        'fecha_vencimiento_tecnomecanico' => 'date',
     ];
 
     public function contratos()

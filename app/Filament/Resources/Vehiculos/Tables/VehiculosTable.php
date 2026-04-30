@@ -37,6 +37,22 @@ class VehiculosTable
                 TextColumn::make('anio')
                     ->label('Año'),
 
+                TextColumn::make('fecha_vencimiento_soat')
+                    ->label('SOAT')
+                    ->date('d/m/Y')
+                    ->badge()
+                    ->color(fn ($record) => $record->fecha_vencimiento_soat
+                        ? (now()->gt($record->fecha_vencimiento_soat) ? 'danger' : (now()->diffInDays($record->fecha_vencimiento_soat) <= 30 ? 'warning' : 'success'))
+                        : 'gray'),
+
+                TextColumn::make('fecha_vencimiento_tecnomecanico')
+                    ->label('Tecnomecánica')
+                    ->date('d/m/Y')
+                    ->badge()
+                    ->color(fn ($record) => $record->fecha_vencimiento_tecnomecanico
+                        ? (now()->gt($record->fecha_vencimiento_tecnomecanico) ? 'danger' : (now()->diffInDays($record->fecha_vencimiento_tecnomecanico) <= 30 ? 'warning' : 'success'))
+                        : 'gray'),
+
                 TextColumn::make('cuota_diaria')
                     ->label('Cuota diaria')
                     ->money('COP')

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Vehiculos\Schemas;
 
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -35,6 +36,14 @@ class VehiculoForm
             TextInput::make('color')
                 ->label('Color')
                 ->maxLength(30),
+
+            DatePicker::make('fecha_vencimiento_soat')
+                ->label('Vencimiento SOAT')
+                ->nullable(),
+
+            DatePicker::make('fecha_vencimiento_tecnomecanico')
+                ->label('Vencimiento Tecnomecánica')
+                ->nullable(),
 
             Select::make('persona_id')
                 ->label('Conductor')
