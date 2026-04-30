@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     curl \
+    icu-devtools \
     && docker-php-ext-configure gd \
     && docker-php-ext-install pdo_mysql zip gd intl
 
