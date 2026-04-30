@@ -12,6 +12,7 @@ class Vehiculo extends Model
         'modelo',
         'anio',
         'color',
+        'persona_id',
         'cuota_diaria',
         'estado',
         'observaciones',
@@ -22,13 +23,34 @@ class Vehiculo extends Model
         return $this->hasMany(Contrato::class);
     }
 
-    public function pagosDiarios()
+    public function persona()
     {
-        return $this->hasMany(PagoDiario::class);
+        return $this->belongsTo(Persona::class);
     }
 
-    public function gastos()
+    public function controlDiarios()
     {
-        return $this->hasMany(Gasto::class);
+        return $this->hasMany(ControlDiario::class);
+    }
+
+    public function canBeDeleted(): bool
+    {
+        return ! $this->contratos()->exists()
+            && ! $this->controlDiarios()->exists();
+    }
+
+    public function deletionBlockers(): string
+    {
+        $blockers = [];
+
+        if ($this->contratos()->exists()) {
+            $blockers[] = 'contratos';
+        }
+
+        if ($this->controlDiarios()->exists()) {
+            $blockers[] = 'controles semanales';
+        }
+
+        return implode(', ', $blockers);
     }
 }

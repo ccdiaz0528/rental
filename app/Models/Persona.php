@@ -20,13 +20,8 @@ class Persona extends Model
         return $this->hasMany(Contrato::class);
     }
 
-    public function pagosDiarios()
+    public function vehiculos()
     {
-        return $this->hasMany(PagoDiario::class);
-    }
-
-    public function gastos()
-    {
-        return $this->hasMany(Gasto::class);
+        return $this->hasMany(Vehiculo::class);
     }
 }

@@ -30,8 +30,8 @@ class ContratoForm
             Select::make('tipo')
                 ->label('Tipo de contrato')
                 ->options([
-                    'alquiler'       => 'Alquiler',
-                    'opcion_compra'  => 'Opción de compra',
+                    'alquiler' => 'Alquiler',
+                    'opcion_compra' => 'Opción de compra',
                 ])
                 ->required()
                 ->default('alquiler'),
@@ -54,9 +54,9 @@ class ContratoForm
             Select::make('estado')
                 ->label('Estado')
                 ->options([
-                    'activo'     => 'Activo',
+                    'activo' => 'Activo',
                     'finalizado' => 'Finalizado',
-                    'cancelado'  => 'Cancelado',
+                    'cancelado' => 'Cancelado',
                 ])
                 ->required()
                 ->default('activo'),

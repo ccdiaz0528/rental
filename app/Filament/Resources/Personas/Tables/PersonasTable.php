@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\Personas\Tables;
 
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -35,9 +35,9 @@ class PersonasTable
                     ->label('Tipo')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'conductor'   => 'success',
+                        'conductor' => 'success',
                         'propietario' => 'warning',
-                        default       => 'gray',
+                        default => 'gray',
                     }),
 
                 TextColumn::make('created_at')

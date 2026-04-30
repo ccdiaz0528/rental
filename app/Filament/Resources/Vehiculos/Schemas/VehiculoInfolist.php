@@ -20,6 +20,9 @@ class VehiculoInfolist
                     ->placeholder('-'),
                 TextEntry::make('color')
                     ->placeholder('-'),
+                TextEntry::make('persona.nombre')
+                    ->label('Conductor')
+                    ->placeholder('Sin conductor'),
                 TextEntry::make('cuota_diaria')
                     ->numeric(),
                 TextEntry::make('estado')

@@ -13,7 +13,6 @@ use App\Models\Persona;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
 class PersonaResource extends Resource
@@ -21,7 +20,9 @@ class PersonaResource extends Resource
     protected static ?string $model = Persona::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
+
     protected static ?string $navigationLabel = 'Personas';
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'nombre';

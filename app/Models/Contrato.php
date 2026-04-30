@@ -19,7 +19,7 @@ class Contrato extends Model
 
     protected $casts = [
         'fecha_inicio' => 'date',
-        'fecha_fin'    => 'date',
+        'fecha_fin' => 'date',
     ];
 
     public function vehiculo()
@@ -30,10 +30,5 @@ class Contrato extends Model
     public function persona()
     {
         return $this->belongsTo(Persona::class);
-    }
-
-    public function pagosDiarios()
-    {
-        return $this->hasMany(PagoDiario::class);
     }
 }

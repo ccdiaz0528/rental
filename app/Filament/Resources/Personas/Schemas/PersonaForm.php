@@ -34,9 +34,9 @@ class PersonaForm
             Select::make('tipo')
                 ->label('Tipo')
                 ->options([
-                    'conductor'   => 'Conductor',
+                    'conductor' => 'Conductor',
                     'propietario' => 'Propietario',
-                    'otro'        => 'Otro',
+                    'otro' => 'Otro',
                 ])
                 ->required()
                 ->default('conductor'),

@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\Contratos\Tables;
 
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -29,9 +29,9 @@ class ContratosTable
                     ->label('Tipo')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'alquiler'      => 'info',
+                        'alquiler' => 'info',
                         'opcion_compra' => 'warning',
-                        default         => 'gray',
+                        default => 'gray',
                     }),
 
                 TextColumn::make('valor_diario')
@@ -53,10 +53,10 @@ class ContratosTable
                     ->label('Estado')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'activo'     => 'success',
+                        'activo' => 'success',
                         'finalizado' => 'gray',
-                        'cancelado'  => 'danger',
-                        default      => 'gray',
+                        'cancelado' => 'danger',
+                        default => 'gray',
                     }),
             ])
             ->defaultSort('fecha_inicio', 'desc')

@@ -36,6 +36,13 @@ class VehiculoForm
                 ->label('Color')
                 ->maxLength(30),
 
+            Select::make('persona_id')
+                ->label('Conductor')
+                ->relationship('persona', 'nombre')
+                ->searchable()
+                ->preload()
+                ->nullable(),
+
             TextInput::make('cuota_diaria')
                 ->label('Cuota diaria')
                 ->numeric()
@@ -46,8 +53,8 @@ class VehiculoForm
             Select::make('estado')
                 ->label('Estado')
                 ->options([
-                    'activo'        => 'Activo',
-                    'inactivo'      => 'Inactivo',
+                    'activo' => 'Activo',
+                    'inactivo' => 'Inactivo',
                     'mantenimiento' => 'En mantenimiento',
                 ])
                 ->required()

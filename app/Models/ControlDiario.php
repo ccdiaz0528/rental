@@ -4,28 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Gasto extends Model
+class ControlDiario extends Model
 {
     protected $fillable = [
         'vehiculo_id',
-        'persona_id',
         'fecha',
-        'categoria',
-        'valor',
-        'detalle',
+        'trabajo',
+        'valor_generado',
+        'gasto',
+        'observaciones',
     ];
 
     protected $casts = [
         'fecha' => 'date',
+        'trabajo' => 'boolean',
     ];
 
     public function vehiculo()
     {
         return $this->belongsTo(Vehiculo::class);
-    }
-
-    public function persona()
-    {
-        return $this->belongsTo(Persona::class);
     }
 }

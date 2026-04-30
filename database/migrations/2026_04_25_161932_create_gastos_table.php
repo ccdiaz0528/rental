@@ -27,7 +27,7 @@ return new class extends Migration
                 'multa',
                 'fotomulta',
                 'prestamo',
-                'otro'
+                'otro',
             ]);
             $table->decimal('valor', 10, 2);
             $table->text('detalle')->nullable();
