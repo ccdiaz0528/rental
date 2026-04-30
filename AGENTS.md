@@ -13,12 +13,14 @@
 ## Commands
 - Initial bootstrap: `composer setup`
 - Full local dev loop: `composer dev`
-  - This runs the PHP server, a queue listener, `php artisan pail`, and Vite together.
+  - Runs PHP server, queue listener, `php artisan pail`, and Vite together.
+  - **Windows users**: `pcntl` extension is unavailable, so `pail` and queue listener will fail. Use `php artisan serve` directly instead.
 - Tests: `composer test`
   - This clears config first, then runs `php artisan test`.
 - Focused test runs: `php artisan test tests/Feature/ExampleTest.php` or `php artisan test --filter=SomeTestName`
 - PHP formatting: `vendor/bin/pint`
 - Frontend assets only: `npm run dev` or `npm run build`
+- After cleaning old asset folders or changing Vite config, clear views: `php artisan view:clear`
 
 ## Database And Auth Gotchas
 - Default local DB is SQLite (`config/database.php`, `.env.example`) and the repo already includes `database/database.sqlite`.
@@ -29,6 +31,8 @@
 ## Frontend Notes
 - Frontend tooling is minimal: Vite + Tailwind CSS 4, with entrypoints `resources/css/app.css` and `resources/js/app.js`.
 - Most UI work should happen in Filament resources/widgets, not in custom JS; `resources/js/app.js` is currently empty.
+- **Old asset folders**: If styles break after builds, delete `public/css`, `public/js`, and `public/hot` (these are Vite HMR leftovers that conflict with production builds).
+  - On Windows, delete them manually via Explorer or PowerShell: `rm public/css -Recurse -Force`
 
 ## Verification Priorities
 - For Filament/resource changes, verify the affected `/admin/...` screen instead of only checking `/`.
