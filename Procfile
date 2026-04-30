@@ -1,1 +1,1 @@
-web: php artisan serve --host=0.0.0.0 --port=$PORT
+web: cp .env.railway .env && php artisan key:generate && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
