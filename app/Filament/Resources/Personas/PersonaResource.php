@@ -27,6 +27,11 @@ class PersonaResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'nombre';
 
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['nombre', 'cedula', 'telefono', 'direccion'];
+    }
+
     public static function form(Schema $schema): Schema
     {
         return PersonaForm::configure($schema);

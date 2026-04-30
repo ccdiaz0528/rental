@@ -32,6 +32,11 @@ class ContratoResource extends Resource
         return $record->vehiculo->placa.' - '.$record->persona->nombre;
     }
 
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['tipo', 'estado'];
+    }
+
     public static function form(Schema $schema): Schema
     {
         return ContratoForm::configure($schema);

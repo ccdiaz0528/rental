@@ -27,6 +27,11 @@ class VehiculoResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'placa';
 
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['placa', 'marca', 'modelo', 'color'];
+    }
+
     public static function form(Schema $schema): Schema
     {
         return VehiculoForm::configure($schema);
