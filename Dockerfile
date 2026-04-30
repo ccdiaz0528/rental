@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     && docker-php-ext-configure gd \
-    && docker-php-ext-install pdo_mysql zip gd
+    && docker-php-ext-install pdo_mysql zip gd intl
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
