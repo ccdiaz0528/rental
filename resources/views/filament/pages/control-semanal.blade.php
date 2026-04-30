@@ -68,15 +68,15 @@
                             >
                         </label>
 
-                        <div class="flex flex-wrap gap-2 lg:justify-end">
-                            <button wire:click="previousWeek" type="button" class="rounded-2xl border border-slate-300 px-4 py-2.5 text-sm font-medium hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5">
-                                Semana anterior
+                        <div class="flex items-center gap-2 lg:justify-end">
+                            <button wire:click="previousWeek" type="button" class="rounded-2xl border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5">
+                                ‹ Anterior
                             </button>
-                            <button wire:click="goToCurrentWeek" type="button" class="rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-500">
+                            <button wire:click="goToCurrentWeek" type="button" class="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-500">
                                 Semana actual
                             </button>
-                            <button wire:click="nextWeek" type="button" class="rounded-2xl border border-slate-300 px-4 py-2.5 text-sm font-medium hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5">
-                                Semana siguiente
+                            <button wire:click="nextWeek" type="button" class="rounded-2xl border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5">
+                                Siguiente ›
                             </button>
                         </div>
                     </div>
