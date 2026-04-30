@@ -30,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->favicon(asset('favicon.png'))
+            ->brandLogo(asset('favicon.png'))
             ->globalSearch()
             ->colors([
                 'primary' => Color::Blue,
