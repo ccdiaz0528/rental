@@ -15,6 +15,28 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'url' => env('APP_URL', 'http://localhost'),
+
+    'asset_url' => env('ASSET_URL'),
+
+    'timezone' => 'America/Bogota',
+
+    'locale' => 'es',
+
+    'fallback_locale' => 'es',
+
+    'faker_locale' => 'es_CO',
+
+    'key' => env('APP_KEY'),
+
+    'cipher' => 'AES-256-CBC',
+
+    'maintenance' => [
+        'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
+    ],
+
+    'favicon' => env('APP_FAVICON', 'favicon.png'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
