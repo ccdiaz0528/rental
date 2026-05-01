@@ -1,43 +1,45 @@
 # AGENTS.md
 
-## Stack And Entry Points
-- This is a Laravel 13 app with Filament 5. The real app UI is the Filament panel at `/admin`; `/` is still the default welcome page.
-- Filament is wired in `app/Providers/Filament/AdminPanelProvider.php`. Resources, pages, and widgets are auto-discovered from `app/Filament`.
-- There are no `api.php` routes. `bootstrap/app.php` only wires `routes/web.php`, `routes/console.php`, and the health check at `/up`.
+## Stack And Versions
+- Laravel 13.6.0 + Filament 5.6.1
+- UI: Filament panel at `/admin`; `/` is welcome page
+- Filament wired in `app/Providers/Filament/AdminPanelProvider.php`. Auto-discovers from `app/Filament`.
+- No API routes. `bootstrap/app.php` wires `routes/web.php`, `routes/console.php`, `/up` health check.
 
 ## Domain Structure
-- The main business areas are `Personas`, `Vehiculos`, `Contratos`, `PagoDiarios`, and `Gastos`.
-- Filament resources follow the Filament 5 split layout: `app/Filament/Resources/<Domain>/Pages`, `Schemas`, and `Tables`. Prefer matching that structure instead of adding older inline resource definitions.
-- Models and schema use Spanish names and enums. Preserve that vocabulary when adding fields, labels, states, or routes.
+- **Personas** - Conductores y clientes
+- **Vehiculos** - Flota de vehículos
+- **Contratos** - Contratos de alquiler
+- **ControlDiario** - Control semanal de ingresos/gastos (reemplaza PagoDiarios y Gastos)
+
+Filament split layout: `app/Filament/Resources/<Domain>/Pages`, `Schemas`, `Tables`.
+Models use Spanish vocabulary. Preserve when adding fields/labels.
 
 ## Commands
-- Initial bootstrap: `composer setup`
-- Full local dev loop: `composer dev`
-  - Runs PHP server, queue listener, `php artisan pail`, and Vite together.
-  - **Windows users**: `pcntl` extension is unavailable, so `pail` and queue listener will fail. Use `php artisan serve` directly instead.
-- Tests: `composer test`
-  - This clears config first, then runs `php artisan test`.
-- Focused test runs: `php artisan test tests/Feature/ExampleTest.php` or `php artisan test --filter=SomeTestName`
-- PHP formatting: `vendor/bin/pint`
-- Frontend assets only: `npm run dev` or `npm run build`
-- After cleaning old asset folders or changing Vite config, clear views: `php artisan view:clear`
+- Initial setup: `composer setup`
+- Dev server (Windows): `php artisan serve` (pcntl not available)
+- Tests: `composer test` (clears config first)
+- Single test: `php artisan test tests/Feature/ExampleTest.php`
+- Format: `vendor/bin/pint`
+- Assets: `npm run dev` / `npm run build`
+- Clear views after asset changes: `php artisan view:clear`
 
-## Database And Auth Gotchas
-- Default local DB is SQLite (`config/database.php`, `.env.example`) and the repo already includes `database/database.sqlite`.
-- `.env.example` uses database-backed sessions, cache, and queues, so migrations are required before the app behaves normally.
-- Tests do not use the file DB; `phpunit.xml` forces an in-memory SQLite database.
-- If you need an admin login quickly, run `php artisan db:seed`. The default seeded user is `test@example.com` with password `password`.
+## Database
+- Default: SQLite (`database/database.sqlite`)
+- Production: MySQL (rental_manager)
+- Migrations required before app works normally
+- Seeded user: `test@example.com` / `password`
 
-## Frontend Notes
-- Frontend tooling is minimal: Vite + Tailwind CSS 4, with entrypoints `resources/css/app.css` and `resources/js/app.js`.
-- Most UI work should happen in Filament resources/widgets, not in custom JS; `resources/js/app.js` is currently empty.
-- **Old asset folders**: If styles break after builds, delete `public/css`, `public/js`, and `public/hot` (these are Vite HMR leftovers that conflict with production builds).
-  - On Windows, delete them manually via Explorer or PowerShell: `rm public/css -Recurse -Force`
+## Frontend
+- Vite + Tailwind CSS 4
+- Entry: `resources/css/app.css`, `resources/js/app.js` (currently empty)
+- **Old assets cause issues**: Delete `public/css`, `public/js`, `public/hot` if styles break
+  - Windows: `rm public/css -Recurse -Force`
 
-## Verification Priorities
-- For Filament/resource changes, verify the affected `/admin/...` screen instead of only checking `/`.
-- There is no repo ESLint, Prettier, or TypeScript config. The meaningful checks here are `vendor/bin/pint`, `composer test`, and asset builds when frontend files change.
+## Verification
+- Test: `composer test` + `vendor/bin/pint`
+- For Filament changes, verify `/admin/...` screens
 
 ## Composer Lifecycle
-- `composer install` / `composer dump-autoload` triggers `php artisan filament:upgrade` via `post-autoload-dump`.
-- `composer update` also force-publishes Laravel assets via `post-update-cmd`.
+- `composer install` triggers `php artisan filament:upgrade`
+- `composer update` force-publishes Laravel assets
