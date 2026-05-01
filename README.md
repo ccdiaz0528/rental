@@ -34,13 +34,34 @@ composer test
 ## Panel de Administración
 
 Accede a `/admin` para gestionar:
-- Personas
-- Vehículos
-- Contratos
-- Pagos Diarios
-- Gastos
+- **Personas** - Conductores y clientes
+- **Vehículos** - Flota de vehículos
+- **Contratos** - Contratos de alquiler
+- **Control Semanal** - Control diario de ingresos y gastos
 
 Credenciales por defecto: `test@example.com` / `password`
+
+## Estructura del Proyecto
+
+```
+app/
+├── Filament/
+│   ├── Resources/
+│   │   ├── Personas/
+│   │   ├── Vehiculos/
+│   │   └── Contratos/
+│   ├── Pages/ControlSemanal.php
+│   └── Widgets/
+├── Models/
+│   ├── Persona.php
+│   ├── Vehiculo.php
+│   ├── Contrato.php
+│   └── ControlDiario.php
+└── Providers/
+
+database/
+└── migrations/
+```
 
 ## Tech Stack
 
