@@ -7,6 +7,7 @@ use App\Models\Vehiculo;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ControlSemanal extends Page
 {
@@ -353,5 +354,141 @@ class ControlSemanal extends Page
             'novedades' => $registros->count(),
             'is_selected' => $weekStart->isSameDay($this->weekStart()),
         ];
+    }
+
+    public function exportWeekly(): BinaryFileResponse
+    {
+        $dataset = $this->getWeekDataset();
+        $weekStart = $dataset['weekStart']->format('Y-m-d');
+        $weekEnd = $dataset['weekEnd']->format('Y-m-d');
+        $filename = "reporte_semanal_{$weekStart}_{$weekEnd}.csv";
+        $tempFile = tempnam(sys_get_temp_dir(), 'export_');
+        $fp = fopen($tempFile, 'w');
+
+        // Header row
+        $header = ['Día', 'Fecha'];
+        foreach ($dataset['vehiculos'] as $vehiculo) {
+            $header[] = $vehiculo->placa.' ('.($vehiculo->persona?->nombre ?? 'Sin conductor').')';
+        }
+        $header[] = 'Gastos';
+        $header[] = 'Total día';
+        $header[] = 'Acumulado semana';
+        fputcsv($fp, $header);
+
+        // Data rows
+        foreach ($dataset['rows'] as $row) {
+            $fecha = $row['fecha'];
+            $line = [
+                $this->dayLabel($fecha),
+                $fecha->format('d/m/Y'),
+            ];
+            foreach ($row['cells'] as $cell) {
+                $value = $cell['trabajo'] ? $cell['ingreso'] : 'No trabajó';
+                if ($cell['gasto'] > 0) {
+                    $value .= ' (Gasto: '.$this->money($cell['gasto']).')';
+                }
+                $line[] = $value;
+            }
+            $line[] = $this->money($row['gastos']);
+            $line[] = $this->money($row['total']);
+            $line[] = $this->money($row['acumulado']);
+            fputcsv($fp, $line);
+        }
+
+        // Total row
+        $totalLine = ['Total semanal', ''];
+        foreach ($dataset['vehiculos'] as $vehiculo) {
+            $total = $dataset['vehicleTotals'][$vehiculo->id]['neto'] ?? 0;
+            $totalLine[] = $this->money($total);
+        }
+        $totalLine[] = $this->money($dataset['summary']['gastos']);
+        $totalLine[] = $this->money($dataset['summary']['neto']);
+        $totalLine[] = $this->money($dataset['summary']['neto']);
+        fputcsv($fp, $totalLine);
+
+        fclose($fp);
+
+        return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
+    }
+
+    public function exportMonthly(): BinaryFileResponse
+    {
+        $selectedDate = Carbon::parse($this->selectedDate);
+        $monthStart = $selectedDate->copy()->startOfMonth();
+        $monthEnd = $selectedDate->copy()->endOfMonth();
+        $filename = "reporte_mensual_{$monthStart->format('Y-m')}.csv";
+        $tempFile = tempnam(sys_get_temp_dir(), 'export_');
+        $fp = fopen($tempFile, 'w');
+
+        // Header: Month and year
+        fputcsv($fp, ['Reporte Mensual', $monthStart->format('F Y')]);
+        fputcsv($fp, []); // empty line
+
+        // For each week in month
+        $weekStart = $monthStart->copy()->startOfWeek(Carbon::SUNDAY);
+        $weekCount = 0;
+        while ($weekStart->lte($monthEnd)) {
+            $weekEnd = $weekStart->copy()->addDays(6);
+            if ($weekEnd->gt($monthEnd)) {
+                $weekEnd = $monthEnd->copy();
+            }
+            $weekCount++;
+
+            // Get dataset for this week
+            $originalDate = $this->selectedDate;
+            $this->selectedDate = $weekStart->toDateString();
+            $dataset = $this->getWeekDataset();
+            $this->selectedDate = $originalDate;
+
+            fputcsv($fp, ["Semana $weekCount: ".$weekStart->format('d/m').' - '.$weekEnd->format('d/m')]);
+            // Header row
+            $header = ['Día', 'Fecha'];
+            foreach ($dataset['vehiculos'] as $vehiculo) {
+                $header[] = $vehiculo->placa;
+            }
+            $header[] = 'Gastos';
+            $header[] = 'Total día';
+            $header[] = 'Acumulado semana';
+            fputcsv($fp, $header);
+
+            // Data rows
+            foreach ($dataset['rows'] as $row) {
+                $fecha = $row['fecha'];
+                $line = [
+                    $this->dayLabel($fecha),
+                    $fecha->format('d/m/Y'),
+                ];
+                foreach ($row['cells'] as $cell) {
+                    $value = $cell['trabajo'] ? $this->money($cell['ingreso']) : 'No trabajó';
+                    if ($cell['gasto'] > 0) {
+                        $value .= ' (Gasto: '.$this->money($cell['gasto']).')';
+                    }
+                    $line[] = $value;
+                }
+                $line[] = $this->money($row['gastos']);
+                $line[] = $this->money($row['total']);
+                $line[] = $this->money($row['acumulado']);
+                fputcsv($fp, $line);
+            }
+
+            // Weekly total
+            $totalLine = ['Total semanal', ''];
+            foreach ($dataset['vehiculos'] as $vehiculo) {
+                $total = $dataset['vehicleTotals'][$vehiculo->id]['neto'] ?? 0;
+                $totalLine[] = $this->money($total);
+            }
+            $totalLine[] = $this->money($dataset['summary']['gastos']);
+            $totalLine[] = $this->money($dataset['summary']['neto']);
+            $totalLine[] = $this->money($dataset['summary']['neto']);
+            fputcsv($fp, $totalLine);
+
+            fputcsv($fp, []); // empty line between weeks
+
+            $weekStart->addWeek();
+        }
+
+        fclose($fp);
+
+        return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
     }
 }
