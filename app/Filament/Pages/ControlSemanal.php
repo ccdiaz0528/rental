@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Configuracion;
 use App\Models\ControlDiario;
 use App\Models\Vehiculo;
 use Carbon\Carbon;
@@ -22,6 +23,8 @@ class ControlSemanal extends Page
 
     public string $selectedDate;
 
+    public float $administracion = 0;
+
     public bool $isModalOpen = false;
 
     public ?int $selectedVehiculoId = null;
@@ -38,6 +41,12 @@ class ControlSemanal extends Page
     public function mount(): void
     {
         $this->selectedDate = now()->toDateString();
+        $this->administracion = (float) Configuracion::get('administracion_semanal', 0);
+    }
+
+    public function saveAdministracion(): void
+    {
+        Configuracion::set('administracion_semanal', (string) $this->administracion);
     }
 
     public function previousWeek(): void
@@ -235,6 +244,8 @@ class ControlSemanal extends Page
             $rows[array_key_last($rows)]['acumulado'] = $acumuladoSemana;
         }
 
+        $adminSemanal = $this->administracion;
+
         return [
             'weekStart' => $weekStart,
             'weekEnd' => $weekEnd,
@@ -245,7 +256,8 @@ class ControlSemanal extends Page
                 'esperado' => $esperado,
                 'real' => $real,
                 'gastos' => $gastos,
-                'neto' => $real - $gastos,
+                'administracion' => $adminSemanal,
+                'neto' => $real - $gastos - $adminSemanal,
                 'dias_sin_trabajo' => $diasSinTrabajo,
             ],
         ];

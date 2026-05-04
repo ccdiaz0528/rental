@@ -34,7 +34,13 @@
                     <div class="rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur-md xl:min-h-[140px]">
                         <p class="text-[11px] uppercase tracking-[0.24em] text-slate-300">Neto semanal</p>
                         <p class="mt-2 text-3xl font-semibold">{{ $this->money($dataset['summary']['neto']) }}</p>
-                        <div class="mt-3 text-xs text-slate-300">Ingreso ajustado menos gastos</div>
+                        <div class="mt-3 text-xs text-slate-300">
+                            @if($dataset['summary']['administracion'] > 0)
+                                <span class="text-rose-300">-{{ $this->money($dataset['summary']['administracion']) }} administración</span>
+                            @else
+                                Ingreso menos gastos
+                            @endif
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 xl:min-h-[140px]">
                         <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
@@ -42,8 +48,8 @@
                             <p class="mt-2 text-xl font-semibold">{{ $this->money($dataset['summary']['gastos']) }}</p>
                         </div>
                         <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
-                            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Sin trabajo</p>
-                            <p class="mt-2 text-xl font-semibold">{{ $dataset['summary']['dias_sin_trabajo'] }}</p>
+                            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Administración</p>
+                            <p class="mt-2 text-xl font-semibold">{{ $this->money($dataset['summary']['administracion']) }}</p>
                         </div>
                     </div>
                 </div>
@@ -51,14 +57,28 @@
         </section>
 
         <section class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-gray-900">
-            <div class="border-b border-slate-200 bg-slate-50/80 px-5 py-4 dark:border-white/10 dark:bg-white/5">
-                <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div class="border-b border-slate-200 bg-slate-50/80 px-5 py-1 dark:border-white/10 dark:bg-white/5">
+                <div class="flex items-start justify-between gap-4">
                     <div>
                         <h3 class="text-lg font-semibold text-slate-950 dark:text-white">Cuadro semanal</h3>
                         <p class="text-sm text-slate-500">Haz clic en una celda para ajustar ingreso, gasto u observación de ese vehículo en ese día.</p>
                     </div>
 
-                    <div class="grid gap-3 lg:grid-cols-[220px_auto] lg:items-end">
+                    <div class="grid gap-3 lg:grid-cols-[140px_140px_200px] lg:items-end">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[10px] text-white/60 uppercase tracking-wider">Admin Semanal</span>
+                            <div class="flex items-center gap-1 rounded-lg border border-white/20 bg-white/5 px-2 py-1">
+                                <span class="text-xs text-white/60">$</span>
+                                <input
+                                    type="number"
+                                    wire:model="administracion"
+                                    wire:change="saveAdministracion"
+                                    class="w-20 bg-transparent px-1 py-1 text-sm text-white placeholder-white/50 focus:outline-none"
+                                    placeholder="0"
+                                >
+                            </div>
+                        </div>
+
                         <label class="block">
                             <span class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Ir a una fecha</span>
                             <input
