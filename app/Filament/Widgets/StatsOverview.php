@@ -189,26 +189,25 @@ class StatsOverview extends BaseWidget
      * @param Collection $registrosMes - Registros de control diario del mes
      * @return array Array con todas las métricas calculadas
      */
-    private function calcularResumen(Collection $vehiculos, Collection $registrosSemana, Collection $registrosMes): array
+private function calcularResumen(Collection $vehiculos, Collection $registrosSemana, Collection $registrosMes): array
     {
         $hoy = now()->startOfDay();
         $inicioSemana = now()->startOfWeek(Carbon::SUNDAY);
         $inicioMes = now()->startOfMonth();
 
-        // Calcular métricas de HOY
         $esperado_hoy = $vehiculos->sum('cuota_diaria');
         $gastos_hoy = 0;
         $real_hoy = 0;
 
         foreach ($vehiculos as $v) {
-            // Buscar registro del día para este vehículo
             $registro = $registrosSemana->firstWhere(fn ($r) => $r->fecha->isSameDay($hoy) && $r->vehiculo_id === $v->id);
             if ($registro) {
                 $gastos_hoy += (float) ($registro->gasto ?? 0);
-                // Si trabajó, usar valor_generado; si no, usar cuota_diaria
-                $real_hoy += $registro->trabajo ? (float) $registro->valor_generado : (float) $v->cuota_diaria;
+                // Si trabajó: usar valor_generado; si no trabajó: 0; si no hay registro: usar cuota_diaria (por defecto trabajó)
+                $trabajo = $registro->trabajo ?? true;
+                $real_hoy += $trabajo ? (float) ($registro->valor_generado ?? $v->cuota_diaria) : 0;
             } else {
-                // Si no hay registro, usar valor por defecto (cuota_diaria)
+                // No hay registro: usar valores por defecto (trabajo=true, cuota_diaria)
                 $real_hoy += (float) $v->cuota_diaria;
             }
         }
@@ -232,10 +231,27 @@ class StatsOverview extends BaseWidget
         $real_mes = 0;
         $gastos_mes = 0;
 
-        foreach ($registrosMes as $registro) {
-            // Solo contar si trabajó (valor_generado > 0 cuando trabajó)
-            $real_mes += $registro->trabajo ? (float) $registro->valor_generado : 0;
-            $gastos_mes += (float) ($registro->gasto ?? 0);
+        // Calcular real_mes considerando valores por defecto para días sin registro
+        $inicioMes = now()->startOfMonth();
+        $hoy = now()->startOfDay();
+        
+        foreach ($vehiculos as $v) {
+            for ($d = 1; $d <= $diasMes; $d++) {
+                $fecha = $inicioMes->copy()->addDays($d - 1);
+                if ($fecha->isAfter($hoy)) {
+                    break;
+                }
+                $registro = $registrosMes->firstWhere(fn ($r) => $r->fecha->isSameDay($fecha) && $r->vehiculo_id === $v->id);
+                
+                if ($registro) {
+                    $gastos_mes += (float) ($registro->gasto ?? 0);
+                    $trabajo = $registro->trabajo ?? true;
+                    $real_mes += $trabajo ? (float) ($registro->valor_generado ?? $v->cuota_diaria) : 0;
+                } else {
+                    // Valores por defecto
+                    $real_mes += (float) $v->cuota_diaria;
+                }
+            }
         }
 
         return [
