@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Modelo de Persona - Representa clientes y conductores del sistema.
- * 
+ *
  * Este modelo agrupa la información de las personas que pueden ser:
  * - Clientes: Personas que rentan vehículos
  * - Conductores: Personas que conducen los vehículos de la flota
- * 
+ *
  * La distinción se realiza mediante el campo 'tipo' (cliente/conductor).
  *
  * @property int $id
@@ -20,8 +22,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $direccion
  * @property string|null $tipo - 'cliente' o 'conductor'
  * @property string|null $observaciones
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class Persona extends Model
 {
@@ -42,7 +44,7 @@ class Persona extends Model
      * Relación: Una persona puede tener muchos contratos.
      * Un contrato representa el acuerdo de alquiler entre cliente y empresa.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
      */
     public function contratos()
     {
@@ -53,7 +55,7 @@ class Persona extends Model
      * Relación: Una persona (conductor) puede tener muchos vehículos asignados.
      * Un conductor puede manejar varios vehículos a lo largo del tiempo.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
      */
     public function vehiculos()
     {

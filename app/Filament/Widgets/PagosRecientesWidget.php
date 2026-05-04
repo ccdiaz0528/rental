@@ -9,7 +9,7 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 /**
  * Widget de tabla - Muestra los últimos ajustes del control semanal.
- * 
+ *
  * Este widget muestra una tabla con los últimos 10 registros modificados
  * del control diario, permitiendo al usuario ver rápidamente:
  * - Qué vehículo se modificó
@@ -17,36 +17,33 @@ use Filament\Widgets\TableWidget as BaseWidget;
  * - El valor generado y gastos registrados
  * - Si el vehículo trabajó o no
  * - Observaciones adicionales
- * 
+ *
  * Los registros se ordenan por fecha de actualización (más recientes primero).
  */
 class PagosRecientesWidget extends BaseWidget
 {
     /**
      * Orden de aparición en el escritorio (2 = después de StatsOverview).
-     * @var int|null
      */
     protected static ?int $sort = 2;
 
     /**
      * Título del widget.
-     * @var string|null
      */
     protected static ?string $heading = 'Últimos ajustes del control semanal';
 
     /**
      * Ocupa el ancho completo del contenedor.
-     * @var int|string|array
      */
     protected int|string|array $columnSpan = 'full';
 
     /**
      * Define la estructura de la tabla: consulta, columnas y formato.
-     * 
+     *
      * La consulta obtiene los 10 registros más recientes ordenados por
      * updated_at (última modificación), con las relaciones de vehículo y persona.
      *
-     * @param Table $table - Instancia de la tabla de Filament
+     * @param  Table  $table  - Instancia de la tabla de Filament
      * @return Table Configuración de la tabla
      */
     public function table(Table $table): Table

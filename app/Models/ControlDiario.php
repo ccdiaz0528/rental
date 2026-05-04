@@ -2,24 +2,26 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Modelo de Control Diario - Registros del control semanal por día y vehículo.
- * 
+ *
  * Este modelo almacena los registros de trabajo diario de cada vehículo.
  * Es la base de datos del "Control Semanal" donde se registra:
  * - Si el vehículo trabajó o no ese día
  * - El valor generado ese día (puede diferir de la cuota diaria)
  * - Los gastos del día (mantenimiento, multas, etc.)
  * - Observaciones adicionales
- * 
+ *
  * Si no hay registro para un vehículo en un día específico, el sistema
  * usa valores por defecto (trabajo=true, valor=cuota_diaria del vehículo).
  *
  * @property int $id
  * @property int $vehiculo_id - Vehículo al que pertenece el registro
- * @property \Carbon\Carbon $fecha - Fecha del registro
+ * @property Carbon $fecha - Fecha del registro
  * @property bool $trabajo - true si el vehículo trabajó, false si no
  * @property float|null $valor_generado - Ingreso del día (null usa cuota_diaria)
  * @property float $gasto - Gastos del día
@@ -54,7 +56,7 @@ class ControlDiario extends Model
     /**
      * Relación: Un control diario pertenece a un vehículo.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
     public function vehiculo()
     {

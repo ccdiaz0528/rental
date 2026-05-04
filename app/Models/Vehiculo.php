@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Modelo de Vehículo - Representa la flota de vehículos del sistema de alquiler.
- * 
+ *
  * Este modelo gestiona la información de cada vehículo en la flota, incluyendo:
  * - Datos técnicos: placa, marca, modelo, año, color
  * - Información de租赁: conductor asignado, cuota diaria, estado
@@ -22,8 +25,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property float $cuota_diaria - Valor que debe pagar el conductor diariamente
  * @property string $estado - 'activo' o 'inactivo'
  * @property string|null $observaciones
- * @property \Carbon\Carbon|null $fecha_vencimiento_soat
- * @property \Carbon\Carbon|null $fecha_vencimiento_tecnomecanico
+ * @property Carbon|null $fecha_vencimiento_soat
+ * @property Carbon|null $fecha_vencimiento_tecnomecanico
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  */
@@ -59,7 +62,7 @@ class Vehiculo extends Model
      * Relación: Un vehículo puede tener muchos contratos.
      * Cada contrato representa un período de alquiler del vehículo.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
      */
     public function contratos()
     {
@@ -70,7 +73,7 @@ class Vehiculo extends Model
      * Relación: Un vehículo pertenece a una persona (conductor).
      * Un conductor puede tener asignado un vehículo a la vez.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
     public function persona()
     {
@@ -81,7 +84,7 @@ class Vehiculo extends Model
      * Relación: Un vehículo tiene muchos registros de control diario.
      * El control diario registra el trabajo y finanzas de cada día.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
      */
     public function controlDiarios()
     {
@@ -90,7 +93,7 @@ class Vehiculo extends Model
 
     /**
      * Verifica si el vehículo puede ser eliminado.
-     * 
+     *
      * Un vehículo no puede eliminarse si tiene contratos activos
      * o registros de control semanal asociados.
      *
@@ -104,7 +107,7 @@ class Vehiculo extends Model
 
     /**
      * Retorna los motivos por los que el vehículo no puede ser eliminado.
-     * 
+     *
      * Si el vehículo tiene contratos o controles asociados, devuelve
      * una cadena con los tipos de registros que bloquean la eliminación.
      *

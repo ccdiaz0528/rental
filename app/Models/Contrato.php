@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Modelo de Contrato - Representa los contratos de alquiler de vehículos.
- * 
+ *
  * Este modelo gestiona la información de los acuerdos entre la empresa de租赁
  * y los clientes. Cada contrato define:
  * - El vehículo involucrado
@@ -19,8 +21,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $vehiculo_id - Vehículo alquilado
  * @property int $persona_id - Cliente que renting el vehículo
  * @property string|null $tipo - Tipo de contrato (opcional)
- * @property \Carbon\Carbon $fecha_inicio - Fecha de inicio del contrato
- * @property \Carbon\Carbon|null $fecha_fin - Fecha de finalización del contrato
+ * @property Carbon $fecha_inicio - Fecha de inicio del contrato
+ * @property Carbon|null $fecha_fin - Fecha de finalización del contrato
  * @property float $valor_diario - Valor diario del alquiler
  * @property string $estado - 'activo', 'finalizado', 'cancelado'
  * @property string|null $observaciones
@@ -56,7 +58,7 @@ class Contrato extends Model
     /**
      * Relación: Un contrato pertenece a un vehículo.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
     public function vehiculo()
     {
@@ -66,7 +68,7 @@ class Contrato extends Model
     /**
      * Relación: Un contrato pertenece a una persona (cliente).
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
     public function persona()
     {

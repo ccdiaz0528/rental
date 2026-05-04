@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Widget de estadísticas del escritorio (Dashboard).
- * 
+ *
  * Este widget muestra un resumen visual de las métricas más importantes
  * del sistema de rental de vehículos:
  * - Estadísticas diarias: ingreso de hoy, esperado, gastos
@@ -20,20 +20,18 @@ use Illuminate\Support\Collection;
  * - Estadísticas mensuales: esperado, neto
  * - Información de flota: vehículos activos, conductor asignado, contratos
  * - Alertas de documentos: SOAT y tecnomecánica por vencer/vencidos
- * 
+ *
  * Se muestra en el panel de administración al iniciar sesión.
  */
 class StatsOverview extends BaseWidget
 {
     /**
      * Orden de aparición en el escritorio (1 = primero).
-     * @var int|null
      */
     protected static ?int $sort = 1;
 
     /**
      * Distribución responsive: cada stat ocupa columna completa.
-     * @return array
      */
     public static function getDefaultMetrics(): array
     {
@@ -42,14 +40,14 @@ class StatsOverview extends BaseWidget
 
     /**
      * Genera las estadísticas a mostrar en el widget.
-     * 
+     *
      * Este método consulta:
      * 1. Vehículos activos del sistema
      * 2. Registros de control diario de la semana actual
      * 3. Registros de control diario del mes actual
      * 4. Contratos activos
      * 5. Fechas de vencimiento de SOAT y tecnomecánica
-     * 
+     *
      * Calcula totales y neto (ingreso - gastos) para diferentes períodos.
      *
      * @return array<Stat> Array de estadísticas para mostrar
@@ -202,19 +200,19 @@ class StatsOverview extends BaseWidget
 
     /**
      * Calcula el resumen de ingresos, gastos y netos para diferentes períodos.
-     * 
+     *
      * Este método procesa los vehículos activos y sus registros de control diario
      * para calcular:
      * - Hoy: esperado, real, gastos, neto
      * - Semana: esperado, real, gastos, neto
      * - Mes: esperado, real, gastos, neto
      *
-     * @param Collection $vehiculos - Colección de vehículos activos
-     * @param Collection $registrosSemana - Registros de control diario de la semana
-     * @param Collection $registrosMes - Registros de control diario del mes
+     * @param  Collection  $vehiculos  - Colección de vehículos activos
+     * @param  Collection  $registrosSemana  - Registros de control diario de la semana
+     * @param  Collection  $registrosMes  - Registros de control diario del mes
      * @return array Array con todas las métricas calculadas
      */
-private function calcularResumen(Collection $vehiculos, Collection $registrosSemana, Collection $registrosMes): array
+    private function calcularResumen(Collection $vehiculos, Collection $registrosSemana, Collection $registrosMes): array
     {
         $hoy = now()->startOfDay();
         $inicioSemana = now()->startOfWeek(Carbon::SUNDAY);
@@ -259,7 +257,7 @@ private function calcularResumen(Collection $vehiculos, Collection $registrosSem
         // Calcular real_mes considerando valores por defecto para días sin registro
         $inicioMes = now()->startOfMonth();
         $hoy = now()->startOfDay();
-        
+
         foreach ($vehiculos as $v) {
             for ($d = 1; $d <= $diasMes; $d++) {
                 $fecha = $inicioMes->copy()->addDays($d - 1);
@@ -267,7 +265,7 @@ private function calcularResumen(Collection $vehiculos, Collection $registrosSem
                     break;
                 }
                 $registro = $registrosMes->firstWhere(fn ($r) => $r->fecha->isSameDay($fecha) && $r->vehiculo_id === $v->id);
-                
+
                 if ($registro) {
                     $gastos_mes += (float) ($registro->gasto ?? 0);
                     $trabajo = $registro->trabajo ?? true;
@@ -297,10 +295,10 @@ private function calcularResumen(Collection $vehiculos, Collection $registrosSem
 
     /**
      * Calcula las métricas (esperado, real, gastos) para un día específico.
-     * 
-     * @param Carbon $fecha - Fecha a calcular
-     * @param Collection $vehiculos - Vehículos activos
-     * @param Collection $registros - Registros de control diario
+     *
+     * @param  Carbon  $fecha  - Fecha a calcular
+     * @param  Collection  $vehiculos  - Vehículos activos
+     * @param  Collection  $registros  - Registros de control diario
      * @return array Métricas del día: esperado, real, gastos, neto
      */
     private function calcularDia(Carbon $fecha, Collection $vehiculos, Collection $registros): array
@@ -312,15 +310,15 @@ private function calcularResumen(Collection $vehiculos, Collection $registrosSem
         foreach ($vehiculos as $vehiculo) {
             // Buscar registro para este vehículo en esta fecha
             $registro = $registros->firstWhere(fn ($r) => $r->fecha->isSameDay($fecha) && $r->vehiculo_id === $vehiculo->id);
-            
+
             // Sumar esperado (siempre es la cuota_diaria)
             $esperado += (float) $vehiculo->cuota_diaria;
-            
+
             // Calcular real: si hay registro y trabajó, usar valor_generado; si no trabajó, usar 0; si no hay registro, usar cuota_diaria
             $real += $registro
                 ? ($registro->trabajo ? (float) $registro->valor_generado : (float) $vehiculo->cuota_diaria)
                 : (float) $vehiculo->cuota_diaria;
-            
+
             // Sumar gastos del registro o 0
             $gastos += (float) ($registro?->gasto ?? 0);
         }
@@ -330,8 +328,8 @@ private function calcularResumen(Collection $vehiculos, Collection $registrosSem
 
     /**
      * Obtiene alertas de vehículos con documentos por vencer o vencidos.
-     * 
-     * @param Collection $vehiculos - Todos los vehículos
+     *
+     * @param  Collection  $vehiculos  - Todos los vehículos
      * @return array Array con conteos de: soat_por_vencer, soat_vencido, tecnomecanica_por_vencer, tecnomecanica_vencida
      */
     private function getAlertasVencimientos(Collection $vehiculos): array
@@ -350,8 +348,8 @@ private function calcularResumen(Collection $vehiculos, Collection $registrosSem
 
     /**
      * Formatea un número como dinero en pesos colombianos.
-     * 
-     * @param float|int|string $amount - Cantidad a formatear
+     *
+     * @param  float|int|string  $amount  - Cantidad a formatear
      * @return string Cantidad formateada (ej: $1.234.567)
      */
     private function money(float|int|string $amount): string
