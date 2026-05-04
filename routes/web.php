@@ -2,12 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
 Route::get('documento/contratos/{path}', function (string $path) {
+    if (! Auth::check()) {
+        abort(401, 'Unauthorized');
+    }
     if (! Storage::disk('local')->exists($path)) {
         abort(404, 'File not found: '.$path);
     }
