@@ -16,14 +16,16 @@
                 align-items: center;
                 justify-content: center;
                 color: #fff;
+                padding: 1.5rem;
             }
             .container {
                 text-align: center;
                 padding: 2rem;
                 max-width: 600px;
+                width: 100%;
             }
             h1 {
-                font-size: 2.5rem;
+                font-size: clamp(2rem, 8vw, 3.5rem);
                 font-weight: 700;
                 margin-bottom: 1rem;
                 background: linear-gradient(90deg, #22c55e, #3b82f6);
@@ -32,7 +34,7 @@
                 background-clip: text;
             }
             .subtitle {
-                font-size: 1.125rem;
+                font-size: clamp(0.875rem, 3vw, 1.125rem);
                 color: #94a3b8;
                 margin-bottom: 2rem;
             }
@@ -46,6 +48,8 @@
                 font-weight: 600;
                 font-size: 1rem;
                 transition: all 0.2s;
+                width: 100%;
+                max-width: 280px;
             }
             .btn:hover {
                 background: #16a34a;
@@ -66,7 +70,7 @@
             }
             .features {
                 display: flex;
-                gap: 2rem;
+                gap: 1rem;
                 justify-content: center;
                 margin-top: 2rem;
                 flex-wrap: wrap;
@@ -76,13 +80,19 @@
                 align-items: center;
                 gap: 0.5rem;
                 color: #cbd5e1;
-                font-size: 0.875rem;
+                font-size: 0.75rem;
             }
             .feature span {
                 width: 8px;
                 height: 8px;
                 background: #22c55e;
                 border-radius: 50%;
+            }
+
+            @media (min-width: 640px) {
+                .btn { width: auto; }
+                .feature { font-size: 0.875rem; }
+                .features { gap: 2rem; }
             }
         </style>
     </head>
