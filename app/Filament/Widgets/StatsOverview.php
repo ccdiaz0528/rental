@@ -32,6 +32,15 @@ class StatsOverview extends BaseWidget
     protected static ?int $sort = 1;
 
     /**
+     * Distribución responsive: cada stat ocupa columna completa.
+     * @return array
+     */
+    public static function getDefaultMetrics(): array
+    {
+        return [];
+    }
+
+    /**
      * Genera las estadísticas a mostrar en el widget.
      * 
      * Este método consulta:
@@ -85,93 +94,109 @@ class StatsOverview extends BaseWidget
         $alertas = $this->getAlertasVencimientos($todos);
 
         return [
-            // Estructura: Stat::make('Etiqueta', 'Valor')->description('Descripción')->descriptionIcon('icono')->color('color')
+            // Estructura: Stat::make('Etiqueta', 'Valor')->description('Descripción')->descriptionIcon('icono')->color('color')->columnSpan('full')
 
             // Estadísticas de HOY
             Stat::make('Ingreso hoy', $this->money($resumen['neto_hoy']))
                 ->description('Ingreso real del día')
                 ->descriptionIcon('heroicon-o-currency-dollar')
-                ->color($resumen['neto_hoy'] >= 0 ? 'success' : 'danger'),
+                ->color($resumen['neto_hoy'] >= 0 ? 'success' : 'danger')
+                ->columnSpan('full'),
 
             Stat::make('Esperado hoy', $this->money($resumen['esperado_hoy']))
                 ->description('Cuota base diaria')
                 ->descriptionIcon('heroicon-o-banknotes')
-                ->color('info'),
+                ->color('info')
+                ->columnSpan('full'),
 
             Stat::make('Gastos hoy', $this->money($resumen['gastos_hoy']))
                 ->description('Gastos del día')
                 ->descriptionIcon('heroicon-o-receipt-percent')
-                ->color('danger'),
+                ->color('danger')
+                ->columnSpan('full'),
 
             // Estadísticas de la SEMANA
             Stat::make('Esperado semana', $this->money($resumen['esperado_semana']))
                 ->description('6 días de operación')
                 ->descriptionIcon('heroicon-o-calendar')
-                ->color('info'),
+                ->color('info')
+                ->columnSpan('full'),
 
             Stat::make('Neto semana', $this->money($resumen['neto_semana']))
                 ->description('Ingreso menos gastos')
                 ->descriptionIcon('heroicon-o-chart-bar')
-                ->color($resumen['neto_semana'] >= 0 ? 'success' : 'danger'),
+                ->color($resumen['neto_semana'] >= 0 ? 'success' : 'danger')
+                ->columnSpan('full'),
 
             Stat::make('Gastos semana', $this->money($resumen['gastos_semana']))
                 ->description('Total semanal')
                 ->descriptionIcon('heroicon-o-receipt-percent')
-                ->color('warning'),
+                ->color('warning')
+                ->columnSpan('full'),
 
             // Estadísticas del MES
             Stat::make('Esperado mes', $this->money($resumen['esperado_mes']))
                 ->description('Del mes en curso')
                 ->descriptionIcon('heroicon-o-calendar-days')
-                ->color('info'),
+                ->color('info')
+                ->columnSpan('full'),
 
             Stat::make('Neto mes', $this->money($resumen['neto_mes']))
                 ->description('Ingreso menos gastos')
                 ->descriptionIcon('heroicon-o-banknotes')
-                ->color($resumen['neto_mes'] >= 0 ? 'success' : 'danger'),
+                ->color($resumen['neto_mes'] >= 0 ? 'success' : 'danger')
+                ->columnSpan('full'),
 
             // Información de la FLOTA
             Stat::make('Vehículos activos', $vehiculosActivos->count())
                 ->description('En operación')
                 ->descriptionIcon('heroicon-o-truck')
-                ->color('success'),
+                ->color('success')
+                ->columnSpan('full'),
 
             Stat::make('Con conductor', $vehiculosActivos->whereNotNull('persona_id')->count())
                 ->description('Asignados')
                 ->descriptionIcon('heroicon-o-user-group')
-                ->color('success'),
+                ->color('success')
+                ->columnSpan('full'),
 
             Stat::make('Contratos activos', Contrato::where('estado', 'activo')->count())
                 ->description('Vigentes')
                 ->descriptionIcon('heroicon-o-document-text')
-                ->color('info'),
+                ->color('info')
+                ->columnSpan('full'),
 
             Stat::make('Ajustes semana', $registrosSemana->count())
                 ->description('Celdas modificadas')
                 ->descriptionIcon('heroicon-o-pencil-square')
-                ->color($registrosSemana->count() > 0 ? 'warning' : 'gray'),
+                ->color($registrosSemana->count() > 0 ? 'warning' : 'gray')
+                ->columnSpan('full'),
 
             // Alertas de SOAT
             Stat::make('SOAT por vencer', $alertas['soat_por_vencer'])
                 ->description('Vence en ≤30 días')
                 ->descriptionIcon('heroicon-o-shield-check')
-                ->color($alertas['soat_por_vencer'] > 0 ? 'warning' : 'gray'),
+                ->color($alertas['soat_por_vencer'] > 0 ? 'warning' : 'gray')
+                ->columnSpan('full'),
 
             Stat::make('SOAT vencido', $alertas['soat_vencido'])
                 ->description('Vencido')
                 ->descriptionIcon('heroicon-o-shield-exclamation')
-                ->color($alertas['soat_vencido'] > 0 ? 'danger' : 'gray'),
+                ->color($alertas['soat_vencido'] > 0 ? 'danger' : 'gray')
+                ->columnSpan('full'),
 
             // Alertas de Tecnomecánica
             Stat::make('Tecnomecánica por vencer', $alertas['tecnomecanica_por_vencer'])
                 ->description('Vence en ≤30 días')
                 ->descriptionIcon('heroicon-o-wrench-screwdriver')
-                ->color($alertas['tecnomecanica_por_vencer'] > 0 ? 'warning' : 'gray'),
+                ->color($alertas['tecnomecanica_por_vencer'] > 0 ? 'warning' : 'gray')
+                ->columnSpan('full'),
 
             Stat::make('Tecnomecánica vencida', $alertas['tecnomecanica_vencida'])
                 ->description('Vencido')
                 ->descriptionIcon('heroicon-o-wrench-screwdriver')
-                ->color($alertas['tecnomecanica_vencida'] > 0 ? 'danger' : 'gray'),
+                ->color($alertas['tecnomecanica_vencida'] > 0 ? 'danger' : 'gray')
+                ->columnSpan('full'),
         ];
     }
 
