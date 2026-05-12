@@ -2,70 +2,85 @@
 
 ## Stack
 - Laravel 13 + Filament 5.6.1, PHP 8.3
-- Vite + Tailwind CSS 4
-- SQLite (dev) / MySQL (prod)
-- No API routes
+- Vite + Tailwind CSS 4 (usando `@tailwindcss/vite`)
+- MySQL (Laragon local) / SQLite (tests)
+- Moneda: COP (pesos colombianos)
 
-## Project Setup
+## Commands
 - `composer setup` - installs deps, generates key, migrates, builds assets
-- Dev server: `php artisan serve`
-- Tests: `composer test` (clears config first)
-- Format: `vendor/bin/pint`
-- Assets: `npm run dev` / `npm run build`
-- Old assets break styling: `rm public/css -Recurse -Force`
+- `composer test` - clears config + runs phpunit (uses SQLite in-memory)
+- `npm run dev` - assets con hot reload (Vite)
+- `npm run build` - assets para producción
+- `vendor/bin/pint` - format code
+- Dev server: http://rental-manager.test (Laragon) o `php artisan serve`
+- Old assets break styling: `Remove-Item -Recurse -Force public/css` (Windows)
 - Seeded user: `test@example.com` / `password`
 
 ## Architecture
 
-### Filament Panel
-- Panel at `/admin`, login required
-- Custom theme: `resources/css/filament/admin/theme.css`
-- Brand logo: `resources/views/filament/custom-logo.blade.php`
+### Panel Structure
+- Panel at `/admin`, requires login
+- Theme: `resources/css/filament/admin/theme.css`
+- Brand logo: `resources/views/filament/custom-logo.blade.php` (uses `favicon.png`)
 - Auto-discovers resources/pages/widgets from `app/Filament/`
 
-### Resource Structure (split layout)
-Each resource follows `app/Filament/Resources/<Domain>/`:
-- `Pages/`: List, Create, View, Edit page classes
-- `Schemas/`: Form (`.php`), Infolist (`.php`) — `form($schema)` and `infolist($schema)` methods on the resource delegate to these
-- `Tables/`: Table class
-
-Filament 5 pattern:
+### Resource Structure (Filament 5 split layout)
+```
+app/Filament/Resources/<Domain>/
+├── Resource.php
+├── Pages/ (List, Create, View, Edit)
+├── Schemas/ (Form.php, Infolist.php)
+└── Tables/ (Table.php)
+```
+Pattern:
 ```php
 public static function form(Schema $schema): Schema { return MyForm::configure($schema); }
-public static function infolist(Schema $schema): Schema { return MyInfolist::configure($schema); }
 public static function table(Table $table): Table { return MyTable::configure($table); }
 ```
 
 ### Models
-| Model | Table | Notes |
+| Model | Table | Key Fields |
 |---|---|---|
-| `Persona` | `personas` | tipo: cliente/conductor; has vehiculos (conductor), contratos |
-| `Vehiculo` | `vehiculos` | placa, cuota_diaria, estado; has contratos, controlDiarios; SOAT/tecnomecánico dates |
-| `Contrato` | `contratos` | vehiculo_id, persona_id; fecha_inicio, fecha_fin, valor_diario, estado, documento |
-| `ControlDiario` | `control_diarios` | vehiculo_id, fecha, trabajo(bool), valor_generado, gasto; defaults: trabajo=true, valor=cuota_diaria |
-| `Configuracion` | `configuraciones` | clave/valor KV store; `Configuracion::get($key, $default)`, `Configuracion::set($key, $value)` |
+| `Persona` | `personas` | nombre, cedula, telefono, tipo (conductor/propietario/otro) |
+| `Vehiculo` | `vehiculos` | placa, marca, modelo, anio, color, persona_id, cuota_diaria, estado, fecha_vencimiento_soat, fecha_vencimiento_tecnomecanico |
+| `Contrato` | `contratos` | vehiculo_id, persona_id, tipo (alquiler/opcion_compra), fecha_inicio, fecha_fin, valor_diario, estado, documento (file path) |
+| `ControlDiario` | `control_diarios` | vehiculo_id, fecha, trabajo (bool), valor_generado, gasto, observaciones |
+| `Configuracion` | `configuraciones` | clave/valor KV store |
+
+### Relationships
+- Persona hasMany Contratos, hasMany Vehiculos (as conductor)
+- Vehiculo belongsTo Persona, hasMany Contratos, hasMany ControlDiarios
+- Contrato belongsTo Vehiculo, belongsTo Persona
+- ControlDiario belongsTo Vehiculo
 
 ### Pages & Widgets
-- `app/Filament/Pages/ControlSemanal.php` — custom weekly spreadsheet page (domingo-sábado), cell-level editing via modal, week history sidebar, admin costo configurable via `configuraciones.administracion_semanal`
-- `app/Filament/Widgets/StatsOverview.php` — 14 stats: daily/weekly/monthly income, fleet counts, SOAT/tecnomecánico alerts
-- `app/Filament/Widgets/PagosRecientesWidget.php` — last 10 control diario modifications
+- `ControlSemanal.php` - Custom weekly spreadsheet (domingo-sábado), cell editing via modal, week history sidebar, admin costo via `configuraciones.administracion_semanal`
+- `StatsOverview.php` - 14 stats: daily/weekly/monthly income, fleet counts, SOAT/tecnomecánico alerts (≤30 days warning)
+- `PagosRecientesWidget.php` - Last 10 control diario modifications
 
 ### Routes
 - `/` → `welcome.blade.php`
 - `/admin` → Filament panel
-- `/documento/contratos/{path}` → protected file viewer for contrato documents (requires auth, local disk)
+- `/documento/contratos/{path}` → protected file viewer (requires auth, local disk)
 
 ## Important Behaviors
 
-- **ControlDiario defaults**: if no record exists for a vehicle/day, system assumes trabajo=true and uses vehicle's cuota_diaria. Deleting a registro reverts to defaults.
-- **Vehiculo deletion**: blocked if has contratos or controlDiarios. Check `canBeDeleted()` / `deletionBlockers()`.
-- **Contrato documento**: stored as file path, served via `/documento/contratos/` route
-- **Spanish labels**: all field labels, navigation, and model attributes use Spanish. Preserve this.
+- **ControlDiario defaults**: no record = trabajo=true, valor=cuota_diaria. Deleting reverts to defaults.
+- **Vehiculo deletion**: blocked if has contratos or controlDiarios. Uses `canBeDeleted()` / `deletionBlockers()`.
+- **Contrato documento**: stored as file path, served via `/documento/contratos/` route. Supports pdf, doc/docx, images.
+- **Vehiculo SOAT/Tecnomecanica**: color-coded badges (success/warning/danger) in tables and StatsOverview.
+- **Spanish only**: all labels, navigation, and attributes use Spanish.
 
 ## Composer Lifecycle
 - `post-autoload-dump`: `php artisan package:discover && php artisan filament:upgrade`
 - `post-update-cmd`: `php artisan vendor:publish --tag=laravel-assets --force`
 
+## Testing
+- Uses SQLite in-memory (`DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`)
+- Tests clear config first: `php artisan config:clear --ansi`
+- No integration tests currently exist (tests/Unit and tests/Feature are empty)
+
 ## Verification
-- `composer test` + `vendor/bin/pint`
-- Test Filament changes at `/admin/...` screens
+1. `composer test`
+2. `vendor/bin/pint`
+3. Test Filament changes at `/admin/...` screens
