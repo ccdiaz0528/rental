@@ -23,11 +23,19 @@ class UserResource extends Resource
 
     protected static ?string $navigationLabel = 'Usuarios';
 
-    protected static ?string $pluralNavigationLabel = 'Usuarios';
-
     protected static ?int $navigationSort = 99;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getPluralModelLabel(): string
+    {
+        return 'Usuarios';
+    }
+
+    public static function getModelLabel(): string
+    {
+        return 'Usuario';
+    }
 
     public static function canViewAny(): bool
     {

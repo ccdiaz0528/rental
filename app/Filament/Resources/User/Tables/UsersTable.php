@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\User\Tables;
 
+use App\Models\User;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TagsColumn;
@@ -28,9 +31,14 @@ class UsersTable
             ])
             ->actions([
                 EditAction::make(),
+                DeleteAction::make()
+                    ->visible(fn (User $record) => $record->id !== auth()->id()),
             ])
             ->bulkActions([
-                DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
+                        ->deselectRecordsAfterCompletion(),
+                ]),
             ]);
     }
 }
