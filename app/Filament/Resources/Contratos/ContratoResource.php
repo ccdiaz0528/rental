@@ -27,11 +27,6 @@ class ContratoResource extends Resource
 
     protected static ?string $recordTitleAttribute = null;
 
-    public static function getRecordTitle($record): string
-    {
-        return $record->vehiculo->placa.' - '.$record->persona->nombre;
-    }
-
     public static function getGloballySearchableAttributes(): array
     {
         return ['tipo', 'estado'];

@@ -8,6 +8,7 @@ use App\Models\Vehiculo;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Collection;
 
 class ControlSemanal extends Page
 {
@@ -30,6 +31,8 @@ class ControlSemanal extends Page
     public ?int $selectedVehiculoId = null;
 
     public ?string $selectedFecha = null;
+
+    public ?array $cachedVehiculo = null;
 
     public array $modalForm = [
         'trabajo' => true,
@@ -74,6 +77,13 @@ class ControlSemanal extends Page
     {
         $vehiculo = Vehiculo::query()->with('persona')->findOrFail($vehiculoId);
 
+        $this->cachedVehiculo = [
+            'id' => $vehiculo->id,
+            'placa' => $vehiculo->placa,
+            'cuota_diaria' => $vehiculo->cuota_diaria,
+            'persona_nombre' => $vehiculo->persona?->nombre,
+        ];
+
         $registro = ControlDiario::query()
             ->where('vehiculo_id', $vehiculoId)
             ->whereDate('fecha', $fecha)
@@ -96,6 +106,7 @@ class ControlSemanal extends Page
         $this->isModalOpen = false;
         $this->selectedVehiculoId = null;
         $this->selectedFecha = null;
+        $this->cachedVehiculo = null;
         $this->modalForm = [
             'trabajo' => true,
             'valor_generado' => 0,
@@ -124,7 +135,8 @@ class ControlSemanal extends Page
             return;
         }
 
-        $vehiculo = Vehiculo::query()->findOrFail($this->selectedVehiculoId);
+        $valorPorDefecto = (float) ($this->cachedVehiculo['cuota_diaria'] ?? 0);
+
         $registro = ControlDiario::query()->firstOrNew([
             'vehiculo_id' => $this->selectedVehiculoId,
             'fecha' => $this->selectedFecha,
@@ -134,7 +146,6 @@ class ControlSemanal extends Page
         $valorGenerado = $trabajo ? (float) $this->modalForm['valor_generado'] : 0;
         $gasto = (float) ($this->modalForm['gasto'] ?? 0);
         $observaciones = trim((string) ($this->modalForm['observaciones'] ?? ''));
-        $valorPorDefecto = (float) $vehiculo->cuota_diaria;
 
         $isDefault = $trabajo
             && abs($valorGenerado - $valorPorDefecto) < 0.01
@@ -183,7 +194,7 @@ class ControlSemanal extends Page
             ->with('persona')
             ->where('estado', 'activo')
             ->orderBy('placa');
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             $vehiculoQuery->where('user_id', auth()->id());
         }
         $vehiculos = $vehiculoQuery->get();
@@ -191,17 +202,13 @@ class ControlSemanal extends Page
         $fechas = collect(range(0, 6))
             ->map(fn (int $offset) => $weekStart->copy()->addDays($offset));
 
-        $registrosQuery = $vehiculos->isEmpty()
+        $registros = $vehiculos->isEmpty()
             ? collect()
             : ControlDiario::query()
                 ->whereIn('vehiculo_id', $vehiculos->pluck('id'))
-                ->whereBetween('fecha', [$weekStart->toDateString(), $weekEnd->toDateString()]);
-        if (!$isAdmin) {
-            $registrosQuery->where('control_diarios.user_id', auth()->id());
-        }
-        $registros = $vehiculos->isEmpty()
-            ? collect()
-            : $registrosQuery->get()
+                ->whereBetween('fecha', [$weekStart->toDateString(), $weekEnd->toDateString()])
+                ->when(! $isAdmin, fn ($q) => $q->where('control_diarios.user_id', auth()->id()))
+                ->get()
                 ->keyBy(fn (ControlDiario $registro) => $registro->fecha->toDateString().'-'.$registro->vehiculo_id);
 
         $rows = [];
@@ -291,12 +298,34 @@ class ControlSemanal extends Page
 
     public function getWeekHistory(): array
     {
-        $history = [];
         $baseWeek = $this->weekStart();
+        $isAdmin = auth()->user()->hasRole('admin');
+
+        $oldestWeek = $baseWeek->copy()->subWeeks(11)->startOfWeek(Carbon::SUNDAY);
+        $newestWeek = $baseWeek->copy()->addDays(6);
+
+        $vehiculos = Vehiculo::query()
+            ->where('estado', 'activo')
+            ->when(! $isAdmin, fn ($q) => $q->where('user_id', auth()->id()))
+            ->get(['id', 'cuota_diaria']);
+
+        $allRegistros = $vehiculos->isEmpty()
+            ? collect()
+            : ControlDiario::query()
+                ->whereIn('vehiculo_id', $vehiculos->pluck('id'))
+                ->whereBetween('fecha', [$oldestWeek->toDateString(), $newestWeek->toDateString()])
+                ->when(! $isAdmin, fn ($q) => $q->where('control_diarios.user_id', auth()->id()))
+                ->get()
+                ->groupBy(fn ($r) => $r->fecha->copy()->startOfWeek(Carbon::SUNDAY)->toDateString());
+
+        $history = [];
 
         for ($index = 0; $index < 12; $index++) {
-            $weekStart = $baseWeek->copy()->subWeeks($index);
-            $item = $this->buildWeekHistoryItem($weekStart);
+            $weekStart = $baseWeek->copy()->subWeeks($index)->startOfWeek(Carbon::SUNDAY);
+            $weekEnd = $weekStart->copy()->addDays(6);
+            $weekRegistros = $allRegistros->get($weekStart->toDateString(), collect());
+
+            $item = $this->buildWeekHistoryFromData($weekStart, $weekEnd, $vehiculos, $weekRegistros);
 
             if (($item['novedades'] ?? 0) === 0) {
                 continue;
@@ -327,13 +356,9 @@ class ControlSemanal extends Page
         };
     }
 
-    public function selectedVehiculo(): ?Vehiculo
+    public function selectedVehiculo(): ?array
     {
-        if (! $this->selectedVehiculoId) {
-            return null;
-        }
-
-        return Vehiculo::query()->with('persona')->find($this->selectedVehiculoId);
+        return $this->cachedVehiculo;
     }
 
     private function weekStart(): Carbon
@@ -341,44 +366,31 @@ class ControlSemanal extends Page
         return Carbon::parse($this->selectedDate)->startOfWeek(Carbon::SUNDAY);
     }
 
-    private function buildWeekHistoryItem(Carbon $weekStart): array
-    {
-        $weekEnd = $weekStart->copy()->addDays(6);
-        $isAdmin = auth()->user()->hasRole('admin');
-
-        $vehiculoQuery = Vehiculo::query()
-            ->where('estado', 'activo');
-        if (!$isAdmin) {
-            $vehiculoQuery->where('user_id', auth()->id());
-        }
-        $vehiculos = $vehiculoQuery->get(['id', 'cuota_diaria']);
-
-        $registrosQuery = $vehiculos->isEmpty()
-            ? collect()
-            : ControlDiario::query()
-                ->whereIn('vehiculo_id', $vehiculos->pluck('id'))
-                ->whereBetween('fecha', [$weekStart->toDateString(), $weekEnd->toDateString()]);
-        if (!$isAdmin) {
-            $registrosQuery->where('control_diarios.user_id', auth()->id());
-        }
-        $registros = $vehiculos->isEmpty() ? collect() : $registrosQuery->get();
-
+    private function buildWeekHistoryFromData(
+        Carbon $weekStart,
+        Carbon $weekEnd,
+        Collection $vehiculos,
+        Collection $registros
+    ): array {
         $esperado = 0;
         $real = 0;
         $gastos = 0;
         $diasSinTrabajo = 0;
 
-        foreach (range(0, 6) as $offset) {
-            $fecha = $weekStart->copy()->addDays($offset);
+        $registrosByKey = $registros->keyBy(fn ($r) => $r->vehiculo_id.'-'.$r->fecha->format('Y-m-d'));
+
+        for ($offset = 0; $offset < 7; $offset++) {
+            $key = $weekStart->copy()->addDays($offset)->format('Y-m-d');
 
             foreach ($vehiculos as $vehiculo) {
-                $registro = $registros->first(fn (ControlDiario $item) => $item->vehiculo_id === $vehiculo->id && $item->fecha->isSameDay($fecha));
                 $valorBase = (float) $vehiculo->cuota_diaria;
+                $esperado += $valorBase;
+
+                $registro = $registrosByKey->get($vehiculo->id.'-'.$key);
                 $trabajo = $registro?->trabajo ?? true;
                 $ingreso = $trabajo ? (float) ($registro?->valor_generado ?? $valorBase) : 0;
                 $gasto = (float) ($registro?->gasto ?? 0);
 
-                $esperado += $valorBase;
                 $real += $ingreso;
                 $gastos += $gasto;
 

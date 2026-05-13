@@ -24,7 +24,7 @@ class PagosRecientesWidget extends BaseWidget
             ->with(['vehiculo.persona'])
             ->latest('updated_at')
             ->limit(10);
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             $query->where('control_diarios.user_id', auth()->id());
         }
 

@@ -33,7 +33,7 @@ class Vehiculo extends Model
     protected static function booted(): void
     {
         static::addGlobalScope('user', function (Builder $builder) {
-            if (auth()->check() && !auth()->user()->hasRole('admin')) {
+            if (auth()->check() && ! auth()->user()->hasRole('admin')) {
                 $builder->where('user_id', auth()->id());
             }
         });
@@ -61,19 +61,19 @@ class Vehiculo extends Model
 
     public function canBeDeleted(): bool
     {
-        return ! $this->contratos()->exists()
-            && ! $this->controlDiarios()->exists();
+        return ($this->contratos_count ?? $this->contratos()->count()) === 0
+            && ($this->control_diarios_count ?? $this->controlDiarios()->count()) === 0;
     }
 
     public function deletionBlockers(): string
     {
         $blockers = [];
 
-        if ($this->contratos()->exists()) {
+        if (($this->contratos_count ?? $this->contratos()->count()) > 0) {
             $blockers[] = 'contratos';
         }
 
-        if ($this->controlDiarios()->exists()) {
+        if (($this->control_diarios_count ?? $this->controlDiarios()->count()) > 0) {
             $blockers[] = 'controles semanales';
         }
 

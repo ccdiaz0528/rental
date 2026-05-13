@@ -323,9 +323,9 @@
                         <div>
                             <h3 class="text-lg font-semibold">Ajustar registro semanal</h3>
                             <p class="text-sm text-gray-500">
-                                {{ $this->selectedVehiculo()?->placa }}
-                                @if ($this->selectedVehiculo()?->persona?->nombre)
-                                    · {{ $this->selectedVehiculo()?->persona?->nombre }}
+                                {{ $this->selectedVehiculo()?->placa ?? $this->selectedVehiculo()['placa'] ?? '' }}
+                                @if ($this->selectedVehiculo()?->persona?->nombre ?? $this->selectedVehiculo()['persona_nombre'] ?? false)
+                                    · {{ $this->selectedVehiculo()?->persona?->nombre ?? $this->selectedVehiculo()['persona_nombre'] ?? '' }}
                                 @endif
                                 · {{ $selectedFecha ? \Carbon\Carbon::parse($selectedFecha)->format('d/m/Y') : '' }}
                             </p>

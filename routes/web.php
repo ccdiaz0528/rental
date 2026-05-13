@@ -12,10 +12,11 @@ Route::get('documento/contratos/{path}', function (string $path) {
     if (! Auth::check()) {
         abort(401, 'Unauthorized');
     }
+
     if (! Storage::disk('local')->exists($path)) {
         abort(404, 'File not found: '.$path);
     }
-    $file = Storage::disk('local')->get($path);
+
     $mime = match (pathinfo($path, PATHINFO_EXTENSION)) {
         'pdf' => 'application/pdf',
         'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -25,5 +26,14 @@ Route::get('documento/contratos/{path}', function (string $path) {
         default => 'application/octet-stream',
     };
 
-    return response($file, 200, ['Content-Type' => $mime, 'Content-Disposition' => 'inline; filename="'.basename($path).'"']);
+    return response()->stream(function () use ($path) {
+        $stream = Storage::disk('local')->readStream($path);
+        if ($stream) {
+            fpassthru($stream);
+            fclose($stream);
+        }
+    }, 200, [
+        'Content-Type' => $mime,
+        'Content-Disposition' => 'inline; filename="'.basename($path).'"',
+    ]);
 })->where('path', '.+')->name('contrato.documento');
