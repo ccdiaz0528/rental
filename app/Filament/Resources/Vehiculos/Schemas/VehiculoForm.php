@@ -19,6 +19,11 @@ class VehiculoForm
                 ->unique(ignoreRecord: true)
                 ->maxLength(10),
 
+            TextInput::make('administrador_vehiculo')
+                ->label('Administrador vehículo')
+                ->maxLength(255)
+                ->default(fn () => auth()->check() ? auth()->user()->name : null),
+
             TextInput::make('marca')
                 ->label('Marca')
                 ->maxLength(50),

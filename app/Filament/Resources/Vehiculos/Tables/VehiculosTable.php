@@ -22,6 +22,11 @@ class VehiculosTable
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('administrador_vehiculo')
+                    ->label('Administrador')
+                    ->searchable()
+                    ->placeholder('Sin asignar'),
+
                 TextColumn::make('marca')
                     ->label('Marca')
                     ->searchable(),
