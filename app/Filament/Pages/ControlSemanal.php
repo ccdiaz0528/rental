@@ -45,6 +45,11 @@ class ControlSemanal extends Page
         $this->administracion = (float) Configuracion::get('administracion_semanal', 0);
     }
 
+    public function isAdmin(): bool
+    {
+        return auth()->check() && auth()->user()->hasRole('admin');
+    }
+
     public function saveAdministracion(): void
     {
         Configuracion::set('administracion_semanal', (string) $this->administracion);

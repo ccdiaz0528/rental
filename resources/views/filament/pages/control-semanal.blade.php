@@ -42,16 +42,18 @@
                             @endif
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 xl:min-h-[140px]">
+                        <div class="grid {{ $this->isAdmin() ? 'grid-cols-2' : 'grid-cols-1' }} gap-4 xl:min-h-[140px]">
                         <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
                             <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Gastos</p>
                             <p class="mt-2 text-xl font-semibold">{{ $this->money($dataset['summary']['gastos']) }}</p>
                         </div>
+                        @if($this->isAdmin())
                         <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
                             <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Administración</p>
                             <p class="mt-2 text-xl font-semibold">{{ $this->money($dataset['summary']['administracion']) }}</p>
                         </div>
-                    </div>
+                        @endif
+                        </div>
                 </div>
             </div>
         </section>
@@ -65,6 +67,7 @@
                     </div>
 
                     <div class="flex flex-wrap items-end gap-4 xl:gap-6">
+                        @if($this->isAdmin())
                         <div class="flex flex-col gap-1.5">
                             <span class="text-xs font-medium text-slate-500 dark:text-slate-300">Admin Semanal</span>
                             <input
@@ -75,6 +78,7 @@
                                 placeholder="$ 0"
                             >
                         </div>
+                        @endif
 
                         <div class="flex flex-col gap-1.5">
                             <span class="text-xs font-medium text-slate-500 dark:text-slate-300">Ir a una fecha</span>
