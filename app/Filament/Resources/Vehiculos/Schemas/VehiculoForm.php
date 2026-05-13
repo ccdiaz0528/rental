@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Vehiculos\Schemas;
 
+use App\Models\User;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -19,10 +20,12 @@ class VehiculoForm
                 ->unique(ignoreRecord: true)
                 ->maxLength(10),
 
-            TextInput::make('administrador_vehiculo')
+            Select::make('administrador_vehiculo')
                 ->label('Administrador vehículo')
-                ->maxLength(255)
-                ->default(fn () => auth()->check() ? auth()->user()->name : null),
+                ->options(fn () => User::pluck('name', 'name'))
+                ->searchable()
+                ->nullable()
+                ->default(fn () => auth()->user()?->name),
 
             TextInput::make('marca')
                 ->label('Marca')
