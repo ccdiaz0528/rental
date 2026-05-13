@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class UserResource extends Resource
 {
@@ -22,11 +23,40 @@ class UserResource extends Resource
 
     protected static ?string $navigationLabel = 'Usuarios';
 
+    protected static ?string $pluralNavigationLabel = 'Usuarios';
+
     protected static ?int $navigationSort = 99;
 
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function canViewAny(): bool
+    {
+        return auth()->user()->hasRole('admin');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasRole('admin');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()->hasRole('admin');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        if (! $record instanceof User) {
+            return false;
+        }
+        if ($record->id === auth()->id()) {
+            return false;
+        }
+
+        return auth()->user()->hasRole('admin');
+    }
+
+    public static function canDeleteAny(): bool
     {
         return auth()->user()->hasRole('admin');
     }
