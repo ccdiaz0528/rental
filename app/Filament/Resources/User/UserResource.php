@@ -5,7 +5,9 @@ namespace App\Filament\Resources\User;
 use App\Filament\Resources\User\Pages\CreateUser;
 use App\Filament\Resources\User\Pages\EditUser;
 use App\Filament\Resources\User\Pages\ListUsers;
+use App\Filament\Resources\User\Pages\ViewUser;
 use App\Filament\Resources\User\Schemas\UserForm;
+use App\Filament\Resources\User\Schemas\UserInfolist;
 use App\Filament\Resources\User\Tables\UsersTable;
 use App\Models\User;
 use BackedEnum;
@@ -79,6 +81,11 @@ class UserResource extends Resource
         return UserForm::configure($schema);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return UserInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return UsersTable::configure($table);
@@ -89,6 +96,7 @@ class UserResource extends Resource
         return [
             'index' => ListUsers::route('/'),
             'create' => CreateUser::route('/create'),
+            'view' => ViewUser::route('/{record}'),
             'edit' => EditUser::route('/{record}/edit'),
         ];
     }
