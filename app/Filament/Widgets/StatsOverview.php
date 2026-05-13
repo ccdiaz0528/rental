@@ -54,41 +54,44 @@ class StatsOverview extends BaseWidget
      */
     protected function getStats(): array
     {
-        // Obtener fechas actuales
+        $isAdmin = auth()->user()->hasRole('admin');
+
         $hoy = now()->startOfDay();
         $inicioSemana = now()->startOfWeek(Carbon::SUNDAY);
         $finSemana = $inicioSemana->copy()->addDays(6);
 
-        // Obtener vehículos activos
-        $vehiculosActivos = Vehiculo::query()
-            ->where('estado', 'activo')
-            ->get(['id', 'cuota_diaria', 'persona_id']);
+        $vehiculoQuery = Vehiculo::query()->where('estado', 'activo');
+        if (!$isAdmin) {
+            $vehiculoQuery->where('user_id', auth()->id());
+        }
+        $vehiculosActivos = $vehiculoQuery->get(['id', 'cuota_diaria', 'persona_id']);
 
-        // Obtener registros de control diario de la semana actual
         $registrosSemana = $vehiculosActivos->isEmpty()
             ? collect()
             : ControlDiario::query()
                 ->whereIn('vehiculo_id', $vehiculosActivos->pluck('id'))
                 ->whereBetween('fecha', [$inicioSemana->toDateString(), $finSemana->toDateString()])
+                ->when(!$isAdmin, fn ($q) => $q->where('control_diarios.user_id', auth()->id()))
                 ->get();
 
-        // Filtrar registros de hoy
         $registrosHoy = $registrosSemana->filter(fn ($r) => $r->fecha->isSameDay($hoy));
 
-        // Obtener registros del mes actual
         $inicioMes = now()->startOfMonth();
         $registrosMes = $vehiculosActivos->isEmpty()
             ? collect()
             : ControlDiario::query()
                 ->whereIn('vehiculo_id', $vehiculosActivos->pluck('id'))
                 ->whereBetween('fecha', [$inicioMes->toDateString(), now()->toDateString()])
+                ->when(!$isAdmin, fn ($q) => $q->where('control_diarios.user_id', auth()->id()))
                 ->get();
 
-        // Calcular resumen de ingresos/gastos
         $resumen = $this->calcularResumen($vehiculosActivos, $registrosSemana, $registrosMes);
 
-        // Obtener alertas de vencimientos
-        $todos = Vehiculo::all();
+        $vehiculoAlertasQuery = Vehiculo::query();
+        if (!$isAdmin) {
+            $vehiculoAlertasQuery->where('user_id', auth()->id());
+        }
+        $todos = $vehiculoAlertasQuery->get();
         $alertas = $this->getAlertasVencimientos($todos);
 
         return [
@@ -146,12 +149,12 @@ class StatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-o-user-group')
                 ->color('success'),
 
-            Stat::make('Contratos alquiler', Contrato::where('estado', 'activo')->where('tipo', 'alquiler')->count())
+            Stat::make('Contratos alquiler', Contrato::query()->where('estado', 'activo')->where('tipo', 'alquiler')->when(!$isAdmin, fn ($q) => $q->where('contratos.user_id', auth()->id()))->count())
                 ->description('En alquiler')
                 ->descriptionIcon('heroicon-o-calendar')
                 ->color('info'),
 
-            Stat::make('Contratos opción compra', Contrato::where('estado', 'activo')->where('tipo', 'opcion_compra')->count())
+            Stat::make('Contratos opción compra', Contrato::query()->where('estado', 'activo')->where('tipo', 'opcion_compra')->when(!$isAdmin, fn ($q) => $q->where('contratos.user_id', auth()->id()))->count())
                 ->description('Opción de compra')
                 ->descriptionIcon('heroicon-o-shopping-cart')
                 ->color('info'),

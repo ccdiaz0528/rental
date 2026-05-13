@@ -32,7 +32,7 @@ class Vehiculo extends Model
     protected static function booted(): void
     {
         static::addGlobalScope('user', function (Builder $builder) {
-            if (auth()->check()) {
+            if (auth()->check() && !auth()->user()->hasRole('admin')) {
                 $builder->where('user_id', auth()->id());
             }
         });

@@ -19,13 +19,17 @@ class PagosRecientesWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
+        $isAdmin = auth()->user()->hasRole('admin');
+        $query = ControlDiario::query()
+            ->with(['vehiculo.persona'])
+            ->latest('updated_at')
+            ->limit(10);
+        if (!$isAdmin) {
+            $query->where('control_diarios.user_id', auth()->id());
+        }
+
         return $table
-            ->query(
-                ControlDiario::query()
-                    ->with(['vehiculo.persona'])
-                    ->latest('updated_at')
-                    ->limit(10)
-            )
+            ->query($query)
             ->columns([
                 TextColumn::make('fecha')
                     ->label('Fecha')

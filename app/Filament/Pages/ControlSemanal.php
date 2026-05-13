@@ -172,21 +172,31 @@ class ControlSemanal extends Page
     {
         $weekStart = $this->weekStart();
         $weekEnd = $weekStart->copy()->addDays(6);
-        $vehiculos = Vehiculo::query()
+        $isAdmin = auth()->user()->hasRole('admin');
+
+        $vehiculoQuery = Vehiculo::query()
             ->with('persona')
             ->where('estado', 'activo')
-            ->orderBy('placa')
-            ->get();
+            ->orderBy('placa');
+        if (!$isAdmin) {
+            $vehiculoQuery->where('user_id', auth()->id());
+        }
+        $vehiculos = $vehiculoQuery->get();
 
         $fechas = collect(range(0, 6))
             ->map(fn (int $offset) => $weekStart->copy()->addDays($offset));
 
-        $registros = $vehiculos->isEmpty()
+        $registrosQuery = $vehiculos->isEmpty()
             ? collect()
             : ControlDiario::query()
                 ->whereIn('vehiculo_id', $vehiculos->pluck('id'))
-                ->whereBetween('fecha', [$weekStart->toDateString(), $weekEnd->toDateString()])
-                ->get()
+                ->whereBetween('fecha', [$weekStart->toDateString(), $weekEnd->toDateString()]);
+        if (!$isAdmin) {
+            $registrosQuery->where('control_diarios.user_id', auth()->id());
+        }
+        $registros = $vehiculos->isEmpty()
+            ? collect()
+            : $registrosQuery->get()
                 ->keyBy(fn (ControlDiario $registro) => $registro->fecha->toDateString().'-'.$registro->vehiculo_id);
 
         $rows = [];
@@ -329,16 +339,24 @@ class ControlSemanal extends Page
     private function buildWeekHistoryItem(Carbon $weekStart): array
     {
         $weekEnd = $weekStart->copy()->addDays(6);
-        $vehiculos = Vehiculo::query()
-            ->where('estado', 'activo')
-            ->get(['id', 'cuota_diaria']);
+        $isAdmin = auth()->user()->hasRole('admin');
 
-        $registros = $vehiculos->isEmpty()
+        $vehiculoQuery = Vehiculo::query()
+            ->where('estado', 'activo');
+        if (!$isAdmin) {
+            $vehiculoQuery->where('user_id', auth()->id());
+        }
+        $vehiculos = $vehiculoQuery->get(['id', 'cuota_diaria']);
+
+        $registrosQuery = $vehiculos->isEmpty()
             ? collect()
             : ControlDiario::query()
                 ->whereIn('vehiculo_id', $vehiculos->pluck('id'))
-                ->whereBetween('fecha', [$weekStart->toDateString(), $weekEnd->toDateString()])
-                ->get();
+                ->whereBetween('fecha', [$weekStart->toDateString(), $weekEnd->toDateString()]);
+        if (!$isAdmin) {
+            $registrosQuery->where('control_diarios.user_id', auth()->id());
+        }
+        $registros = $vehiculos->isEmpty() ? collect() : $registrosQuery->get();
 
         $esperado = 0;
         $real = 0;
