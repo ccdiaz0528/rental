@@ -35,6 +35,7 @@ class ControlSemanal extends Page
         'trabajo' => true,
         'valor_generado' => 0,
         'gasto' => 0,
+        'categoria_gasto' => 'otro',
         'observaciones' => '',
     ];
 
@@ -79,6 +80,7 @@ class ControlSemanal extends Page
             'trabajo' => $registro?->trabajo ?? true,
             'valor_generado' => $registro?->valor_generado ?? $vehiculo->cuota_diaria,
             'gasto' => $registro?->gasto ?? 0,
+            'categoria_gasto' => $registro?->categoria_gasto ?? 'otro',
             'observaciones' => $registro?->observaciones ?? '',
         ];
         $this->isModalOpen = true;
@@ -93,18 +95,25 @@ class ControlSemanal extends Page
             'trabajo' => true,
             'valor_generado' => 0,
             'gasto' => 0,
+            'categoria_gasto' => 'otro',
             'observaciones' => '',
         ];
     }
 
     public function saveRegistro(): void
     {
-        $this->validate([
+        $rules = [
             'modalForm.trabajo' => ['required', 'boolean'],
             'modalForm.valor_generado' => ['required', 'numeric', 'min:0'],
             'modalForm.gasto' => ['nullable', 'numeric', 'min:0'],
             'modalForm.observaciones' => ['nullable', 'string', 'max:1000'],
-        ]);
+        ];
+
+        if ($this->modalForm['gasto'] > 0) {
+            $rules['modalForm.categoria_gasto'] = ['required', 'in:daño,mantenimiento,multa,otro'];
+        }
+
+        $this->validate($rules);
 
         if (! $this->selectedVehiculoId || ! $this->selectedFecha) {
             return;
@@ -146,6 +155,7 @@ class ControlSemanal extends Page
             'trabajo' => $trabajo,
             'valor_generado' => $valorGenerado,
             'gasto' => $gasto,
+            'categoria_gasto' => ($gasto > 0 && isset($this->modalForm['categoria_gasto'])) ? $this->modalForm['categoria_gasto'] : null,
             'observaciones' => $observaciones ?: null,
         ]);
         $registro->save();
@@ -219,6 +229,7 @@ class ControlSemanal extends Page
                     'fecha' => $fecha->toDateString(),
                     'ingreso' => $ingreso,
                     'gasto' => $gasto,
+                    'categoria_gasto' => $registro?->categoria_gasto,
                     'trabajo' => $trabajo,
                     'has_changes' => $registro !== null,
                     'observaciones' => $registro?->observaciones,

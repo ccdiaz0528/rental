@@ -158,6 +158,24 @@
                                             <div class="text-base font-semibold">{{ $this->money($cell['ingreso']) }}</div>
                                             @if ($cell['gasto'] > 0)
                                                 <div class="mt-1 text-xs font-medium">Gasto: {{ $this->money($cell['gasto']) }}</div>
+                                                @if ($cell['categoria_gasto'] && strlen($cell['categoria_gasto']) > 0)
+                                                    @php($categoria = $cell['categoria_gasto'])
+                                                    @php($colors = [
+                                                        'daño' => 'bg-danger-100 text-danger-700 dark:bg-danger-500/20 dark:text-danger-300',
+                                                        'mantenimiento' => 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
+                                                        'multa' => 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+                                                        'otro' => 'bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300'
+                                                    ])
+                                                    @php($labels = [
+                                                        'daño' => '🛠️ Daño',
+                                                        'mantenimiento' => '🔧 Mantenimiento',
+                                                        'multa' => '🚫 Multa',
+                                                        'otro' => '📋 Otro'
+                                                    ])
+                                                    <span class="mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold {{ $colors[$categoria] ?? $colors['otro'] }}">
+                                                        {{ $labels[$categoria] ?? '📋 Otro' }}
+                                                    </span>
+                                                @endif
                                             @endif
                                             @if (! $cell['trabajo'])
                                                 <div class="mt-1 text-xs font-medium">No trabajó</div>
@@ -343,9 +361,24 @@
                                 type="number"
                                 min="0"
                                 step="0.01"
-                                wire:model="modalForm.gasto"
+                                wire:model.live="modalForm.gasto"
                                 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-white/10 dark:bg-gray-950"
                             >
+                        </label>
+                    </div>
+
+                    <div x-data="{ gasto: {{ (float) $modalForm['gasto'] }} }" x-init="$watch('$wire.modalForm.gasto', value => gasto = parseFloat(value || 0))">
+                        <label class="block" x-show="gasto > 0" x-transition.opacity.duration.200ms>
+                            <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Categoría del gasto</span>
+                            <select
+                                wire:model="modalForm.categoria_gasto"
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-white/10 dark:bg-gray-950"
+                            >
+                                <option value="daño">Daño</option>
+                                <option value="mantenimiento">Mantenimiento</option>
+                                <option value="multa">Multa</option>
+                                <option value="otro">Otro</option>
+                            </select>
                         </label>
                     </div>
 

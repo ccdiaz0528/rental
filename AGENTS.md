@@ -9,11 +9,14 @@
 ## Commands
 - `composer setup` - installs deps, generates key, migrates, builds assets
 - `composer test` - clears config + runs phpunit (uses SQLite in-memory)
+- `composer dev` - runs php artisan serve + queue + logs + vite concurrently
 - `npm run dev` - assets con hot reload (Vite)
 - `npm run build` - assets para producción
 - `vendor/bin/pint` - format code
+- `php artisan tinker` - REPL para debugging
 - Dev server: http://rental-manager.test (Laragon) o `php artisan serve`
-- Old assets break styling: `Remove-Item -Recurse -Force public/css` (Windows)
+- Old assets break styling (Windows): `Remove-Item -Recurse -Force public/css`
+- Clear caches: `php artisan config:clear && php artisan view:clear`
 - Seeded user: `test@example.com` / `password`
 
 ## Architecture
@@ -25,26 +28,20 @@
 - Auto-discovers resources/pages/widgets from `app/Filament/`
 
 ### Resource Structure (Filament 5 split layout)
-```
-app/Filament/Resources/<Domain>/
-├── Resource.php
-├── Pages/ (List, Create, View, Edit)
-├── Schemas/ (Form.php, Infolist.php)
-└── Tables/ (Table.php)
-```
 Pattern:
 ```php
 public static function form(Schema $schema): Schema { return MyForm::configure($schema); }
 public static function table(Table $table): Table { return MyTable::configure($table); }
 ```
+Files live under `app/Filament/Resources/<Domain>/` — Resource.php, Pages/, Schemas/, Tables/
 
-### Models
+### Models & Key Fields
 | Model | Table | Key Fields |
 |---|---|---|
 | `Persona` | `personas` | nombre, cedula, telefono, tipo (conductor/propietario/otro) |
 | `Vehiculo` | `vehiculos` | placa, marca, modelo, anio, color, persona_id, cuota_diaria, estado, fecha_vencimiento_soat, fecha_vencimiento_tecnomecanico |
-| `Contrato` | `contratos` | vehiculo_id, persona_id, tipo (alquiler/opcion_compra), fecha_inicio, fecha_fin, valor_diario, estado, documento (file path) |
-| `ControlDiario` | `control_diarios` | vehiculo_id, fecha, trabajo (bool), valor_generado, gasto, observaciones |
+| `Contrato` | `contratos` | vehiculo_id, persona_id, tipo (alquiler/opcion_compra), fecha_inicio, fecha_fin, valor_diario, estado, documento |
+| `ControlDiario` | `control_diarios` | vehiculo_id, fecha, trabajo, valor_generado, gasto, observaciones |
 | `Configuracion` | `configuraciones` | clave/valor KV store |
 
 ### Relationships
@@ -54,7 +51,7 @@ public static function table(Table $table): Table { return MyTable::configure($t
 - ControlDiario belongsTo Vehiculo
 
 ### Pages & Widgets
-- `ControlSemanal.php` - Custom weekly spreadsheet (domingo-sábado), cell editing via modal, week history sidebar, admin costo via `configuraciones.administracion_semanal`
+- `ControlSemanal.php` - Weekly spreadsheet (domingo–sábado), cell editing via modal, week history sidebar, admin costo via `configuraciones.administracion_semanal`
 - `StatsOverview.php` - 14 stats: daily/weekly/monthly income, fleet counts, SOAT/tecnomecánico alerts (≤30 days warning)
 - `PagosRecientesWidget.php` - Last 10 control diario modifications
 

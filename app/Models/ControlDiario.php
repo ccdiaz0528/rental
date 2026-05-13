@@ -31,6 +31,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ControlDiario extends Model
 {
+    public const CATEGORIA_DAÑO = 'daño';
+
+    public const CATEGORIA_MANTENIMIENTO = 'mantenimiento';
+
+    public const CATEGORIA_MULTA = 'multa';
+
+    public const CATEGORIA_OTRO = 'otro';
+
+    public const CATEGORIAS = [
+        self::CATEGORIA_DAÑO,
+        self::CATEGORIA_MANTENIMIENTO,
+        self::CATEGORIA_MULTA,
+        self::CATEGORIA_OTRO,
+    ];
+
     /**
      * Atributos que pueden ser asignados masivamente.
      */
@@ -40,6 +55,7 @@ class ControlDiario extends Model
         'trabajo',
         'valor_generado',
         'gasto',
+        'categoria_gasto',
         'observaciones',
     ];
 
@@ -47,10 +63,12 @@ class ControlDiario extends Model
      * Conversión de tipos:
      * - fecha: Se convierte a objeto Carbon para manejo de fechas
      * - trabajo: Se convierte a booleano
+     * - categoria_gasto: Enum de categoría del gasto
      */
     protected $casts = [
         'fecha' => 'date',
         'trabajo' => 'boolean',
+        'categoria_gasto' => 'string',
     ];
 
     /**
