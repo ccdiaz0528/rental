@@ -2,33 +2,10 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * Modelo de Control Diario - Registros del control semanal por día y vehículo.
- *
- * Este modelo almacena los registros de trabajo diario de cada vehículo.
- * Es la base de datos del "Control Semanal" donde se registra:
- * - Si el vehículo trabajó o no ese día
- * - El valor generado ese día (puede diferir de la cuota diaria)
- * - Los gastos del día (mantenimiento, multas, etc.)
- * - Observaciones adicionales
- *
- * Si no hay registro para un vehículo en un día específico, el sistema
- * usa valores por defecto (trabajo=true, valor=cuota_diaria del vehículo).
- *
- * @property int $id
- * @property int $vehiculo_id - Vehículo al que pertenece el registro
- * @property Carbon $fecha - Fecha del registro
- * @property bool $trabajo - true si el vehículo trabajó, false si no
- * @property float|null $valor_generado - Ingreso del día (null usa cuota_diaria)
- * @property float $gasto - Gastos del día
- * @property string|null $observaciones - Notas adicionales
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- */
 class ControlDiario extends Model
 {
     public const CATEGORIA_DAÑO = 'daño';
@@ -46,10 +23,8 @@ class ControlDiario extends Model
         self::CATEGORIA_OTRO,
     ];
 
-    /**
-     * Atributos que pueden ser asignados masivamente.
-     */
     protected $fillable = [
+        'user_id',
         'vehiculo_id',
         'fecha',
         'trabajo',
@@ -59,24 +34,27 @@ class ControlDiario extends Model
         'observaciones',
     ];
 
-    /**
-     * Conversión de tipos:
-     * - fecha: Se convierte a objeto Carbon para manejo de fechas
-     * - trabajo: Se convierte a booleano
-     * - categoria_gasto: Enum de categoría del gasto
-     */
     protected $casts = [
         'fecha' => 'date',
         'trabajo' => 'boolean',
         'categoria_gasto' => 'string',
     ];
 
-    /**
-     * Relación: Un control diario pertenece a un vehículo.
-     *
-     * @return BelongsTo
-     */
-    public function vehiculo()
+    protected static function booted(): void
+    {
+        static::addGlobalScope('user', function (Builder $builder) {
+            if (auth()->check()) {
+                $builder->where('user_id', auth()->id());
+            }
+        });
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function vehiculo(): BelongsTo
     {
         return $this->belongsTo(Vehiculo::class);
     }

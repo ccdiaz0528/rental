@@ -2,36 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToUser;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
-/**
- * Modelo de Persona - Representa clientes y conductores del sistema.
- *
- * Este modelo agrupa la información de las personas que pueden ser:
- * - Clientes: Personas que rentan vehículos
- * - Conductores: Personas que conducen los vehículos de la flota
- *
- * La distinción se realiza mediante el campo 'tipo' (cliente/conductor).
- *
- * @property int $id
- * @property string $nombre
- * @property string|null $cedula
- * @property string|null $telefono
- * @property string|null $direccion
- * @property string|null $tipo - 'cliente' o 'conductor'
- * @property string|null $observaciones
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
- */
 class Persona extends Model
 {
-    /**
-     * Atributos que pueden ser asignados masivamente.
-     * Se incluyen todos los campos editables desde el formulario.
-     */
+    use BelongsToUser;
+
     protected $fillable = [
+        'user_id',
         'nombre',
         'cedula',
         'telefono',
@@ -40,24 +22,26 @@ class Persona extends Model
         'observaciones',
     ];
 
-    /**
-     * Relación: Una persona puede tener muchos contratos.
-     * Un contrato representa el acuerdo de alquiler entre cliente y empresa.
-     *
-     * @return HasMany
-     */
-    public function contratos()
+    protected static function booted(): void
+    {
+        static::addGlobalScope('user', function (Builder $builder) {
+            if (auth()->check()) {
+                $builder->where('user_id', auth()->id());
+            }
+        });
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function contratos(): HasMany
     {
         return $this->hasMany(Contrato::class);
     }
 
-    /**
-     * Relación: Una persona (conductor) puede tener muchos vehículos asignados.
-     * Un conductor puede manejar varios vehículos a lo largo del tiempo.
-     *
-     * @return HasMany
-     */
-    public function vehiculos()
+    public function vehiculos(): HasMany
     {
         return $this->hasMany(Vehiculo::class);
     }

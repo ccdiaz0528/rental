@@ -58,45 +58,44 @@
 
         <section class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-gray-900">
             <div class="border-b border-slate-200 bg-slate-50/80 px-5 py-1 dark:border-white/10 dark:bg-white/5">
-                <div class="flex items-start justify-between gap-4">
+                <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                     <div>
                         <h3 class="text-lg font-semibold text-slate-950 dark:text-white">Cuadro semanal</h3>
                         <p class="text-sm text-slate-500">Haz clic en una celda para ajustar ingreso, gasto u observación de ese vehículo en ese día.</p>
                     </div>
 
-                    <div class="grid gap-3 lg:grid-cols-[140px_140px_200px] lg:items-end">
-                        <div class="flex flex-col gap-1">
-                            <span class="text-[10px] text-white/60 uppercase tracking-wider">Admin Semanal</span>
-                            <div class="flex items-center gap-1 rounded-lg border border-white/20 bg-white/5 px-2 py-1">
-                                <span class="text-xs text-white/60">$</span>
-                                <input
-                                    type="number"
-                                    wire:model="administracion"
-                                    wire:change="saveAdministracion"
-                                    class="w-20 bg-transparent px-1 py-1 text-sm text-white placeholder-white/50 focus:outline-none"
-                                    placeholder="0"
-                                >
-                            </div>
+                    <div class="flex flex-wrap items-end gap-4 xl:gap-6">
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-xs font-medium text-slate-500 dark:text-slate-300">Admin Semanal</span>
+                            <input
+                                type="number"
+                                wire:model="administracion"
+                                wire:change="saveAdministracion"
+                                class="rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm placeholder-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-white/10 dark:bg-gray-950 dark:text-white min-w-[180px]"
+                                placeholder="$ 0"
+                            >
                         </div>
 
-                        <label class="block">
-                            <span class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Ir a una fecha</span>
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-xs font-medium text-slate-500 dark:text-slate-300">Ir a una fecha</span>
                             <input
                                 type="date"
                                 wire:model.live="selectedDate"
-                                class="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-white/10 dark:bg-gray-950"
+                                class="rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-white/10 dark:bg-gray-950 dark:text-white min-w-[180px]"
                             >
-                        </label>
+                        </div>
 
-                        <div class="flex items-center gap-2 lg:justify-end">
-                            <button wire:click="previousWeek" type="button" class="rounded-2xl border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5">
-                                ‹ Anterior
+                        <div class="flex items-center gap-2">
+                            <button wire:click="previousWeek" type="button" class="flex items-center gap-1 rounded-2xl border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5">
+                                <span>‹</span>
+                                <span>Anterior</span>
                             </button>
-                            <button wire:click="goToCurrentWeek" type="button" class="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-500">
+                            <button wire:click="goToCurrentWeek" type="button" class="rounded-2xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-500">
                                 Semana actual
                             </button>
-                            <button wire:click="nextWeek" type="button" class="rounded-2xl border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5">
-                                Siguiente ›
+                            <button wire:click="nextWeek" type="button" class="flex items-center gap-1 rounded-2xl border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5">
+                                <span>Siguiente</span>
+                                <span>›</span>
                             </button>
                         </div>
                     </div>

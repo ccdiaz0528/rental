@@ -146,9 +146,14 @@ class StatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-o-user-group')
                 ->color('success'),
 
-            Stat::make('Contratos activos', Contrato::where('estado', 'activo')->count())
-                ->description('Vigentes')
-                ->descriptionIcon('heroicon-o-document-text')
+            Stat::make('Contratos alquiler', Contrato::where('estado', 'activo')->where('tipo', 'alquiler')->count())
+                ->description('En alquiler')
+                ->descriptionIcon('heroicon-o-calendar')
+                ->color('info'),
+
+            Stat::make('Contratos opción compra', Contrato::where('estado', 'activo')->where('tipo', 'opcion_compra')->count())
+                ->description('Opción de compra')
+                ->descriptionIcon('heroicon-o-shopping-cart')
                 ->color('info'),
 
             Stat::make('Ajustes semana', $registrosSemana->count())

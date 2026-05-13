@@ -2,3 +2,18 @@
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
+
+.fi-ta-header-ctn {
+    align-items: center;
+}
+
+.fi-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+html {
+    scroll-behavior: smooth;
+}
