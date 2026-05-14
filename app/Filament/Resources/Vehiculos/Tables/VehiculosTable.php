@@ -45,6 +45,7 @@ class VehiculosTable
                 TextColumn::make('fecha_vencimiento_soat')
                     ->label('SOAT')
                     ->date('d/m/Y')
+                    ->placeholder('Sin registro')
                     ->badge()
                     ->color(fn ($record) => $record->fecha_vencimiento_soat
                         ? (now()->gt($record->fecha_vencimiento_soat) ? 'danger' : (now()->diffInDays($record->fecha_vencimiento_soat) <= 30 ? 'warning' : 'success'))
@@ -53,6 +54,7 @@ class VehiculosTable
                 TextColumn::make('fecha_vencimiento_tecnomecanico')
                     ->label('Tecnomecánica')
                     ->date('d/m/Y')
+                    ->placeholder('Sin registro')
                     ->badge()
                     ->color(fn ($record) => $record->fecha_vencimiento_tecnomecanico
                         ? (now()->gt($record->fecha_vencimiento_tecnomecanico) ? 'danger' : (now()->diffInDays($record->fecha_vencimiento_tecnomecanico) <= 30 ? 'warning' : 'success'))

@@ -26,10 +26,12 @@ class PersonasTable
                     ->searchable(),
 
                 TextColumn::make('telefono')
-                    ->label('Teléfono'),
+                    ->label('Teléfono')
+                    ->placeholder('Sin teléfono'),
 
                 TextColumn::make('direccion')
-                    ->label('Dirección'),
+                    ->label('Dirección')
+                    ->placeholder('Sin dirección'),
 
                 TextColumn::make('tipo')
                     ->label('Tipo')
