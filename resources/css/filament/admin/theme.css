@@ -34,15 +34,21 @@
     }
 
     .fi-body-has-navigation:not(.fi-body-has-top-navigation) .fi-layout {
-        overflow-y: auto;
+        overflow: hidden;
         flex: 1 1 0%;
         min-height: 0;
+    }
+
+    .fi-body-has-navigation:not(.fi-body-has-top-navigation) .fi-main-ctn {
+        overflow-y: auto;
     }
 
     .fi-body-has-navigation:not(.fi-body-has-top-navigation) .fi-sidebar {
         height: 100%;
         max-height: 100%;
         top: 0;
+        flex-shrink: 0;
+        overflow-y: auto;
     }
 
     /* Undo topbar offset — layout is already below topbar in flex column */
