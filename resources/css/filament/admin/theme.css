@@ -3,17 +3,192 @@
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 
+:root {
+    --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+    --sidebar-width: 16rem;
+}
+
+/* ── Table header alignment ── */
 .fi-ta-header-ctn {
     align-items: center;
 }
 
+/* ── Sidebar ── */
 .fi-sidebar {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
 }
 
+:is(.dark) .fi-sidebar {
+    border-right-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Desktop: make .fi-layout the scroll container so sidebar stays fixed */
+@media (min-width: 1024px) {
+    .fi-body-has-navigation:not(.fi-body-has-top-navigation) {
+        display: flex;
+        flex-direction: column;
+        height: 100dvh;
+        max-height: 100dvh;
+        overflow: hidden;
+    }
+
+    .fi-body-has-navigation:not(.fi-body-has-top-navigation) .fi-layout {
+        overflow-y: auto;
+        flex: 1 1 0%;
+        min-height: 0;
+    }
+
+    .fi-body-has-navigation:not(.fi-body-has-top-navigation) .fi-sidebar {
+        height: 100%;
+        max-height: 100%;
+        top: 0;
+    }
+
+    /* Undo topbar offset — layout is already below topbar in flex column */
+    .fi-body-has-topbar.fi-body-has-navigation:not(.fi-body-has-top-navigation) .fi-sidebar {
+        top: 0 !important;
+        height: 100% !important;
+        max-height: 100% !important;
+    }
+}
+
+.fi-sidebar-item a {
+    transition: background-color 100ms ease, color 100ms ease;
+}
+
+/* ── Top bar ── */
+.fi-topbar {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+:is(.dark) .fi-topbar {
+    border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+
+/* ── Smooth scroll ── */
 html {
     scroll-behavior: smooth;
+}
+
+/* ════════════════════════════════════════════
+   BUTTONS & INTERACTIONS
+   ════════════════════════════════════════════ */
+
+.fi-btn,
+.fi-link,
+button:not(.fi-ta-cell-action),
+[role="button"]:not(.fi-ta-cell-action) {
+    transition: transform 160ms var(--ease-out-strong);
+}
+
+.fi-btn:active,
+button:active {
+    transform: scale(0.97);
+}
+
+/* ── Table row hover ── */
+.fi-ta-row {
+    transition: background-color 120ms ease;
+}
+
+/* ── Stat cards ── */
+.fi-wi-stats-overview-stat {
+    transition: box-shadow 200ms ease, transform 200ms var(--ease-out-strong);
+    border-radius: 1rem;
+}
+
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+:is(.dark) .fi-wi-stats-overview-stat:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* ── Form inputs focus ── */
+.fi-fo-field-wrp:focus-within {
+    transition: box-shadow 150ms ease;
+}
+
+/* ── Modal/dialog ── */
+.fi-modal-content,
+.fi-fo-modal {
+    transition: opacity 200ms var(--ease-out-strong), transform 200ms var(--ease-out-strong);
+    transform-origin: center;
+}
+
+/* ── Badges / Tags ── */
+.fi-badge,
+.fi-tag {
+    transition: background-color 120ms ease, color 120ms ease;
+    border-radius: 9999px;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+}
+
+/* ── Cards / Sections ── */
+.fi-section,
+.fi-card {
+    transition: box-shadow 200ms ease;
+    border-radius: 1rem;
+}
+
+/* ── Table header ── */
+.fi-ta-header {
+    border-radius: 0.75rem 0.75rem 0 0;
+}
+
+/* ── Infolist entries ── */
+.fi-infolist-entry {
+    transition: background-color 120ms ease;
+}
+
+/* ── Breadcrumbs ── */
+.fi-breadcrumbs {
+    opacity: 0.7;
+}
+
+/* ── Page header action buttons ── */
+.fi-header-actions .fi-btn {
+    font-weight: 500;
+}
+
+/* ── Empty state ── */
+.fi-ta-empty-state {
+    padding: 3rem 1.5rem;
+}
+
+/* ── Filter area ── */
+.fi-ta-filters {
+    gap: 0.5rem;
+}
+
+/* ════════════════════════════════════════════
+   LOGIN PAGE
+   ════════════════════════════════════════════ */
+
+.fi-simple-layout {
+    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.06), transparent 60%),
+                radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.04), transparent 50%);
+}
+
+:is(.dark) .fi-simple-layout {
+    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 60%),
+                radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.08), transparent 50%);
+}
+
+/* ════════════════════════════════════════════
+   ACCESSIBILITY
+   ════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
