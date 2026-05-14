@@ -11,9 +11,9 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class PagosRecientesWidget extends BaseWidget
 {
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 6;
 
-    protected static ?string $heading = 'Últimos ajustes del control semanal';
+    protected static ?string $heading = 'Últimos movimientos';
 
     protected int|string|array $columnSpan = 'full';
 
