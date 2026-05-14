@@ -55,19 +55,32 @@ class BelongsToUserTraitTest extends TestCase
         $this->assertEquals($this->admin->id, $persona->user_id);
     }
 
-    public function test_vehiculo_does_not_have_belongs_to_user_trait(): void
+    public function test_vehiculo_auto_sets_user_id_for_normal_user(): void
     {
         $this->actingAs($this->user);
         $vehiculo = Vehiculo::create([
-            'placa' => 'NOTRAIT',
+            'placa' => 'TRAIT01',
             'cuota_diaria' => 80000,
             'estado' => 'activo',
         ]);
 
-        $this->assertNull($vehiculo->user_id);
+        $this->assertEquals($this->user->id, $vehiculo->user_id);
     }
 
-    public function test_contrato_does_not_have_belongs_to_user_trait(): void
+    public function test_vehiculo_user_id_not_overwritten_if_already_set(): void
+    {
+        $this->actingAs($this->user);
+        $vehiculo = Vehiculo::create([
+            'user_id' => $this->admin->id,
+            'placa' => 'PRESETV',
+            'cuota_diaria' => 80000,
+            'estado' => 'activo',
+        ]);
+
+        $this->assertEquals($this->admin->id, $vehiculo->user_id);
+    }
+
+    public function test_contrato_auto_sets_user_id_for_normal_user(): void
     {
         $vehiculo = Vehiculo::create([
             'user_id' => $this->admin->id,
@@ -91,7 +104,35 @@ class BelongsToUserTraitTest extends TestCase
             'estado' => 'activo',
         ]);
 
-        $this->assertNull($contrato->user_id);
+        $this->assertEquals($this->user->id, $contrato->user_id);
+    }
+
+    public function test_contrato_user_id_not_overwritten_if_already_set(): void
+    {
+        $vehiculo = Vehiculo::create([
+            'user_id' => $this->admin->id,
+            'placa' => 'CTPREST',
+            'cuota_diaria' => 80000,
+            'estado' => 'activo',
+        ]);
+        $persona = Persona::create([
+            'user_id' => $this->admin->id,
+            'nombre' => 'Cond2',
+            'tipo' => 'conductor',
+        ]);
+
+        $this->actingAs($this->user);
+        $contrato = Contrato::create([
+            'user_id' => $this->admin->id,
+            'vehiculo_id' => $vehiculo->id,
+            'persona_id' => $persona->id,
+            'tipo' => 'alquiler',
+            'fecha_inicio' => now(),
+            'valor_diario' => 80000,
+            'estado' => 'activo',
+        ]);
+
+        $this->assertEquals($this->admin->id, $contrato->user_id);
     }
 
     public function test_control_diario_does_not_have_belongs_to_user_trait(): void
