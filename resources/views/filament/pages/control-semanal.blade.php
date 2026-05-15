@@ -42,17 +42,15 @@
                             @endif
                         </div>
                     </div>
-                        <div class="grid {{ $this->isAdmin() ? 'grid-cols-2' : 'grid-cols-1' }} gap-4 xl:min-h-[140px]">
+                        <div class="grid grid-cols-2 gap-4 xl:min-h-[140px]">
                         <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
                             <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Gastos</p>
                             <p class="mt-2 text-xl font-semibold">{{ $this->money($dataset['summary']['gastos']) }}</p>
                         </div>
-                        @if($this->isAdmin())
                         <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
                             <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Administración</p>
                             <p class="mt-2 text-xl font-semibold">{{ $this->money($dataset['summary']['administracion']) }}</p>
                         </div>
-                        @endif
                         </div>
                 </div>
             </div>
@@ -67,19 +65,6 @@
                     </div>
 
                     <div class="flex flex-wrap items-end gap-4 xl:gap-6">
-                        @if($this->isAdmin())
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-xs font-medium text-slate-500 dark:text-slate-300">Admin Semanal</span>
-                            <input
-                                type="number"
-                                wire:model="administracion"
-                                wire:change="saveAdministracion"
-                                class="rounded-2xl border border-gray-300 bg-white px-4 py-2.5 text-sm shadow-sm placeholder-gray-400 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/20 dark:border-white/10 dark:bg-gray-950 dark:text-white min-w-[180px]"
-                                placeholder="$ 0"
-                            >
-                        </div>
-                        @endif
-
                         <div class="flex flex-col gap-1.5">
                             <span class="text-xs font-medium text-slate-500 dark:text-slate-300">Ir a una fecha</span>
                             <input
@@ -127,6 +112,9 @@
                                         <div class="mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $palette['soft'] }} {{ $palette['text'] }} ring-1 ring-inset ring-black/5 dark:ring-white/10">
                                             Cuota {{ $this->money($vehiculo->cuota_diaria) }}
                                         </div>
+                                        <div class="mt-1.5 inline-flex rounded-full px-3 py-1 text-[11px] font-semibold {{ $palette['soft'] }} {{ $palette['text'] }} ring-1 ring-inset ring-black/5 dark:ring-white/10 opacity-75">
+                                            Admin {{ $this->money($vehiculo->administracion ?? 0) }}
+                                        </div>
                                     </div>
                                 </th>
                             @empty
@@ -159,6 +147,9 @@
                                             class="w-full rounded-[20px] border px-3 py-4 text-sm shadow-sm transition {{ ! $cell['trabajo'] ? 'border-danger-200 bg-danger-50 text-danger-700 dark:border-danger-500/30 dark:bg-danger-500/10 dark:text-danger-300' : ($cell['gasto'] > 0 ? 'border-warning-200 bg-warning-50 text-warning-700 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300' : ($cell['has_changes'] ? 'border-gray-300 bg-gray-50 text-gray-700 dark:border-gray-500/30 dark:bg-gray-500/10 dark:text-gray-300' : 'border-gray-200 bg-white text-slate-800 hover:-translate-y-0.5 hover:border-gray-400 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:hover:bg-white/10')) }}"
                                         >
                                             <div class="text-base font-semibold">{{ $this->money($cell['ingreso']) }}</div>
+                                            @if (($cell['administracion'] ?? 0) > 0)
+                                                <div class="mt-1 text-[10px] font-medium text-slate-500">Admin: {{ $this->money($cell['administracion'] ?? 0) }}</div>
+                                            @endif
                                             @if ($cell['gasto'] > 0)
                                                 <div class="mt-1 text-xs font-medium">Gasto: {{ $this->money($cell['gasto']) }}</div>
                                                 @if ($cell['categoria_gasto'] && strlen($cell['categoria_gasto']) > 0)
@@ -293,15 +284,18 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="mt-3 grid grid-cols-3 gap-2 text-xs">
-                                <div class="rounded-2xl px-3 py-2 {{ $week['is_selected'] ? 'bg-white/10 text-slate-100' : 'bg-slate-100 text-slate-700 dark:bg-white/5 dark:text-gray-200' }}">
+                            <div class="mt-3 grid grid-cols-4 gap-1.5 text-[11px]">
+                                <div class="rounded-2xl px-2 py-2 {{ $week['is_selected'] ? 'bg-white/10 text-slate-100' : 'bg-slate-100 text-slate-700 dark:bg-white/5 dark:text-gray-200' }}">
                                     Esp: {{ $this->money($week['esperado']) }}
                                 </div>
-                                <div class="rounded-2xl px-3 py-2 {{ $week['is_selected'] ? 'bg-white/10 text-slate-100' : 'bg-slate-100 text-slate-700 dark:bg-white/5 dark:text-gray-200' }}">
+                                <div class="rounded-2xl px-2 py-2 {{ $week['is_selected'] ? 'bg-white/10 text-slate-100' : 'bg-slate-100 text-slate-700 dark:bg-white/5 dark:text-gray-200' }}">
                                     Ing: {{ $this->money($week['real']) }}
                                 </div>
-                                <div class="rounded-2xl px-3 py-2 {{ $week['is_selected'] ? 'bg-white/10 text-slate-100' : 'bg-slate-100 text-slate-700 dark:bg-white/5 dark:text-gray-200' }}">
+                                <div class="rounded-2xl px-2 py-2 {{ $week['is_selected'] ? 'bg-white/10 text-slate-100' : 'bg-slate-100 text-slate-700 dark:bg-white/5 dark:text-gray-200' }}">
                                     Gas: {{ $this->money($week['gastos']) }}
+                                </div>
+                                <div class="rounded-2xl px-2 py-2 {{ $week['is_selected'] ? 'bg-white/10 text-slate-100' : 'bg-slate-100 text-slate-700 dark:bg-white/5 dark:text-gray-200' }}">
+                                    Adm: {{ $this->money($week['administracion'] ?? 0) }}
                                 </div>
                             </div>
                         </button>
@@ -369,6 +363,17 @@
                             >
                         </label>
                     </div>
+
+                    <label class="block">
+                        <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Administración</span>
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            wire:model="modalForm.administracion"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/20 dark:border-white/10 dark:bg-gray-950"
+                        >
+                    </label>
 
                     <div x-data="{ gasto: {{ (float) $modalForm['gasto'] }} }" x-init="$watch('$wire.modalForm.gasto', value => gasto = parseFloat(value || 0))">
                         <label class="block" x-show="gasto > 0" x-transition.opacity.duration.200ms>

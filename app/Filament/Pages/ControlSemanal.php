@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Configuracion;
 use App\Models\ControlDiario;
 use App\Models\Vehiculo;
 use Carbon\Carbon;
@@ -24,8 +23,6 @@ class ControlSemanal extends Page
 
     public string $selectedDate;
 
-    public float $administracion = 0;
-
     public bool $isModalOpen = false;
 
     public ?int $selectedVehiculoId = null;
@@ -45,17 +42,11 @@ class ControlSemanal extends Page
     public function mount(): void
     {
         $this->selectedDate = now()->toDateString();
-        $this->administracion = (float) Configuracion::get('administracion_semanal', 0);
     }
 
     public function isAdmin(): bool
     {
         return auth()->check() && auth()->user()->hasRole('admin');
-    }
-
-    public function saveAdministracion(): void
-    {
-        Configuracion::set('administracion_semanal', (string) $this->administracion);
     }
 
     public function previousWeek(): void
@@ -81,6 +72,7 @@ class ControlSemanal extends Page
             'id' => $vehiculo->id,
             'placa' => $vehiculo->placa,
             'cuota_diaria' => $vehiculo->cuota_diaria,
+            'administracion' => $vehiculo->administracion ?? 0,
             'persona_nombre' => $vehiculo->persona?->nombre,
         ];
 
@@ -95,6 +87,7 @@ class ControlSemanal extends Page
             'trabajo' => $registro?->trabajo ?? true,
             'valor_generado' => $registro?->valor_generado ?? $vehiculo->cuota_diaria,
             'gasto' => $registro?->gasto ?? 0,
+            'administracion' => $registro?->administracion ?? $vehiculo->administracion ?? 0,
             'categoria_gasto' => $registro?->categoria_gasto ?? 'otro',
             'observaciones' => $registro?->observaciones ?? '',
         ];
@@ -111,6 +104,7 @@ class ControlSemanal extends Page
             'trabajo' => true,
             'valor_generado' => 0,
             'gasto' => 0,
+            'administracion' => 0,
             'categoria_gasto' => 'otro',
             'observaciones' => '',
         ];
@@ -121,6 +115,7 @@ class ControlSemanal extends Page
         $rules = [
             'modalForm.trabajo' => ['required', 'boolean'],
             'modalForm.valor_generado' => ['required', 'numeric', 'min:0'],
+            'modalForm.administracion' => ['nullable', 'numeric', 'min:0'],
             'modalForm.gasto' => ['nullable', 'numeric', 'min:0'],
             'modalForm.observaciones' => ['nullable', 'string', 'max:1000'],
         ];
@@ -136,6 +131,7 @@ class ControlSemanal extends Page
         }
 
         $valorPorDefecto = (float) ($this->cachedVehiculo['cuota_diaria'] ?? 0);
+        $adminPorDefecto = (float) ($this->cachedVehiculo['administracion'] ?? 0);
 
         $registro = ControlDiario::withoutGlobalScope('user')->firstOrNew([
             'vehiculo_id' => $this->selectedVehiculoId,
@@ -145,10 +141,12 @@ class ControlSemanal extends Page
         $trabajo = (bool) $this->modalForm['trabajo'];
         $valorGenerado = $trabajo ? (float) $this->modalForm['valor_generado'] : 0;
         $gasto = (float) ($this->modalForm['gasto'] ?? 0);
+        $administracion = (float) ($this->modalForm['administracion'] ?? 0);
         $observaciones = trim((string) ($this->modalForm['observaciones'] ?? ''));
 
         $isDefault = $trabajo
             && abs($valorGenerado - $valorPorDefecto) < 0.01
+            && abs($administracion - $adminPorDefecto) < 0.01
             && abs($gasto) < 0.01
             && $observaciones === '';
 
@@ -172,6 +170,7 @@ class ControlSemanal extends Page
             'trabajo' => $trabajo,
             'valor_generado' => $valorGenerado,
             'gasto' => $gasto,
+            'administracion' => $administracion,
             'categoria_gasto' => ($gasto > 0 && isset($this->modalForm['categoria_gasto'])) ? $this->modalForm['categoria_gasto'] : null,
             'observaciones' => $observaciones ?: null,
         ]);
@@ -217,6 +216,7 @@ class ControlSemanal extends Page
         $esperado = 0;
         $real = 0;
         $gastos = 0;
+        $adminTotal = 0;
         $diasSinTrabajo = 0;
         $acumuladoSemana = 0;
 
@@ -241,17 +241,20 @@ class ControlSemanal extends Page
             foreach ($vehiculos as $vehiculo) {
                 $registro = $registros->get($fecha->toDateString().'-'.$vehiculo->id);
                 $valorBase = (float) $vehiculo->cuota_diaria;
+                $adminBase = (float) $vehiculo->administracion;
                 $trabajo = $registro?->trabajo ?? true;
                 $ingreso = $trabajo
                     ? (float) ($registro?->valor_generado ?? $valorBase)
                     : 0;
                 $gasto = (float) ($registro?->gasto ?? 0);
+                $adminDia = $registro?->administracion ?? $adminBase;
 
                 $row['cells'][] = [
                     'vehiculo_id' => $vehiculo->id,
                     'fecha' => $fecha->toDateString(),
                     'ingreso' => $ingreso,
                     'gasto' => $gasto,
+                    'administracion' => $adminDia,
                     'categoria_gasto' => $registro?->categoria_gasto,
                     'trabajo' => $trabajo,
                     'has_changes' => $registro !== null,
@@ -259,14 +262,15 @@ class ControlSemanal extends Page
                 ];
 
                 $row['gastos'] += $gasto;
-                $row['total'] += $ingreso - $gasto;
+                $row['total'] += $ingreso - $gasto - $adminDia;
                 $esperado += $valorBase;
                 $real += $ingreso;
                 $gastos += $gasto;
+                $adminTotal += $adminDia;
                 $vehicleTotals[$vehiculo->id]['esperado'] += $valorBase;
                 $vehicleTotals[$vehiculo->id]['real'] += $ingreso;
                 $vehicleTotals[$vehiculo->id]['gastos'] += $gasto;
-                $vehicleTotals[$vehiculo->id]['neto'] += $ingreso - $gasto;
+                $vehicleTotals[$vehiculo->id]['neto'] += $ingreso - $gasto - $adminDia;
 
                 if (! $trabajo) {
                     $diasSinTrabajo++;
@@ -278,8 +282,6 @@ class ControlSemanal extends Page
             $rows[array_key_last($rows)]['acumulado'] = $acumuladoSemana;
         }
 
-        $adminSemanal = $this->administracion;
-
         return [
             'weekStart' => $weekStart,
             'weekEnd' => $weekEnd,
@@ -290,8 +292,8 @@ class ControlSemanal extends Page
                 'esperado' => $esperado,
                 'real' => $real,
                 'gastos' => $gastos,
-                'administracion' => $adminSemanal,
-                'neto' => $real - $gastos - $adminSemanal,
+                'administracion' => $adminTotal,
+                'neto' => $real - $gastos - $adminTotal,
                 'dias_sin_trabajo' => $diasSinTrabajo,
             ],
         ];
@@ -308,7 +310,7 @@ class ControlSemanal extends Page
         $vehiculos = Vehiculo::query()
             ->where('estado', 'activo')
             ->when(! $isAdmin, fn ($q) => $q->where('user_id', auth()->id()))
-            ->get(['id', 'cuota_diaria']);
+            ->get(['id', 'cuota_diaria', 'administracion']);
 
         $allRegistros = $vehiculos->isEmpty()
             ? collect()
@@ -376,6 +378,7 @@ class ControlSemanal extends Page
         $esperado = 0;
         $real = 0;
         $gastos = 0;
+        $adminTotal = 0;
         $diasSinTrabajo = 0;
 
         $registrosByKey = $registros->keyBy(fn ($r) => $r->vehiculo_id.'-'.$r->fecha->format('Y-m-d'));
@@ -391,9 +394,11 @@ class ControlSemanal extends Page
                 $trabajo = $registro?->trabajo ?? true;
                 $ingreso = $trabajo ? (float) ($registro?->valor_generado ?? $valorBase) : 0;
                 $gasto = (float) ($registro?->gasto ?? 0);
+                $adminDia = $registro?->administracion ?? (float) ($vehiculo->administracion ?? 0);
 
                 $real += $ingreso;
                 $gastos += $gasto;
+                $adminTotal += $adminDia;
 
                 if (! $trabajo) {
                     $diasSinTrabajo++;
@@ -407,7 +412,8 @@ class ControlSemanal extends Page
             'esperado' => $esperado,
             'real' => $real,
             'gastos' => $gastos,
-            'neto' => $real - $gastos,
+            'administracion' => $adminTotal,
+            'neto' => $real - $gastos - $adminTotal,
             'dias_sin_trabajo' => $diasSinTrabajo,
             'novedades' => $registros->count(),
             'is_selected' => $weekStart->isSameDay($this->weekStart()),

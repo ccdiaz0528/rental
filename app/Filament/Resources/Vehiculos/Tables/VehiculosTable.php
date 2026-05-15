@@ -65,6 +65,11 @@ class VehiculosTable
                     ->money('COP')
                     ->sortable(),
 
+                TextColumn::make('administracion')
+                    ->label('Administración')
+                    ->money('COP')
+                    ->sortable(),
+
                 TextColumn::make('estado')
                     ->label('Estado')
                     ->badge()

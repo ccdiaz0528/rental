@@ -30,6 +30,7 @@ class ControlDiario extends Model
         'trabajo',
         'valor_generado',
         'gasto',
+        'administracion',
         'categoria_gasto',
         'observaciones',
     ];
@@ -37,6 +38,7 @@ class ControlDiario extends Model
     protected $casts = [
         'fecha' => 'date',
         'trabajo' => 'boolean',
+        'administracion' => 'decimal:2',
         'categoria_gasto' => 'string',
     ];
 

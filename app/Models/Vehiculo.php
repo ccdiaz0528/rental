@@ -22,6 +22,7 @@ class Vehiculo extends Model
         'color',
         'persona_id',
         'cuota_diaria',
+        'administracion',
         'estado',
         'observaciones',
         'fecha_vencimiento_soat',
@@ -31,6 +32,7 @@ class Vehiculo extends Model
     protected $casts = [
         'fecha_vencimiento_soat' => 'date',
         'fecha_vencimiento_tecnomecanico' => 'date',
+        'administracion' => 'decimal:2',
     ];
 
     protected static function booted(): void

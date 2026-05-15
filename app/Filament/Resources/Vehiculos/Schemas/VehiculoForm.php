@@ -67,6 +67,13 @@ class VehiculoForm
                 ->required()
                 ->default(0),
 
+            TextInput::make('administracion')
+                ->label('Administración')
+                ->numeric()
+                ->prefix('$')
+                ->required()
+                ->default(0),
+
             Select::make('estado')
                 ->label('Estado')
                 ->options([
