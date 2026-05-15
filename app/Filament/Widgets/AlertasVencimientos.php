@@ -2,12 +2,15 @@
 
 namespace App\Filament\Widgets;
 
+use App\Concerns\HasUserContext;
 use App\Models\Vehiculo;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class AlertasVencimientos extends BaseWidget
 {
+    use HasUserContext;
+
     protected static ?int $sort = 5;
 
     public function getHeading(): string
@@ -17,10 +20,7 @@ class AlertasVencimientos extends BaseWidget
 
     protected function getStats(): array
     {
-        $isAdmin = auth()->user()->hasRole('admin');
-
-        $vehiculos = Vehiculo::query()
-            ->when(! $isAdmin, fn ($q) => $q->where('user_id', auth()->id()))
+        $vehiculos = $this->applyUserScope(Vehiculo::query())
             ->get(['id', 'fecha_vencimiento_soat', 'fecha_vencimiento_tecnomecanico']);
 
         $now = now();

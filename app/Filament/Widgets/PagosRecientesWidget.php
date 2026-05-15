@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Concerns\HasUserContext;
 use App\Models\ControlDiario;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -11,6 +12,8 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class PagosRecientesWidget extends BaseWidget
 {
+    use HasUserContext;
+
     protected static ?int $sort = 6;
 
     protected static ?string $heading = 'Últimos movimientos';
@@ -19,14 +22,9 @@ class PagosRecientesWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
-        $isAdmin = auth()->user()->hasRole('admin');
-        $query = ControlDiario::query()
-            ->with(['vehiculo.persona'])
-            ->latest('updated_at')
-            ->limit(10);
-        if (! $isAdmin) {
-            $query->where('control_diarios.user_id', auth()->id());
-        }
+        $query = $this->applyUserScope(
+            ControlDiario::query()->with(['vehiculo.persona'])->latest('updated_at')->limit(10)
+        );
 
         return $table
             ->query($query)

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Concerns\HasUserContext;
 use App\Filament\Widgets\Concerns\HasDashboardStats;
 use App\Models\ControlDiario;
 use App\Models\Vehiculo;
@@ -12,6 +13,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 class ResumenSemanal extends BaseWidget
 {
     use HasDashboardStats;
+    use HasUserContext;
 
     protected static ?int $sort = 2;
 
@@ -22,22 +24,20 @@ class ResumenSemanal extends BaseWidget
 
     protected function getStats(): array
     {
-        $isAdmin = auth()->user()->hasRole('admin');
         $inicioSemana = now()->startOfWeek(Carbon::SUNDAY)->startOfDay();
         $finSemana = $inicioSemana->copy()->addDays(6)->endOfDay();
 
-        $vehiculosActivos = Vehiculo::query()
-            ->where('estado', 'activo')
-            ->when(! $isAdmin, fn ($q) => $q->where('user_id', auth()->id()))
-            ->get(['id', 'cuota_diaria']);
+        $vehiculosActivos = $this->applyUserScope(
+            Vehiculo::query()->where('estado', 'activo')
+        )->get(['id', 'cuota_diaria']);
 
         $registrosSemana = $vehiculosActivos->isEmpty()
             ? collect()
-            : ControlDiario::query()
-                ->whereIn('vehiculo_id', $vehiculosActivos->pluck('id'))
-                ->whereBetween('fecha', [$inicioSemana->toDateString(), $finSemana->toDateString()])
-                ->when(! $isAdmin, fn ($q) => $q->where('control_diarios.user_id', auth()->id()))
-                ->get();
+            : $this->applyUserScope(
+                ControlDiario::query()
+                    ->whereIn('vehiculo_id', $vehiculosActivos->pluck('id'))
+                    ->whereBetween('fecha', [$inicioSemana->toDateString(), $finSemana->toDateString()])
+            )->get();
 
         $esperadoSemana = $vehiculosActivos->sum('cuota_diaria') * 7;
         $gastosSemana = 0;

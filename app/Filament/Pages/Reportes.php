@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Concerns\HasUserContext;
 use App\Models\ControlDiario;
 use App\Models\Vehiculo;
 use Carbon\Carbon;
@@ -11,6 +12,8 @@ use Illuminate\Support\Collection;
 
 class Reportes extends Page
 {
+    use HasUserContext;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-chart-bar';
 
     protected static ?string $navigationLabel = 'Reportes';
@@ -41,11 +44,6 @@ class Reportes extends Page
         $range = $this->getDateRange();
         $this->fechaInicio = $range[0]->toDateString();
         $this->fechaFin = $range[1]->toDateString();
-    }
-
-    public function isAdmin(): bool
-    {
-        return auth()->check() && auth()->user()->hasRole('admin');
     }
 
     public function getPeriodoLabel(): string
@@ -101,13 +99,9 @@ class Reportes extends Page
 
     public function getVehiculosDisponibles(): Collection
     {
-        $query = Vehiculo::query()->orderBy('placa');
-
-        if (! $this->isAdmin()) {
-            $query->where('user_id', auth()->id());
-        }
-
-        return $query->get();
+        return $this->applyUserScope(
+            Vehiculo::query()->orderBy('placa')
+        )->get();
     }
 
     public function getResumen(): array
@@ -251,15 +245,13 @@ class Reportes extends Page
     {
         [$start, $end] = $this->getDateRange();
 
-        $query = ControlDiario::query()
-            ->whereBetween('fecha', [$start->toDateString(), $end->toDateString()]);
+        $query = $this->applyUserScope(
+            ControlDiario::query()
+                ->whereBetween('fecha', [$start->toDateString(), $end->toDateString()])
+        );
 
         if (! empty($this->vehiculosSeleccionados)) {
             $query->whereIn('vehiculo_id', $this->vehiculosSeleccionados);
-        }
-
-        if (! $this->isAdmin()) {
-            $query->where('control_diarios.user_id', auth()->id());
         }
 
         return $query;

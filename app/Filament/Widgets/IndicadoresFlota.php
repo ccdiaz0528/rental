@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets;
 
+use App\Concerns\HasUserContext;
+use App\Filament\Widgets\Concerns\HasDashboardStats;
 use App\Models\Contrato;
 use App\Models\ControlDiario;
 use App\Models\Vehiculo;
@@ -11,7 +13,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class IndicadoresFlota extends BaseWidget
 {
-    use Concerns\HasDashboardStats;
+    use HasDashboardStats;
+    use HasUserContext;
 
     protected static ?int $sort = 4;
 
@@ -22,34 +25,28 @@ class IndicadoresFlota extends BaseWidget
 
     protected function getStats(): array
     {
-        $isAdmin = auth()->user()->hasRole('admin');
         $inicioSemana = now()->startOfWeek(Carbon::SUNDAY);
         $finSemana = $inicioSemana->copy()->addDays(6);
 
-        $vehiculosBase = Vehiculo::query();
-        if (! $isAdmin) {
-            $vehiculosBase->where('user_id', auth()->id());
-        }
+        $vehiculosActivos = $this->applyUserScope(
+            Vehiculo::query()->where('estado', 'activo')
+        )->get(['id', 'persona_id']);
 
-        $vehiculosActivos = (clone $vehiculosBase)
-            ->where('estado', 'activo')
-            ->get(['id', 'persona_id']);
+        $todosIds = $this->applyUserScope(Vehiculo::query())
+            ->pluck('id');
 
-        $todos = (clone $vehiculosBase)->get(['id']);
-
-        $ajustesSemana = $vehiculosActivos->isEmpty() || $todos->isEmpty()
+        $ajustesSemana = $vehiculosActivos->isEmpty() || $todosIds->isEmpty()
             ? 0
-            : ControlDiario::query()
-                ->whereIn('vehiculo_id', $todos->pluck('id'))
-                ->whereBetween('fecha', [$inicioSemana->toDateString(), $finSemana->toDateString()])
-                ->when(! $isAdmin, fn ($q) => $q->where('control_diarios.user_id', auth()->id()))
-                ->count();
+            : $this->applyUserScope(
+                ControlDiario::query()
+                    ->whereIn('vehiculo_id', $todosIds)
+                    ->whereBetween('fecha', [$inicioSemana->toDateString(), $finSemana->toDateString()])
+            )->count();
 
-        $contratoStats = Contrato::query()
-            ->where('estado', 'activo')
-            ->when(! $isAdmin, fn ($q) => $q->where('contratos.user_id', auth()->id()))
-            ->selectRaw("SUM(tipo='alquiler') as alquiler, SUM(tipo='opcion_compra') as opcion_compra")
-            ->first();
+        $contratoStats = $this->applyUserScope(
+            Contrato::query()->where('estado', 'activo'),
+            'contratos.user_id'
+        )->selectRaw("SUM(tipo='alquiler') as alquiler, SUM(tipo='opcion_compra') as opcion_compra")->first();
 
         return [
             Stat::make('Vehículos activos', $vehiculosActivos->count())

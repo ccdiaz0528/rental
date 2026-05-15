@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Concerns\HasUserContext;
 use App\Filament\Widgets\Concerns\HasDashboardStats;
 use App\Models\ControlDiario;
 use App\Models\Vehiculo;
@@ -11,6 +12,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 class ResumenMensual extends BaseWidget
 {
     use HasDashboardStats;
+    use HasUserContext;
 
     protected static ?int $sort = 3;
 
@@ -21,23 +23,21 @@ class ResumenMensual extends BaseWidget
 
     protected function getStats(): array
     {
-        $isAdmin = auth()->user()->hasRole('admin');
         $inicioMes = now()->startOfMonth()->startOfDay();
         $hoy = now()->startOfDay();
         $diasMes = now()->day;
 
-        $vehiculosActivos = Vehiculo::query()
-            ->where('estado', 'activo')
-            ->when(! $isAdmin, fn ($q) => $q->where('user_id', auth()->id()))
-            ->get(['id', 'cuota_diaria']);
+        $vehiculosActivos = $this->applyUserScope(
+            Vehiculo::query()->where('estado', 'activo')
+        )->get(['id', 'cuota_diaria']);
 
         $registrosMes = $vehiculosActivos->isEmpty()
             ? collect()
-            : ControlDiario::query()
-                ->whereIn('vehiculo_id', $vehiculosActivos->pluck('id'))
-                ->whereBetween('fecha', [$inicioMes->toDateString(), $hoy->toDateString()])
-                ->when(! $isAdmin, fn ($q) => $q->where('control_diarios.user_id', auth()->id()))
-                ->get();
+            : $this->applyUserScope(
+                ControlDiario::query()
+                    ->whereIn('vehiculo_id', $vehiculosActivos->pluck('id'))
+                    ->whereBetween('fecha', [$inicioMes->toDateString(), $hoy->toDateString()])
+            )->get();
 
         $esperadoMes = $vehiculosActivos->sum('cuota_diaria') * $diasMes;
         $gastosMes = 0;

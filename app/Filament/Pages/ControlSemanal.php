@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Concerns\HasUserContext;
 use App\Models\ControlDiario;
 use App\Models\Vehiculo;
 use Carbon\Carbon;
@@ -11,6 +12,8 @@ use Illuminate\Support\Collection;
 
 class ControlSemanal extends Page
 {
+    use HasUserContext;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-table-cells';
 
     protected static ?string $navigationLabel = 'Control Semanal';
@@ -188,15 +191,12 @@ class ControlSemanal extends Page
     {
         $weekStart = $this->weekStart();
         $weekEnd = $weekStart->copy()->addDays(6);
-        $isAdmin = auth()->user()->hasRole('admin');
 
         $vehiculoQuery = Vehiculo::query()
             ->with('persona')
             ->where('estado', 'activo')
             ->orderBy('placa');
-        if (! $isAdmin) {
-            $vehiculoQuery->where('user_id', auth()->id());
-        }
+        $this->applyUserScope($vehiculoQuery);
         $vehiculos = $vehiculoQuery->get();
 
         $fechas = collect(range(0, 6))
@@ -204,11 +204,11 @@ class ControlSemanal extends Page
 
         $registros = $vehiculos->isEmpty()
             ? collect()
-            : ControlDiario::query()
-                ->whereIn('vehiculo_id', $vehiculos->pluck('id'))
-                ->whereBetween('fecha', [$weekStart->toDateString(), $weekEnd->toDateString()])
-                ->when(! $isAdmin, fn ($q) => $q->where('control_diarios.user_id', auth()->id()))
-                ->get()
+            : $this->applyUserScope(
+                ControlDiario::query()
+                    ->whereIn('vehiculo_id', $vehiculos->pluck('id'))
+                    ->whereBetween('fecha', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            )->get()
                 ->keyBy(fn (ControlDiario $registro) => $registro->fecha->toDateString().'-'.$registro->vehiculo_id);
 
         $rows = [];
@@ -302,23 +302,21 @@ class ControlSemanal extends Page
     public function getWeekHistory(): array
     {
         $baseWeek = $this->weekStart();
-        $isAdmin = auth()->user()->hasRole('admin');
 
         $oldestWeek = $baseWeek->copy()->subWeeks(11)->startOfWeek(Carbon::SUNDAY);
         $newestWeek = $baseWeek->copy()->addDays(6);
 
-        $vehiculos = Vehiculo::query()
-            ->where('estado', 'activo')
-            ->when(! $isAdmin, fn ($q) => $q->where('user_id', auth()->id()))
-            ->get(['id', 'cuota_diaria', 'administracion']);
+        $vehiculos = $this->applyUserScope(
+            Vehiculo::query()->where('estado', 'activo')
+        )->get(['id', 'cuota_diaria', 'administracion']);
 
         $allRegistros = $vehiculos->isEmpty()
             ? collect()
-            : ControlDiario::query()
-                ->whereIn('vehiculo_id', $vehiculos->pluck('id'))
-                ->whereBetween('fecha', [$oldestWeek->toDateString(), $newestWeek->toDateString()])
-                ->when(! $isAdmin, fn ($q) => $q->where('control_diarios.user_id', auth()->id()))
-                ->get()
+            : $this->applyUserScope(
+                ControlDiario::query()
+                    ->whereIn('vehiculo_id', $vehiculos->pluck('id'))
+                    ->whereBetween('fecha', [$oldestWeek->toDateString(), $newestWeek->toDateString()])
+            )->get()
                 ->groupBy(fn ($r) => $r->fecha->copy()->startOfWeek(Carbon::SUNDAY)->toDateString());
 
         $history = [];
