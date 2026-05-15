@@ -137,7 +137,7 @@ class ControlSemanal extends Page
 
         $valorPorDefecto = (float) ($this->cachedVehiculo['cuota_diaria'] ?? 0);
 
-        $registro = ControlDiario::query()->firstOrNew([
+        $registro = ControlDiario::withoutGlobalScope('user')->firstOrNew([
             'vehiculo_id' => $this->selectedVehiculoId,
             'fecha' => $this->selectedFecha,
         ]);
@@ -168,6 +168,7 @@ class ControlSemanal extends Page
         }
 
         $registro->fill([
+            'user_id' => auth()->id(),
             'trabajo' => $trabajo,
             'valor_generado' => $valorGenerado,
             'gasto' => $gasto,
