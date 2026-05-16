@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ControlDiario extends Model
 {
+    use BelongsToUser;
+
     public const CATEGORIA_DAÑO = 'daño';
 
     public const CATEGORIA_MANTENIMIENTO = 'mantenimiento';

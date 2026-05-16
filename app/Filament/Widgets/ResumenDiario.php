@@ -8,6 +8,7 @@ use App\Models\ControlDiario;
 use App\Models\Vehiculo;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Cache;
 
 class ResumenDiario extends BaseWidget
 {
@@ -16,6 +17,8 @@ class ResumenDiario extends BaseWidget
 
     protected static ?int $sort = 1;
 
+    protected ?string $pollingInterval = '60s';
+
     public function getHeading(): string
     {
         return 'Resumen de hoy';
@@ -23,75 +26,91 @@ class ResumenDiario extends BaseWidget
 
     protected function getStats(): array
     {
-        $hoy = now()->startOfDay();
+        $userId = auth()->id();
+        $adminContext = auth()->user()?->hasRole('admin') ? $this->selectedUserId : null;
+        $cacheKey = 'dashboard_diario_v2_'.$userId.'_'.$adminContext;
 
-        $vehiculosActivos = $this->applyUserScope(
-            Vehiculo::query()->where('estado', 'activo')
-        )->get(['id', 'cuota_diaria']);
+        $data = Cache::remember($cacheKey, 60, function () {
+            $hoy = now()->startOfDay();
 
-        $registrosHoy = $vehiculosActivos->isEmpty()
-            ? collect()
-            : $this->applyUserScope(
-                ControlDiario::query()
-                    ->whereIn('vehiculo_id', $vehiculosActivos->pluck('id'))
-                    ->whereDate('fecha', $hoy)
-            )->get();
+            $vehiculosActivos = $this->applyUserScope(
+                Vehiculo::query()->where('estado', 'activo')
+            )->get(['id', 'cuota_diaria']);
 
-        $esperadoHoy = $vehiculosActivos->sum('cuota_diaria');
-        $gastosHoy = 0;
-        $realHoy = 0;
+            $registrosHoy = $vehiculosActivos->isEmpty()
+                ? collect()
+                : $this->applyUserScope(
+                    ControlDiario::query()
+                        ->whereIn('vehiculo_id', $vehiculosActivos->pluck('id'))
+                        ->whereDate('fecha', $hoy)
+                )->get();
 
-        $registrosIndexed = $registrosHoy->keyBy('vehiculo_id');
+            $esperadoHoy = $vehiculosActivos->sum('cuota_diaria');
+            $gastosHoy = 0;
+            $realHoy = 0;
 
-        foreach ($vehiculosActivos as $v) {
-            $registro = $registrosIndexed->get($v->id);
-            $gastosHoy += (float) ($registro->gasto ?? 0);
+            $registrosIndexed = $registrosHoy->keyBy('vehiculo_id');
 
-            if ($registro) {
-                $trabajo = $registro->trabajo ?? true;
-                $realHoy += $trabajo ? (float) $registro->valor_generado : 0;
-            } else {
-                $realHoy += (float) $v->cuota_diaria;
+            foreach ($vehiculosActivos as $v) {
+                $registro = $registrosIndexed->get($v->id);
+                $gastosHoy += (float) ($registro->gasto ?? 0);
+
+                if ($registro) {
+                    $trabajo = $registro->trabajo ?? true;
+                    $realHoy += $trabajo ? (float) $registro->valor_generado : 0;
+                } else {
+                    $realHoy += (float) $v->cuota_diaria;
+                }
             }
-        }
 
-        $gastosCat = $this->gastosPorCategoria($registrosHoy);
+            $gastosCat = $this->gastosPorCategoria($registrosHoy);
+
+            return [
+                'neto' => $realHoy - $gastosHoy,
+                'esperado' => $esperadoHoy,
+                'gastos' => $gastosHoy,
+                'dano' => $gastosCat['daño'],
+                'mantenimiento' => $gastosCat['mantenimiento'],
+                'multa' => $gastosCat['multa'],
+                'otro' => $gastosCat['otro'],
+            ];
+        });
 
         return [
-            Stat::make('Ingreso neto', $this->money($realHoy - $gastosHoy))
+            Stat::make('Ingreso neto', $this->money($data['neto']))
                 ->description('Ingreso real del día')
                 ->descriptionIcon('heroicon-o-currency-dollar')
-                ->color(($realHoy - $gastosHoy) >= 0 ? 'success' : 'danger'),
+                ->color($data['neto'] >= 0 ? 'success' : 'danger'),
 
-            Stat::make('Esperado', $this->money($esperadoHoy))
+            Stat::make('Esperado', $this->money($data['esperado']))
                 ->description('Cuota base diaria')
                 ->descriptionIcon('heroicon-o-banknotes')
                 ->color('info'),
 
-            Stat::make('Gastos', $this->money($gastosHoy))
+            Stat::make('Gastos', $this->money($data['gastos']))
                 ->description('Total gastos del día')
                 ->descriptionIcon('heroicon-o-receipt-percent')
                 ->color('danger'),
 
-            Stat::make('Daño', $this->money($gastosCat['daño']))
+            Stat::make('Daño', $this->money($data['dano']))
                 ->description('Daños del día')
                 ->descriptionIcon('heroicon-o-exclamation-triangle')
-                ->color($gastosCat['daño'] > 0 ? 'danger' : 'gray'),
+                ->color($data['dano'] > 0 ? 'danger' : 'gray'),
 
-            Stat::make('Mantenimiento', $this->money($gastosCat['mantenimiento']))
+            Stat::make('Mantenimiento', $this->money($data['mantenimiento']))
                 ->description('Mantenimiento del día')
                 ->descriptionIcon('heroicon-o-wrench-screwdriver')
-                ->color($gastosCat['mantenimiento'] > 0 ? 'info' : 'gray'),
+                ->color($data['mantenimiento'] > 0 ? 'info' : 'gray'),
 
-            Stat::make('Multa', $this->money($gastosCat['multa']))
+            Stat::make('Multa', $this->money($data['multa']))
                 ->description('Multas del día')
                 ->descriptionIcon('heroicon-o-document-text')
-                ->color($gastosCat['multa'] > 0 ? 'warning' : 'gray'),
+                ->color($data['multa'] > 0 ? 'warning' : 'gray'),
 
-            Stat::make('Otro', $this->money($gastosCat['otro']))
+            Stat::make('Otro', $this->money($data['otro']))
                 ->description('Otros gastos del día')
                 ->descriptionIcon('heroicon-o-tag')
-                ->color($gastosCat['otro'] > 0 ? 'gray' : 'gray'),
+                ->color($data['otro'] > 0 ? 'gray' : 'gray'),
         ];
     }
 }

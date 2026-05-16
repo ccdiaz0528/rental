@@ -64,9 +64,6 @@ class Reportes extends Page
         };
     }
 
-    /**
-     * @return array{Carbon, Carbon}
-     */
     public function getDateRange(): array
     {
         $now = now();
@@ -100,22 +97,16 @@ class Reportes extends Page
     public function getVehiculosDisponibles(): Collection
     {
         return $this->applyUserScope(
-            Vehiculo::query()->orderBy('placa')
+            Vehiculo::query()->with('persona:id,nombre')->orderBy('placa')
         )->get();
     }
 
     public function getResumen(): array
     {
-        $registros = $this->getBaseQuery()->get();
-        $vehiculos = $this->getVehiculosDisponibles();
         [$start, $end] = $this->getDateRange();
-
         $diasEnRango = max((int) $start->diffInDays($end) + 1, 1);
 
-        $totalReal = (float) $registros->sum('valor_generado');
-        $totalGastos = (float) $registros->sum('gasto');
-        $totalNeto = $totalReal - $totalGastos;
-
+        $vehiculos = $this->getVehiculosDisponibles();
         $totalEsperado = 0;
         foreach ($vehiculos as $vehiculo) {
             if ($vehiculo->estado === 'activo') {
@@ -123,13 +114,20 @@ class Reportes extends Page
             }
         }
 
+        $agregados = $this->getBaseQuery()
+            ->selectRaw('COALESCE(SUM(valor_generado), 0) as total_real, COALESCE(SUM(gasto), 0) as total_gastos')
+            ->first();
+
+        $totalReal = (float) ($agregados?->total_real ?? 0);
+        $totalGastos = (float) ($agregados?->total_gastos ?? 0);
+
         return [
             'esperado' => $totalEsperado,
             'real' => $totalReal,
             'gastos' => $totalGastos,
-            'neto' => $totalNeto,
+            'neto' => $totalReal - $totalGastos,
             'dias' => $diasEnRango,
-            'total_registros_modificados' => $registros->count(),
+            'total_registros_modificados' => $this->getBaseQuery()->count(),
         ];
     }
 
@@ -137,43 +135,43 @@ class Reportes extends Page
     {
         $registros = $this->getBaseQuery()
             ->where('gasto', '>', 0)
-            ->get();
+            ->selectRaw('categoria_gasto, SUM(gasto) as total')
+            ->groupBy('categoria_gasto')
+            ->pluck('total', 'categoria_gasto');
 
-        $gastos = ['daño' => 0.0, 'mantenimiento' => 0.0, 'multa' => 0.0, 'otro' => 0.0];
-
-        foreach ($registros as $r) {
-            $cat = $r->categoria_gasto ?: 'otro';
-            $gastos[$cat] += (float) ($r->gasto ?? 0);
-        }
-
-        $total = array_sum($gastos);
+        $gastos = [
+            'daño' => (float) ($registros['daño'] ?? 0),
+            'mantenimiento' => (float) ($registros['mantenimiento'] ?? 0),
+            'multa' => (float) ($registros['multa'] ?? 0),
+            'otro' => (float) ($registros['otro'] ?? 0),
+        ];
 
         return [
             'categorias' => $gastos,
-            'total' => $total,
+            'total' => array_sum($gastos),
         ];
     }
 
     public function getDetallePorVehiculo(): array
     {
         [$start, $end] = $this->getDateRange();
+        $diasEnRango = max((int) $start->diffInDays($end) + 1, 1);
+
         $vehiculos = $this->getVehiculosDisponibles();
 
-        $registrosPorVehiculo = $this->getBaseQuery()
+        $agregadosPorVehiculo = $this->getBaseQuery()
+            ->selectRaw('vehiculo_id, COALESCE(SUM(valor_generado), 0) as total_real, COALESCE(SUM(gasto), 0) as total_gastos, COUNT(*) as total_registros')
+            ->groupBy('vehiculo_id')
             ->get()
-            ->groupBy('vehiculo_id');
+            ->keyBy('vehiculo_id');
 
         $detalle = [];
 
         foreach ($vehiculos as $vehiculo) {
-            $regs = $registrosPorVehiculo->get($vehiculo->id, collect());
+            $agg = $agregadosPorVehiculo->get($vehiculo->id);
 
-            $real = (float) $regs->sum('valor_generado');
-            $gastos = (float) $regs->sum('gasto');
-            $neto = $real - $gastos;
-            $diasModificados = $regs->count();
-
-            $diasEnRango = max((int) $start->diffInDays($end) + 1, 1);
+            $real = (float) ($agg?->total_real ?? 0);
+            $gastos = (float) ($agg?->total_gastos ?? 0);
             $esperado = $vehiculo->estado === 'activo'
                 ? (float) $vehiculo->cuota_diaria * $diasEnRango
                 : 0;
@@ -185,8 +183,8 @@ class Reportes extends Page
                 'esperado' => $esperado,
                 'real' => $real,
                 'gastos' => $gastos,
-                'neto' => $neto,
-                'dias_modificados' => $diasModificados,
+                'neto' => $real - $gastos,
+                'dias_modificados' => (int) ($agg?->total_registros ?? 0),
                 'cuota_diaria' => (float) $vehiculo->cuota_diaria,
             ];
         }
@@ -198,27 +196,29 @@ class Reportes extends Page
     {
         [$start, $end] = $this->getDateRange();
 
-        $registros = $this->getBaseQuery()
+        $agregadosPorDia = $this->getBaseQuery()
+            ->selectRaw('fecha, COALESCE(SUM(valor_generado), 0) as total_real, COALESCE(SUM(gasto), 0) as total_gastos, COUNT(*) as total_registros')
+            ->groupBy('fecha')
+            ->orderBy('fecha')
             ->get()
-            ->groupBy(fn ($r) => $r->fecha->toDateString());
+            ->keyBy(fn ($r) => $r->fecha->toDateString());
 
         $dias = [];
         $current = $start->copy();
 
         while ($current->lte($end)) {
             $fechaStr = $current->toDateString();
-            $regs = $registros->get($fechaStr, collect());
+            $agg = $agregadosPorDia->get($fechaStr);
 
-            $real = (float) $regs->sum('valor_generado');
-            $gastos = (float) $regs->sum('gasto');
-            $neto = $real - $gastos;
+            $real = (float) ($agg?->total_real ?? 0);
+            $gastos = (float) ($agg?->total_gastos ?? 0);
 
             $dias[] = [
                 'fecha' => $current->copy(),
                 'real' => $real,
                 'gastos' => $gastos,
-                'neto' => $neto,
-                'registros' => $regs->count(),
+                'neto' => $real - $gastos,
+                'registros' => (int) ($agg?->total_registros ?? 0),
             ];
 
             $current->addDay();

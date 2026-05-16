@@ -135,7 +135,7 @@ class BelongsToUserTraitTest extends TestCase
         $this->assertEquals($this->admin->id, $contrato->user_id);
     }
 
-    public function test_control_diario_does_not_have_belongs_to_user_trait(): void
+    public function test_control_diario_has_belongs_to_user_trait(): void
     {
         $vehiculo = Vehiculo::create([
             'user_id' => $this->admin->id,
@@ -152,6 +152,6 @@ class BelongsToUserTraitTest extends TestCase
             'valor_generado' => 80000,
         ]);
 
-        $this->assertNull($control->user_id);
+        $this->assertEquals($this->user->id, $control->user_id);
     }
 }

@@ -10,6 +10,7 @@ use App\Models\Vehiculo;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Cache;
 
 class IndicadoresFlota extends BaseWidget
 {
@@ -18,6 +19,8 @@ class IndicadoresFlota extends BaseWidget
 
     protected static ?int $sort = 4;
 
+    protected ?string $pollingInterval = '120s';
+
     public function getHeading(): string
     {
         return 'Indicadores de flota';
@@ -25,51 +28,65 @@ class IndicadoresFlota extends BaseWidget
 
     protected function getStats(): array
     {
-        $inicioSemana = now()->startOfWeek(Carbon::SUNDAY);
-        $finSemana = $inicioSemana->copy()->addDays(6);
+        $userId = auth()->id();
+        $adminContext = auth()->user()?->hasRole('admin') ? $this->selectedUserId : null;
+        $cacheKey = 'dashboard_flota_v2_'.$userId.'_'.$adminContext;
 
-        $vehiculosActivos = $this->applyUserScope(
-            Vehiculo::query()->where('estado', 'activo')
-        )->get(['id', 'persona_id']);
+        $data = Cache::remember($cacheKey, 120, function () {
+            $inicioSemana = now()->startOfWeek(Carbon::SUNDAY);
+            $finSemana = $inicioSemana->copy()->addDays(6);
 
-        $todosIds = $this->applyUserScope(Vehiculo::query())
-            ->pluck('id');
+            $vehiculosQuery = $this->applyUserScope(Vehiculo::query());
 
-        $ajustesSemana = $vehiculosActivos->isEmpty() || $todosIds->isEmpty()
-            ? 0
-            : $this->applyUserScope(
-                ControlDiario::query()
-                    ->whereIn('vehiculo_id', $todosIds)
-                    ->whereBetween('fecha', [$inicioSemana->toDateString(), $finSemana->toDateString()])
-            )->count();
+            $vehiculosActivos = (clone $vehiculosQuery)
+                ->where('estado', 'activo')
+                ->get(['id', 'persona_id']);
 
-        $contratoStats = $this->applyUserScope(
-            Contrato::query()->where('estado', 'activo'),
-            'contratos.user_id'
-        )->selectRaw("SUM(tipo='alquiler') as alquiler, SUM(tipo='opcion_compra') as opcion_compra")->first();
+            $todosIds = (clone $vehiculosQuery)->pluck('id');
+
+            $ajustesSemana = $todosIds->isEmpty()
+                ? 0
+                : $this->applyUserScope(
+                    ControlDiario::query()
+                        ->whereIn('vehiculo_id', $todosIds)
+                        ->whereBetween('fecha', [$inicioSemana->toDateString(), $finSemana->toDateString()])
+                )->count();
+
+            $contratoStats = $this->applyUserScope(
+                Contrato::query()->where('estado', 'activo')
+            )->selectRaw("SUM(tipo='alquiler') as alquiler, SUM(tipo='opcion_compra') as opcion_compra")->first();
+
+            return [
+                'vehiculos_activos' => $vehiculosActivos->count(),
+                'con_conductor' => $vehiculosActivos->whereNotNull('persona_id')->count(),
+                'ajustes_semana' => $ajustesSemana,
+                'contratos_alquiler' => (int) ($contratoStats?->alquiler ?? 0),
+                'contratos_opcion_compra' => (int) ($contratoStats?->opcion_compra ?? 0),
+            ];
+        });
 
         return [
-            Stat::make('Vehículos activos', $vehiculosActivos->count())
+            Stat::make('Vehículos activos', $data['vehiculos_activos'])
                 ->description('En operación')
                 ->descriptionIcon('heroicon-o-truck')
                 ->color('success'),
 
-            Stat::make('Con conductor', $vehiculosActivos->whereNotNull('persona_id')->count())
+            Stat::make('Con conductor', $data['con_conductor'])
                 ->description('Asignados')
                 ->descriptionIcon('heroicon-o-user-group')
                 ->color('success'),
 
-            Stat::make('Ajustes semana', $ajustesSemana)
+            Stat::make('Ajustes semana', $data['ajustes_semana'])
                 ->description('Celdas modificadas')
                 ->descriptionIcon('heroicon-o-pencil-square')
-                ->color($ajustesSemana > 0 ? 'warning' : 'gray'),
+                ->color($data['ajustes_semana'] > 0 ? 'warning' : 'gray'),
 
-            Stat::make('Contratos alquiler', (int) ($contratoStats?->alquiler ?? 0))
+            Stat::make('Contratos alquiler', $data['contratos_alquiler'])
                 ->description('En alquiler')
                 ->descriptionIcon('heroicon-o-calendar')
                 ->color('info'),
 
-            Stat::make('Contratos opción compra', (int) ($contratoStats?->opcion_compra ?? 0))
+            Stat::make('Contratos opción compra', $data['contratos_opcion_compra'])
                 ->description('Opción de compra')
                 ->descriptionIcon('heroicon-o-shopping-cart')
                 ->color('info'),

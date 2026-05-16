@@ -4,9 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Concerns\HasUserContext;
 use App\Models\ControlDiario;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 
@@ -16,7 +14,7 @@ class PagosRecientesWidget extends BaseWidget
 
     protected static ?int $sort = 6;
 
-    protected static ?string $heading = 'Últimos movimientos';
+    protected static ?string $heading = 'Ultimos movimientos';
 
     protected int|string|array $columnSpan = 'full';
 
@@ -32,31 +30,30 @@ class PagosRecientesWidget extends BaseWidget
                 TextColumn::make('fecha')
                     ->label('Fecha')
                     ->date('d/m/Y')
-                    ->searchable()
+                    ->sortable()
                     ->grow(false),
 
                 TextColumn::make('vehiculo.placa')
-                    ->label('Vehículo')
-                    ->searchable()
+                    ->label('Vehiculo')
+                    ->sortable()
                     ->grow(false),
 
                 TextColumn::make('vehiculo.persona.nombre')
                     ->label('Conductor')
                     ->placeholder('Sin conductor'),
 
-                BadgeColumn::make('trabajo')
+                TextColumn::make('trabajo')
                     ->label('Estado')
-                    ->colors([
-                        'success' => true,
-                        'danger' => false,
-                    ])
-                    ->formatStateUsing(fn ($state) => $state ? 'Trabajó' : 'No trabajó')
+                    ->badge()
+                    ->color(fn (bool $state): string => $state ? 'success' : 'danger')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Trabajo' : 'No trabajo')
                     ->grow(false),
 
                 TextColumn::make('valor_generado')
                     ->label('Ingreso')
                     ->money('COP', locale: 'es_CO', decimalPlaces: 0)
                     ->alignEnd()
+                    ->sortable()
                     ->grow(false),
 
                 TextColumn::make('gasto')
@@ -64,6 +61,7 @@ class PagosRecientesWidget extends BaseWidget
                     ->money('COP', locale: 'es_CO', decimalPlaces: 0)
                     ->alignEnd()
                     ->color('danger')
+                    ->sortable()
                     ->grow(false),
 
                 TextColumn::make('neto')
@@ -74,33 +72,25 @@ class PagosRecientesWidget extends BaseWidget
                     ->color(fn ($state) => $state >= 0 ? 'success' : 'danger')
                     ->grow(false),
 
-                BadgeColumn::make('categoria_gasto')
-                    ->label('Categoría')
-                    ->colors([
-                        'danger' => 'daño',
-                        'info' => 'mantenimiento',
-                        'warning' => 'multa',
-                        'gray' => 'otro',
-                    ])
-                    ->formatStateUsing(fn ($state) => match ($state) {
-                        'daño' => '🛠️ Daño',
-                        'mantenimiento' => '🔧 Mant.',
-                        'multa' => '🚫 Multa',
-                        'otro' => '📋 Otro',
+                TextColumn::make('categoria_gasto')
+                    ->label('Categoria')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'dano' => 'danger',
+                        'mantenimiento' => 'info',
+                        'multa' => 'warning',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'dano' => 'Dano',
+                        'mantenimiento' => 'Mant.',
+                        'multa' => 'Multa',
+                        'otro' => 'Otro',
                         default => '—',
                     })
                     ->grow(false),
             ])
-            ->filters([
-                SelectFilter::make('categoria_gasto')
-                    ->label('Categoría')
-                    ->options([
-                        'daño' => 'Daños',
-                        'mantenimiento' => 'Mantenimientos',
-                        'multa' => 'Multas',
-                        'otro' => 'Otros',
-                    ]),
-            ])
+            ->filters([])
             ->paginated(false)
             ->striped()
             ->searchable();
