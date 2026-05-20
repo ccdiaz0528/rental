@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Personas\Tables;
 
+use App\Models\Persona;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -42,6 +43,15 @@ class PersonasTable
                         default => 'gray',
                     }),
 
+                TextColumn::make('estado')
+                    ->label('Estado')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'activo' => 'success',
+                        'inactivo' => 'danger',
+                        default => 'gray',
+                    }),
+
                 TextColumn::make('created_at')
                     ->label('Registrado')
                     ->date('d/m/Y')
@@ -50,7 +60,11 @@ class PersonasTable
             ->actions([
                 ViewAction::make(),
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->disabled(fn (Persona $record): bool => ! $record->canBeDeleted())
+                    ->tooltip(fn (Persona $record): ?string => $record->canBeDeleted()
+                        ? null
+                        : 'No se puede eliminar porque tiene '.$record->deletionBlockers().'.'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

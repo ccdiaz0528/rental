@@ -19,6 +19,7 @@ class Persona extends Model
         'telefono',
         'direccion',
         'tipo',
+        'estado',
         'observaciones',
     ];
 
@@ -44,5 +45,19 @@ class Persona extends Model
     public function vehiculos(): HasMany
     {
         return $this->hasMany(Vehiculo::class);
+    }
+
+    public function canBeDeleted(): bool
+    {
+        return ($this->contratos_activos_count ?? $this->contratos()->where('estado', 'activo')->count()) === 0;
+    }
+
+    public function deletionBlockers(): string
+    {
+        if (($this->contratos_activos_count ?? $this->contratos()->where('estado', 'activo')->count()) > 0) {
+            return 'contratos activos';
+        }
+
+        return '';
     }
 }

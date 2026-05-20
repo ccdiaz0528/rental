@@ -41,6 +41,17 @@ class PersonaForm
                 ->required()
                 ->default('conductor'),
 
+            Select::make('estado')
+                ->label('Estado')
+                ->options([
+                    'activo' => 'Activo',
+                    'inactivo' => 'Inactivo',
+                ])
+                ->hintIcon('heroicon-o-question-mark-circle')
+                ->hintIconTooltip('Activo: conduce algún vehículo en alquiler. Inactivo: tiene deuda activa.')
+                ->default('activo')
+                ->required(),
+
             Textarea::make('observaciones')
                 ->label('Observaciones')
                 ->rows(3)

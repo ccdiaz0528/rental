@@ -55,7 +55,7 @@ class VehiculoForm
 
             Select::make('persona_id')
                 ->label('Conductor')
-                ->relationship('persona', 'nombre')
+                ->relationship('persona', 'nombre', fn ($query) => $query->where('estado', 'activo'))
                 ->searchable()
                 ->preload()
                 ->nullable(),

@@ -23,7 +23,7 @@ class ContratoForm
 
             Select::make('persona_id')
                 ->label('Conductor / Persona')
-                ->relationship('persona', 'nombre')
+                ->relationship('persona', 'nombre', fn ($query) => $query->where('estado', 'activo'))
                 ->required()
                 ->searchable()
                 ->preload(),
