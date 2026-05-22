@@ -73,6 +73,11 @@ class ControlDiario extends Model
             ->logAll()
             ->logOnlyDirty()
             ->useLogName('ControlDiario')
-            ->setDescriptionForEvent(fn (string $eventName) => "Control diario {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => 'Control diario '.match ($eventName) {
+                'created' => 'creado',
+                'updated' => 'actualizado',
+                'deleted' => 'eliminado',
+                default => $eventName,
+            });
     }
 }

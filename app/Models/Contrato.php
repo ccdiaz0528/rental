@@ -62,6 +62,11 @@ class Contrato extends Model
             ->logAll()
             ->logOnlyDirty()
             ->useLogName('Contrato')
-            ->setDescriptionForEvent(fn (string $eventName) => "Contrato {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => 'Contrato '.match ($eventName) {
+                'created' => 'creado',
+                'updated' => 'actualizado',
+                'deleted' => 'eliminado',
+                default => $eventName,
+            });
     }
 }

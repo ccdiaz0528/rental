@@ -52,6 +52,11 @@ class User extends Authenticatable
             ->logOnlyDirty()
             ->useLogName('User')
             ->logExcept(['password', 'remember_token'])
-            ->setDescriptionForEvent(fn (string $eventName) => "Usuario {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => 'Usuario '.match ($eventName) {
+                'created' => 'creado',
+                'updated' => 'actualizado',
+                'deleted' => 'eliminado',
+                default => $eventName,
+            });
     }
 }

@@ -37,7 +37,15 @@ class ActivityLogResource extends Resource
                     ->label('Módulo')
                     ->badge()
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'Vehiculo' => 'Vehículos',
+                        'Persona' => 'Personas',
+                        'Contrato' => 'Contratos',
+                        'ControlDiario' => 'Control Diario',
+                        'User' => 'Usuarios',
+                        default => $state,
+                    }),
 
                 TextColumn::make('description')
                     ->label('Evento')
@@ -45,7 +53,14 @@ class ActivityLogResource extends Resource
 
                 TextColumn::make('subject_type')
                     ->label('Entidad')
-                    ->formatStateUsing(fn (string $state): string => class_basename($state)),
+                    ->formatStateUsing(fn (string $state): string => match (class_basename($state)) {
+                        'Vehiculo' => 'Vehículo',
+                        'Persona' => 'Persona',
+                        'Contrato' => 'Contrato',
+                        'ControlDiario' => 'Control Diario',
+                        'User' => 'Usuario',
+                        default => class_basename($state),
+                    }),
 
                 TextColumn::make('subject_id')
                     ->label('ID Entidad'),

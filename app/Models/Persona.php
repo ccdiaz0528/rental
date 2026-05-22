@@ -70,6 +70,11 @@ class Persona extends Model
             ->logAll()
             ->logOnlyDirty()
             ->useLogName('Persona')
-            ->setDescriptionForEvent(fn (string $eventName) => "Persona {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => 'Persona '.match ($eventName) {
+                'created' => 'creado',
+                'updated' => 'actualizado',
+                'deleted' => 'eliminado',
+                default => $eventName,
+            });
     }
 }

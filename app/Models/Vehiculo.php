@@ -92,6 +92,11 @@ class Vehiculo extends Model
             ->logAll()
             ->logOnlyDirty()
             ->useLogName('Vehiculo')
-            ->setDescriptionForEvent(fn (string $eventName) => "Vehículo {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => 'Vehículo '.match ($eventName) {
+                'created' => 'creado',
+                'updated' => 'actualizado',
+                'deleted' => 'eliminado',
+                default => $eventName,
+            });
     }
 }
