@@ -6,10 +6,13 @@ use App\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Contrato extends Model
 {
     use BelongsToUser;
+    use LogsActivity;
 
     protected $fillable = [
         'user_id',
@@ -51,5 +54,13 @@ class Contrato extends Model
     public function persona(): BelongsTo
     {
         return $this->belongsTo(Persona::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn (string $eventName) => "Contrato {$eventName}");
     }
 }

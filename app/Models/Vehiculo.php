@@ -7,10 +7,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Vehiculo extends Model
 {
     use BelongsToUser;
+    use LogsActivity;
 
     protected $fillable = [
         'user_id',
@@ -73,15 +76,21 @@ class Vehiculo extends Model
     public function deletionBlockers(): string
     {
         $blockers = [];
-
         if (($this->contratos_count ?? $this->contratos()->count()) > 0) {
             $blockers[] = 'contratos';
         }
-
         if (($this->control_diarios_count ?? $this->controlDiarios()->count()) > 0) {
             $blockers[] = 'controles semanales';
         }
 
         return implode(', ', $blockers);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn (string $eventName) => "Vehículo {$eventName}");
     }
 }

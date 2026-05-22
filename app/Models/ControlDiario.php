@@ -6,10 +6,13 @@ use App\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class ControlDiario extends Model
 {
     use BelongsToUser;
+    use LogsActivity;
 
     public const CATEGORIA_DAÑO = 'daño';
 
@@ -62,5 +65,13 @@ class ControlDiario extends Model
     public function vehiculo(): BelongsTo
     {
         return $this->belongsTo(Vehiculo::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn (string $eventName) => "Control diario {$eventName}");
     }
 }

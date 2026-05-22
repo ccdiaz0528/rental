@@ -11,6 +11,7 @@
         "laravel-lang/common": "^6.8",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
+        "spatie/laravel-activitylog": "*",
         "spatie/laravel-permission": "^7.4"
     },
     "require-dev": {
