@@ -284,13 +284,13 @@
                     @forelse ($history as $week)
                         <button
                             type="button"
-                            wire:click="$set('selectedDate', '{{ $week['week_start']->toDateString() }}')"
+                            wire:click="$set('selectedDate', '{{ $week['week_start'] }}')"
                             class="w-full rounded-[22px] border px-4 py-4 text-left transition {{ $week['is_selected'] ? 'border-gray-900 bg-slate-950 text-white dark:border-gray-600 dark:bg-gray-500/10' : 'border-gray-200 hover:border-gray-400 hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5' }}"
                         >
                             <div class="flex items-start justify-between gap-3">
                                 <div>
                                     <div class="text-sm font-semibold {{ $week['is_selected'] ? 'text-white' : 'text-slate-950 dark:text-white' }}">
-                                        {{ $week['week_start']->format('d/m') }} - {{ $week['week_end']->format('d/m') }}
+                                        {{ \Carbon\Carbon::parse($week['week_start'])->format('d/m') }} - {{ \Carbon\Carbon::parse($week['week_end'])->format('d/m') }}
                                     </div>
                                     <div class="mt-1 text-xs {{ $week['is_selected'] ? 'text-slate-300' : 'text-slate-500' }}">
                                         {{ $week['novedades'] }} ajustes · {{ $week['dias_sin_trabajo'] }} días no trabajados

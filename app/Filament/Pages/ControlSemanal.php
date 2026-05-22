@@ -416,8 +416,8 @@ class ControlSemanal extends Page
         }
 
         return [
-            'week_start' => $weekStart,
-            'week_end' => $weekEnd,
+            'week_start' => $weekStart->toDateString(),
+            'week_end' => $weekEnd->toDateString(),
             'esperado' => $esperado,
             'real' => $real,
             'gastos' => $gastos,
