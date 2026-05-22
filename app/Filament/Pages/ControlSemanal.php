@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class ControlSemanal extends Page
 {
@@ -301,6 +302,15 @@ class ControlSemanal extends Page
     }
 
     public function getWeekHistory(): array
+    {
+        $cacheKey = $this->userContextCacheKey().'_week_history_'.$this->weekStart()->toDateString();
+
+        return Cache::remember($cacheKey, 60, function () {
+            return $this->buildWeekHistory();
+        });
+    }
+
+    private function buildWeekHistory(): array
     {
         $baseWeek = $this->weekStart();
 

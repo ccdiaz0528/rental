@@ -87,7 +87,9 @@ trait HasUserContext
             return null;
         }
 
-        return User::find($this->selectedUserId)?->name;
+        $cacheKey = $this->userContextCacheKey().'_name';
+
+        return Cache::remember($cacheKey, 3600, fn () => User::find($this->selectedUserId)?->name);
     }
 
     private function userContextCacheKey(): string

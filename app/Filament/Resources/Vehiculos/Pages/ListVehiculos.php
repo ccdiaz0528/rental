@@ -20,6 +20,6 @@ class ListVehiculos extends ListRecords
 
     protected function getTableQuery(): Builder
     {
-        return parent::getTableQuery()->withCount(['contratos', 'controlDiarios']);
+        return parent::getTableQuery()->with('persona')->withCount(['contratos', 'controlDiarios']);
     }
 }

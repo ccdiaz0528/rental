@@ -32,6 +32,10 @@ class Reportes extends Page
 
     public array $vehiculosSeleccionados = [];
 
+    private ?Collection $cachedVehiculos = null;
+
+    private ?Collection $cachedRegistros = null;
+
     public function mount(): void
     {
         $range = $this->getDateRange();
@@ -96,7 +100,7 @@ class Reportes extends Page
 
     public function getVehiculosDisponibles(): Collection
     {
-        return $this->applyUserScope(
+        return $this->cachedVehiculos ??= $this->applyUserScope(
             Vehiculo::query()->with('persona:id,nombre')->orderBy('placa')
         )->get();
     }
@@ -280,7 +284,7 @@ class Reportes extends Page
 
     private function getRegistrosEnRango(): Collection
     {
-        return $this->getBaseQuery()
+        return $this->cachedRegistros ??= $this->getBaseQuery()
             ->get()
             ->keyBy(fn (ControlDiario $r) => $r->fecha->toDateString().'-'.$r->vehiculo_id);
     }
