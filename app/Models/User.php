@@ -50,6 +50,7 @@ class User extends Authenticatable
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
+            ->useLogName('User')
             ->logExcept(['password', 'remember_token'])
             ->setDescriptionForEvent(fn (string $eventName) => "Usuario {$eventName}");
     }

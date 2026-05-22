@@ -72,6 +72,7 @@ class ControlDiario extends Model
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
+            ->useLogName('ControlDiario')
             ->setDescriptionForEvent(fn (string $eventName) => "Control diario {$eventName}");
     }
 }

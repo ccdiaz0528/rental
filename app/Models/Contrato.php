@@ -61,6 +61,7 @@ class Contrato extends Model
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
+            ->useLogName('Contrato')
             ->setDescriptionForEvent(fn (string $eventName) => "Contrato {$eventName}");
     }
 }

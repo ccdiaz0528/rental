@@ -69,6 +69,7 @@ class Persona extends Model
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
+            ->useLogName('Persona')
             ->setDescriptionForEvent(fn (string $eventName) => "Persona {$eventName}");
     }
 }

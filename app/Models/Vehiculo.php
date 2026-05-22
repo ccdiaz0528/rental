@@ -91,6 +91,7 @@ class Vehiculo extends Model
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
+            ->useLogName('Vehiculo')
             ->setDescriptionForEvent(fn (string $eventName) => "Vehículo {$eventName}");
     }
 }

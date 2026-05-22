@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActivityLogResource\Pages\ListActivityLogs;
 use App\Filament\Resources\ActivityLogResource\Pages\ViewActivityLog;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -14,7 +15,13 @@ class ActivityLogResource extends Resource
 {
     protected static ?string $model = Activity::class;
 
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
+
     protected static ?string $navigationLabel = 'Trazabilidad';
+
+    protected static ?string $modelLabel = 'Registro';
+
+    protected static ?string $pluralModelLabel = 'Trazabilidad';
 
     protected static ?int $navigationSort = 100;
 
@@ -48,23 +55,36 @@ class ActivityLogResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('properties')
+                TextColumn::make('cambios_formateados')
                     ->label('Cambios')
-                    ->formatStateUsing(function ($state): string {
-                        if (! $state) {
+                    ->getStateUsing(function ($record): string {
+                        $changes = $record->attribute_changes;
+
+                        if ($changes->isEmpty()) {
                             return '—';
                         }
-                        $data = is_string($state) ? json_decode($state, true) : $state;
-                        if (! isset($data['old'])) {
-                            return 'Creado';
-                        }
-                        $lines = [];
-                        foreach ($data['old'] as $key => $old) {
-                            $new = $data['attributes'][$key] ?? null;
-                            $lines[] = "{$key}: {$old} → {$new}";
+
+                        if ($changes->has('old') && $changes->has('attributes')) {
+                            $lines = [];
+                            foreach ($changes['old'] as $key => $old) {
+                                $new = $changes['attributes'][$key] ?? '(eliminado)';
+                                if (is_scalar($old) && is_scalar($new)) {
+                                    $lines[] = "{$key}: {$old} → {$new}";
+                                }
+                            }
+
+                            return implode(', ', $lines) ?: '—';
                         }
 
-                        return implode("\n", $lines);
+                        if ($changes->has('attributes')) {
+                            return 'Creado';
+                        }
+
+                        if ($changes->has('old')) {
+                            return 'Eliminado';
+                        }
+
+                        return '—';
                     })
                     ->wrap(),
 
@@ -104,5 +124,10 @@ class ActivityLogResource extends Resource
             'index' => ListActivityLogs::route('/'),
             'view' => ViewActivityLog::route('/{record}'),
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        return auth()->check() && auth()->user()->hasRole('admin');
     }
 }
