@@ -42,13 +42,13 @@ class IndicadoresFlota extends BaseWidget
                 ->where('estado', 'activo')
                 ->get(['id', 'persona_id']);
 
-            $todosIds = (clone $vehiculosQuery)->pluck('id');
+            $activosIds = $vehiculosActivos->pluck('id');
 
-            $ajustesSemana = $todosIds->isEmpty()
+            $ajustesSemana = $activosIds->isEmpty()
                 ? 0
                 : $this->applyUserScope(
                     ControlDiario::query()
-                        ->whereIn('vehiculo_id', $todosIds)
+                        ->whereIn('vehiculo_id', $activosIds)
                         ->whereBetween('fecha', [$inicioSemana->toDateString(), $finSemana->toDateString()])
                 )->count();
 

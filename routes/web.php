@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Contrato;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +16,16 @@ Route::get('documento/contratos/{path}', function (string $path) {
 
     if (! Storage::disk('local')->exists($path)) {
         abort(404, 'File not found: '.$path);
+    }
+
+    $user = Auth::user();
+
+    if (! $user->hasRole('admin')) {
+        $contrato = Contrato::where('documento', $path)->first();
+
+        if (! $contrato || (int) $contrato->user_id !== (int) $user->id) {
+            abort(403, 'Forbidden');
+        }
     }
 
     $mime = match (pathinfo($path, PATHINFO_EXTENSION)) {

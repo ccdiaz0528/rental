@@ -77,6 +77,7 @@ class ControlSemanal extends Page
             'cuota_diaria' => $vehiculo->cuota_diaria,
             'administracion' => $vehiculo->administracion ?? 0,
             'persona_nombre' => $vehiculo->persona?->nombre,
+            'user_id' => $vehiculo->user_id,
         ];
 
         $registro = ControlDiario::query()
@@ -169,7 +170,7 @@ class ControlSemanal extends Page
         }
 
         $registro->fill([
-            'user_id' => auth()->id(),
+            'user_id' => $this->cachedVehiculo['user_id'] ?? auth()->id(),
             'trabajo' => $trabajo,
             'valor_generado' => $valorGenerado,
             'gasto' => $gasto,

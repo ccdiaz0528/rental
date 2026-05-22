@@ -114,20 +114,39 @@ class Reportes extends Page
             }
         }
 
-        $agregados = $this->getBaseQuery()
-            ->selectRaw('COALESCE(SUM(valor_generado), 0) as total_real, COALESCE(SUM(gasto), 0) as total_gastos')
-            ->first();
+        $registrosEnRango = $this->getRegistrosEnRango();
+        $totalReal = 0;
+        $totalGastos = 0;
+        $totalAdmin = 0;
 
-        $totalReal = (float) ($agregados?->total_real ?? 0);
-        $totalGastos = (float) ($agregados?->total_gastos ?? 0);
+        foreach ($vehiculos as $vehiculo) {
+            if ($vehiculo->estado !== 'activo') {
+                continue;
+            }
+
+            for ($d = 0; $d < $diasEnRango; $d++) {
+                $fechaStr = $start->copy()->addDays($d)->toDateString();
+                $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
+
+                if ($registro) {
+                    $totalReal += $registro->trabajo ? (float) $registro->valor_generado : 0;
+                    $totalGastos += (float) $registro->gasto;
+                    $totalAdmin += (float) ($registro->administracion ?? $vehiculo->administracion ?? 0);
+                } else {
+                    $totalReal += (float) $vehiculo->cuota_diaria;
+                    $totalAdmin += (float) ($vehiculo->administracion ?? 0);
+                }
+            }
+        }
 
         return [
             'esperado' => $totalEsperado,
             'real' => $totalReal,
             'gastos' => $totalGastos,
-            'neto' => $totalReal - $totalGastos,
+            'administracion' => $totalAdmin,
+            'neto' => $totalReal - $totalGastos - $totalAdmin,
             'dias' => $diasEnRango,
-            'total_registros_modificados' => $this->getBaseQuery()->count(),
+            'total_registros_modificados' => $registrosEnRango->count(),
         ];
     }
 
@@ -146,9 +165,12 @@ class Reportes extends Page
             'otro' => (float) ($registros['otro'] ?? 0),
         ];
 
+        $dbTotal = $registros->sum();
+        $gastos['otro'] += $dbTotal - array_sum($gastos);
+
         return [
             'categorias' => $gastos,
-            'total' => array_sum($gastos),
+            'total' => $dbTotal,
         ];
     }
 
@@ -158,23 +180,35 @@ class Reportes extends Page
         $diasEnRango = max((int) $start->diffInDays($end) + 1, 1);
 
         $vehiculos = $this->getVehiculosDisponibles();
-
-        $agregadosPorVehiculo = $this->getBaseQuery()
-            ->selectRaw('vehiculo_id, COALESCE(SUM(valor_generado), 0) as total_real, COALESCE(SUM(gasto), 0) as total_gastos, COUNT(*) as total_registros')
-            ->groupBy('vehiculo_id')
-            ->get()
-            ->keyBy('vehiculo_id');
+        $registrosEnRango = $this->getRegistrosEnRango();
 
         $detalle = [];
 
         foreach ($vehiculos as $vehiculo) {
-            $agg = $agregadosPorVehiculo->get($vehiculo->id);
-
-            $real = (float) ($agg?->total_real ?? 0);
-            $gastos = (float) ($agg?->total_gastos ?? 0);
+            $real = 0;
+            $gastos = 0;
+            $admin = 0;
+            $diasModificados = 0;
             $esperado = $vehiculo->estado === 'activo'
                 ? (float) $vehiculo->cuota_diaria * $diasEnRango
                 : 0;
+
+            if ($vehiculo->estado === 'activo') {
+                for ($d = 0; $d < $diasEnRango; $d++) {
+                    $fechaStr = $start->copy()->addDays($d)->toDateString();
+                    $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
+
+                    if ($registro) {
+                        $real += $registro->trabajo ? (float) $registro->valor_generado : 0;
+                        $gastos += (float) $registro->gasto;
+                        $admin += (float) ($registro->administracion ?? $vehiculo->administracion ?? 0);
+                        $diasModificados++;
+                    } else {
+                        $real += (float) $vehiculo->cuota_diaria;
+                        $admin += (float) ($vehiculo->administracion ?? 0);
+                    }
+                }
+            }
 
             $detalle[] = [
                 'placa' => $vehiculo->placa,
@@ -183,8 +217,9 @@ class Reportes extends Page
                 'esperado' => $esperado,
                 'real' => $real,
                 'gastos' => $gastos,
-                'neto' => $real - $gastos,
-                'dias_modificados' => (int) ($agg?->total_registros ?? 0),
+                'administracion' => $admin,
+                'neto' => $real - $gastos - $admin,
+                'dias_modificados' => $diasModificados,
                 'cuota_diaria' => (float) $vehiculo->cuota_diaria,
             ];
         }
@@ -196,35 +231,58 @@ class Reportes extends Page
     {
         [$start, $end] = $this->getDateRange();
 
-        $agregadosPorDia = $this->getBaseQuery()
-            ->selectRaw('fecha, COALESCE(SUM(valor_generado), 0) as total_real, COALESCE(SUM(gasto), 0) as total_gastos, COUNT(*) as total_registros')
-            ->groupBy('fecha')
-            ->orderBy('fecha')
-            ->get()
-            ->keyBy(fn ($r) => $r->fecha->toDateString());
+        $vehiculos = $this->getVehiculosDisponibles()->where('estado', 'activo');
+        $registrosEnRango = $this->getRegistrosEnRango();
+
+        if ($vehiculos->isEmpty()) {
+            return [];
+        }
 
         $dias = [];
         $current = $start->copy();
 
         while ($current->lte($end)) {
             $fechaStr = $current->toDateString();
-            $agg = $agregadosPorDia->get($fechaStr);
 
-            $real = (float) ($agg?->total_real ?? 0);
-            $gastos = (float) ($agg?->total_gastos ?? 0);
+            $real = 0;
+            $gastos = 0;
+            $admin = 0;
+            $registros = 0;
+
+            foreach ($vehiculos as $vehiculo) {
+                $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
+
+                if ($registro) {
+                    $real += $registro->trabajo ? (float) $registro->valor_generado : 0;
+                    $gastos += (float) $registro->gasto;
+                    $admin += (float) ($registro->administracion ?? $vehiculo->administracion ?? 0);
+                    $registros++;
+                } else {
+                    $real += (float) $vehiculo->cuota_diaria;
+                    $admin += (float) ($vehiculo->administracion ?? 0);
+                }
+            }
 
             $dias[] = [
                 'fecha' => $current->copy(),
                 'real' => $real,
                 'gastos' => $gastos,
-                'neto' => $real - $gastos,
-                'registros' => (int) ($agg?->total_registros ?? 0),
+                'administracion' => $admin,
+                'neto' => $real - $gastos - $admin,
+                'registros' => $registros,
             ];
 
             $current->addDay();
         }
 
         return $dias;
+    }
+
+    private function getRegistrosEnRango(): Collection
+    {
+        return $this->getBaseQuery()
+            ->get()
+            ->keyBy(fn (ControlDiario $r) => $r->fecha->toDateString().'-'.$r->vehiculo_id);
     }
 
     public function money(float|int|string $amount): string
