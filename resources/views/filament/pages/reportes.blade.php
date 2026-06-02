@@ -20,24 +20,24 @@
                 </div>
 
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
-                    <div class="rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur-md xl:min-h-[140px]">
+                    <div class="rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur-md xl:min-h-[140px] min-w-0">
                         <p class="text-[11px] uppercase tracking-[0.24em] text-slate-300">Neto del período</p>
-                        <p class="mt-2 text-3xl font-semibold {{ $resumen['neto'] >= 0 ? 'text-emerald-300' : 'text-rose-300' }}">
+                        <p class="mt-2 text-xl lg:text-2xl xl:text-3xl font-semibold truncate {{ $resumen['neto'] >= 0 ? 'text-emerald-300' : 'text-rose-300' }}">
                             {{ $this->money($resumen['neto']) }}
                         </p>
                     </div>
                     <div class="grid grid-cols-3 gap-4 xl:min-h-[140px]">
-                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
-                            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Gastos</p>
-                            <p class="mt-2 text-xl font-semibold">{{ $this->money($resumen['gastos']) }}</p>
+                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-3 xl:p-4 backdrop-blur-md min-w-0">
+                            <p class="text-[10px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Gastos</p>
+                            <p class="mt-2 text-sm lg:text-base xl:text-lg font-semibold truncate">{{ $this->money($resumen['gastos']) }}</p>
                         </div>
-                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
-                            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Ingresos</p>
-                            <p class="mt-2 text-xl font-semibold">{{ $this->money($resumen['real']) }}</p>
+                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-3 xl:p-4 backdrop-blur-md min-w-0">
+                            <p class="text-[10px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Ingresos</p>
+                            <p class="mt-2 text-sm lg:text-base xl:text-lg font-semibold truncate">{{ $this->money($resumen['real']) }}</p>
                         </div>
-                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
-                            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Admin</p>
-                            <p class="mt-2 text-xl font-semibold">{{ $this->money($resumen['administracion']) }}</p>
+                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-3 xl:p-4 backdrop-blur-md min-w-0">
+                            <p class="text-[10px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Admin</p>
+                            <p class="mt-2 text-sm lg:text-base xl:text-lg font-semibold truncate">{{ $this->money($resumen['administracion']) }}</p>
                         </div>
                     </div>
                 </div>
