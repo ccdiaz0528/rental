@@ -6,7 +6,7 @@
 
     <div class="flex flex-col gap-10">
         <section class="overflow-hidden rounded-[32px] border border-gray-300 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.22),_transparent_28%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] text-white shadow-[0_30px_80px_rgba(15,23,42,0.28)] dark:border-white/10">
-            <div class="grid gap-8 px-7 py-7 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-stretch">
+            <div class="grid gap-8 px-7 py-7 xl:grid-cols-[minmax(0,1fr)_30rem] xl:items-stretch">
                 <div>
                     <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-blue-100 backdrop-blur-sm">
                         {{ $this->getPeriodoLabel() }}
@@ -26,18 +26,18 @@
                             {{ $this->money($resumen['neto']) }}
                         </p>
                     </div>
-                    <div class="grid grid-cols-3 gap-4 xl:min-h-[140px]">
-                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-3 xl:p-4 backdrop-blur-md min-w-0">
-                            <p class="text-[10px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Gastos</p>
-                            <p class="mt-2 text-sm lg:text-base xl:text-lg font-semibold truncate">{{ $this->money($resumen['gastos']) }}</p>
+                    <div class="grid grid-cols-2 xl:grid-cols-3 gap-3 xl:min-h-[140px]">
+                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-2 xl:p-3 backdrop-blur-md min-w-0">
+                            <p class="text-[9px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Gastos</p>
+                            <p class="mt-2 text-xs sm:text-sm font-semibold truncate">{{ $this->money($resumen['gastos']) }}</p>
                         </div>
-                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-3 xl:p-4 backdrop-blur-md min-w-0">
-                            <p class="text-[10px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Ingresos</p>
-                            <p class="mt-2 text-sm lg:text-base xl:text-lg font-semibold truncate">{{ $this->money($resumen['real']) }}</p>
+                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-2 xl:p-3 backdrop-blur-md min-w-0">
+                            <p class="text-[9px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Ingresos</p>
+                            <p class="mt-2 text-xs sm:text-sm font-semibold truncate">{{ $this->money($resumen['real']) }}</p>
                         </div>
-                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-3 xl:p-4 backdrop-blur-md min-w-0">
-                            <p class="text-[10px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Admin</p>
-                            <p class="mt-2 text-sm lg:text-base xl:text-lg font-semibold truncate">{{ $this->money($resumen['administracion']) }}</p>
+                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-2 xl:p-3 backdrop-blur-md min-w-0 col-span-2 xl:col-span-1">
+                            <p class="text-[9px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Admin</p>
+                            <p class="mt-2 text-xs sm:text-sm font-semibold truncate">{{ $this->money($resumen['administracion']) }}</p>
                         </div>
                     </div>
                 </div>
