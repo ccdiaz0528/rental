@@ -37,7 +37,7 @@ class ResumenSemanal extends BaseWidget
 
             $vehiculosActivos = $this->applyUserScope(
                 Vehiculo::query()->where('estado', 'activo')
-            )->get(['id', 'cuota_diaria']);
+            )->get(['id', 'cuota_diaria', 'administracion']);
 
             $registrosSemana = $vehiculosActivos->isEmpty()
                 ? collect()
@@ -49,6 +49,7 @@ class ResumenSemanal extends BaseWidget
 
             $esperadoSemana = $vehiculosActivos->sum('cuota_diaria') * 7;
             $gastosSemana = 0;
+            $adminSemana = 0;
             $realSemana = 0;
 
             $registrosIndexed = $registrosSemana->keyBy(fn ($r) => $r->vehiculo_id.'-'.$r->fecha->format('Y-m-d'));
@@ -60,6 +61,7 @@ class ResumenSemanal extends BaseWidget
                 foreach ($vehiculosActivos as $v) {
                     $registro = $registrosIndexed->get($v->id.'-'.$key);
                     $gastosSemana += (float) ($registro->gasto ?? 0);
+                    $adminSemana += (float) ($registro->administracion ?? $v->administracion ?? 0);
 
                     if ($registro) {
                         $trabajo = $registro->trabajo ?? true;
@@ -74,12 +76,13 @@ class ResumenSemanal extends BaseWidget
 
             return [
                 'esperado' => $esperadoSemana,
-                'neto' => $realSemana - $gastosSemana,
+                'neto' => $realSemana - $gastosSemana - $adminSemana,
                 'gastos' => $gastosSemana,
                 'dano' => $gastosCat['daño'],
                 'mantenimiento' => $gastosCat['mantenimiento'],
                 'multa' => $gastosCat['multa'],
                 'otro' => $gastosCat['otro'],
+                'administracion' => $adminSemana,
             ];
         });
 

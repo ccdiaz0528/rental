@@ -156,8 +156,13 @@ class Reportes extends Page
 
     public function getGastosPorCategoria(): array
     {
+        $vehiculosActivosIds = $this->getVehiculosDisponibles()
+            ->where('estado', 'activo')
+            ->pluck('id');
+
         $registros = $this->getBaseQuery()
             ->where('gasto', '>', 0)
+            ->whereIn('vehiculo_id', $vehiculosActivosIds)
             ->selectRaw('categoria_gasto, SUM(gasto) as total')
             ->groupBy('categoria_gasto')
             ->pluck('total', 'categoria_gasto');

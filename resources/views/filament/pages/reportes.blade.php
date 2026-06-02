@@ -26,7 +26,7 @@
                             {{ $this->money($resumen['neto']) }}
                         </p>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 xl:min-h-[140px]">
+                    <div class="grid grid-cols-3 gap-4 xl:min-h-[140px]">
                         <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
                             <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Gastos</p>
                             <p class="mt-2 text-xl font-semibold">{{ $this->money($resumen['gastos']) }}</p>
@@ -34,6 +34,10 @@
                         <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
                             <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Ingresos</p>
                             <p class="mt-2 text-xl font-semibold">{{ $this->money($resumen['real']) }}</p>
+                        </div>
+                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
+                            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Admin</p>
+                            <p class="mt-2 text-xl font-semibold">{{ $this->money($resumen['administracion']) }}</p>
                         </div>
                     </div>
                 </div>
@@ -91,7 +95,7 @@
             </div>
         </section>
 
-        <section class="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+        <section class="grid gap-8 md:grid-cols-2 xl:grid-cols-5">
             <article class="rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <p class="text-sm text-slate-500">Esperado</p>
                 <p class="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{{ $this->money($resumen['esperado']) }}</p>
@@ -108,9 +112,14 @@
                 <p class="mt-2 text-xs text-slate-500">Descuentos del período</p>
             </article>
             <article class="rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
+                <p class="text-sm text-slate-500">Administración</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{{ $this->money($resumen['administracion']) }}</p>
+                <p class="mt-2 text-xs text-slate-500">Costo operativo del período</p>
+            </article>
+            <article class="rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <p class="text-sm text-slate-500">Neto</p>
                 <p class="mt-2 text-2xl font-semibold {{ $resumen['neto'] >= 0 ? 'text-success-600' : 'text-danger-600' }}">{{ $this->money($resumen['neto']) }}</p>
-                <p class="mt-2 text-xs text-slate-500">Ingreso real − Gastos</p>
+                <p class="mt-2 text-xs text-slate-500">Ingreso real − Gastos − Admin</p>
             </article>
         </section>
 
@@ -163,6 +172,7 @@
                                 <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Vehículo</th>
                                 <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Ingresos</th>
                                 <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Gastos</th>
+                                <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Admin</th>
                                 <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Neto</th>
                             </tr>
                         </thead>
@@ -175,11 +185,12 @@
                                     </td>
                                     <td class="px-4 py-3 text-right font-medium text-slate-700 dark:text-slate-300">{{ $this->money($dv['real']) }}</td>
                                     <td class="px-4 py-3 text-right font-medium text-danger-600">{{ $this->money($dv['gastos']) }}</td>
+                                    <td class="px-4 py-3 text-right font-medium text-slate-500 dark:text-slate-400">{{ $this->money($dv['administracion']) }}</td>
                                     <td class="px-4 py-3 text-right font-semibold {{ $dv['neto'] >= 0 ? 'text-success-600' : 'text-danger-600' }}">{{ $this->money($dv['neto']) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-4 py-8 text-center text-sm text-slate-400">Sin vehículos disponibles.</td>
+                                    <td colspan="5" class="px-4 py-8 text-center text-sm text-slate-400">Sin vehículos disponibles.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -201,6 +212,7 @@
                             <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Fecha</th>
                             <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Ingresos</th>
                             <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Gastos</th>
+                            <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Admin</th>
                             <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Neto</th>
                             <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Registros</th>
                         </tr>
@@ -215,12 +227,13 @@
                                 </td>
                                 <td class="px-4 py-3 text-right font-medium text-slate-700 dark:text-slate-300">{{ $this->money($dia['real']) }}</td>
                                 <td class="px-4 py-3 text-right font-medium text-danger-600">{{ $this->money($dia['gastos']) }}</td>
+                                <td class="px-4 py-3 text-right font-medium text-slate-500 dark:text-slate-400">{{ $this->money($dia['administracion']) }}</td>
                                 <td class="px-4 py-3 text-right font-semibold {{ $dia['neto'] >= 0 ? 'text-success-600' : 'text-danger-600' }}">{{ $this->money($dia['neto']) }}</td>
                                 <td class="px-4 py-3 text-right text-xs text-slate-500">{{ $dia['registros'] }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-4 py-8 text-center text-sm text-slate-400">Sin registros en este período.</td>
+                                <td colspan="6" class="px-4 py-8 text-center text-sm text-slate-400">Sin registros en este período.</td>
                             </tr>
                         @endforelse
                         @if(count($detalleDiario) > 0)
@@ -228,6 +241,7 @@
                                 <td class="px-4 py-3 text-slate-950 dark:text-white">Total período</td>
                                 <td class="px-4 py-3 text-right text-primary-600">{{ $this->money(collect($detalleDiario)->sum('real')) }}</td>
                                 <td class="px-4 py-3 text-right text-danger-600">{{ $this->money(collect($detalleDiario)->sum('gastos')) }}</td>
+                                <td class="px-4 py-3 text-right text-slate-500 dark:text-slate-400">{{ $this->money(collect($detalleDiario)->sum('administracion')) }}</td>
                                 <td class="px-4 py-3 text-right {{ $acumulado >= 0 ? 'text-success-600' : 'text-danger-600' }}">{{ $this->money($acumulado) }}</td>
                                 <td class="px-4 py-3 text-right text-slate-500">{{ collect($detalleDiario)->sum('registros') }}</td>
                             </tr>

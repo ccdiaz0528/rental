@@ -35,7 +35,7 @@ class ResumenDiario extends BaseWidget
 
             $vehiculosActivos = $this->applyUserScope(
                 Vehiculo::query()->where('estado', 'activo')
-            )->get(['id', 'cuota_diaria']);
+            )->get(['id', 'cuota_diaria', 'administracion']);
 
             $registrosHoy = $vehiculosActivos->isEmpty()
                 ? collect()
@@ -47,6 +47,7 @@ class ResumenDiario extends BaseWidget
 
             $esperadoHoy = $vehiculosActivos->sum('cuota_diaria');
             $gastosHoy = 0;
+            $adminHoy = 0;
             $realHoy = 0;
 
             $registrosIndexed = $registrosHoy->keyBy('vehiculo_id');
@@ -54,6 +55,7 @@ class ResumenDiario extends BaseWidget
             foreach ($vehiculosActivos as $v) {
                 $registro = $registrosIndexed->get($v->id);
                 $gastosHoy += (float) ($registro->gasto ?? 0);
+                $adminHoy += (float) ($registro->administracion ?? $v->administracion ?? 0);
 
                 if ($registro) {
                     $trabajo = $registro->trabajo ?? true;
@@ -66,13 +68,14 @@ class ResumenDiario extends BaseWidget
             $gastosCat = $this->gastosPorCategoria($registrosHoy);
 
             return [
-                'neto' => $realHoy - $gastosHoy,
+                'neto' => $realHoy - $gastosHoy - $adminHoy,
                 'esperado' => $esperadoHoy,
                 'gastos' => $gastosHoy,
                 'dano' => $gastosCat['daño'],
                 'mantenimiento' => $gastosCat['mantenimiento'],
                 'multa' => $gastosCat['multa'],
                 'otro' => $gastosCat['otro'],
+                'administracion' => $adminHoy,
             ];
         });
 
