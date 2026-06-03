@@ -140,11 +140,12 @@ class Reportes extends Page
                     $totalReal += $realDia;
                     $totalGastos += (float) $registro->gasto;
                     $totalAdmin += (float) ($registro->administracion ?? $vehiculo->administracion ?? 0);
-                    $totalDiferencia += $realDia - (float) $vehiculo->cuota_diaria;
 
                     if (! $registro->trabajo) {
                         $totalNoPercibido += (float) $vehiculo->cuota_diaria;
                         $diasNoTrabajados++;
+                    } elseif ((float) $registro->valor_generado != (float) $vehiculo->cuota_diaria) {
+                        $totalDiferencia += $realDia - (float) $vehiculo->cuota_diaria;
                     }
                 } else {
                     $totalReal += (float) $vehiculo->cuota_diaria;
