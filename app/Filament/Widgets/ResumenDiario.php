@@ -95,6 +95,11 @@ class ResumenDiario extends BaseWidget
                 ->descriptionIcon('heroicon-o-receipt-percent')
                 ->color('danger'),
 
+            Stat::make('Administración', $this->money($data['administracion']))
+                ->description('Costo operativo diario')
+                ->descriptionIcon('heroicon-o-building-office')
+                ->color('warning'),
+
             Stat::make('Daño', $this->money($data['dano']))
                 ->description('Daños del día')
                 ->descriptionIcon('heroicon-o-exclamation-triangle')

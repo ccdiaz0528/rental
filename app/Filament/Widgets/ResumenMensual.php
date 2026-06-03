@@ -102,6 +102,11 @@ class ResumenMensual extends BaseWidget
                 ->descriptionIcon('heroicon-o-receipt-percent')
                 ->color('danger'),
 
+            Stat::make('Administración', $this->money($data['administracion']))
+                ->description('Costo operativo mensual')
+                ->descriptionIcon('heroicon-o-building-office')
+                ->color('warning'),
+
             Stat::make('Daño', $this->money($data['dano']))
                 ->description('Daños del mes')
                 ->descriptionIcon('heroicon-o-exclamation-triangle')

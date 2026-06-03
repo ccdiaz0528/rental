@@ -102,6 +102,11 @@ class ResumenSemanal extends BaseWidget
                 ->descriptionIcon('heroicon-o-receipt-percent')
                 ->color('warning'),
 
+            Stat::make('Administración', $this->money($data['administracion']))
+                ->description('Costo operativo semanal')
+                ->descriptionIcon('heroicon-o-building-office')
+                ->color('warning'),
+
             Stat::make('Daño', $this->money($data['dano']))
                 ->description('Daños de la semana')
                 ->descriptionIcon('heroicon-o-exclamation-triangle')
