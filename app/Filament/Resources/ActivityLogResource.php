@@ -4,12 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActivityLogResource\Pages\ListActivityLogs;
 use App\Filament\Resources\ActivityLogResource\Pages\ViewActivityLog;
+use App\Models\Activity;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogResource extends Resource
 {
