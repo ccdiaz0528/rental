@@ -296,6 +296,44 @@ class Reportes extends Page
         return $dias;
     }
 
+    public function getAjustes(): array
+    {
+        $vehiculos = $this->getVehiculosDisponibles()->keyBy('id');
+        $registros = $this->getRegistrosEnRango();
+
+        $ajustes = [];
+
+        foreach ($registros as $registro) {
+            $vehiculo = $vehiculos->get($registro->vehiculo_id);
+            if (! $vehiculo || $vehiculo->estado !== 'activo') {
+                continue;
+            }
+
+            $esperado = (float) $vehiculo->cuota_diaria;
+            $real = $registro->trabajo ? (float) $registro->valor_generado : 0;
+            $diferencia = $real - $esperado;
+
+            if ($diferencia === 0.0 && $registro->trabajo) {
+                continue;
+            }
+
+            $ajustes[] = [
+                'placa' => $vehiculo->placa,
+                'conductor' => $vehiculo->persona?->nombre ?? 'Sin conductor',
+                'fecha' => $registro->fecha,
+                'esperado' => $esperado,
+                'real' => $real,
+                'diferencia' => $diferencia,
+                'trabajo' => $registro->trabajo,
+            ];
+        }
+
+        usort($ajustes, fn ($a, $b) => $a['fecha']->timestamp <=> $b['fecha']->timestamp
+            ?: strcmp($a['placa'], $b['placa']));
+
+        return $ajustes;
+    }
+
     private function getRegistrosEnRango(): Collection
     {
         return $this->cachedRegistros ??= $this->getBaseQuery()

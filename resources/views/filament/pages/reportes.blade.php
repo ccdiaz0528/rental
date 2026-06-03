@@ -3,6 +3,7 @@
     @php($gastosCat = $this->getGastosPorCategoria())
     @php($detalleVehiculos = $this->getDetallePorVehiculo())
     @php($detalleDiario = $this->getDetalleDiario())
+    @php($ajustes = $this->getAjustes())
 
     <div class="flex flex-col gap-10">
         <section class="overflow-hidden rounded-[32px] border border-gray-300 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.22),_transparent_28%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] text-white shadow-[0_30px_80px_rgba(15,23,42,0.28)] dark:border-white/10">
@@ -251,6 +252,52 @@
                                 <td class="px-4 py-3 text-right text-slate-500">{{ collect($detalleDiario)->sum('registros') }}</td>
                             </tr>
                         @endif
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="rounded-[24px] border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
+            <div class="border-b border-gray-200 px-5 py-4 dark:border-white/10">
+                <h3 class="text-lg font-semibold text-slate-950 dark:text-white">Ajustes del período</h3>
+                <p class="text-sm text-slate-500">Días con cuota modificada o vehículos que no trabajaron</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-slate-50 dark:bg-white/5">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Vehículo</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Conductor</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Fecha</th>
+                            <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Esperado</th>
+                            <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Real</th>
+                            <th class="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">Diferencia</th>
+                            <th class="px-4 py-3 text-center font-semibold text-slate-700 dark:text-slate-300">Trabajó</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($ajustes as $ajuste)
+                            <tr class="border-t border-gray-100 dark:border-white/5 hover:bg-slate-50/80 dark:hover:bg-white/[0.03]">
+                                <td class="px-4 py-3 font-medium text-slate-950 dark:text-white">{{ $ajuste['placa'] }}</td>
+                                <td class="px-4 py-3 text-slate-500">{{ $ajuste['conductor'] }}</td>
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ $ajuste['fecha']->format('d/m/Y') }}</td>
+                                <td class="px-4 py-3 text-right text-slate-500">{{ $this->money($ajuste['esperado']) }}</td>
+                                <td class="px-4 py-3 text-right font-medium {{ $ajuste['diferencia'] < 0 ? 'text-danger-600' : 'text-slate-700 dark:text-slate-300' }}">{{ $this->money($ajuste['real']) }}</td>
+                                <td class="px-4 py-3 text-right font-semibold {{ $ajuste['diferencia'] < 0 ? 'text-danger-600' : ($ajuste['diferencia'] > 0 ? 'text-success-600' : 'text-slate-500') }}">{{ $ajuste['diferencia'] < 0 ? $this->money($ajuste['diferencia']) : ($ajuste['diferencia'] > 0 ? '+'.$this->money($ajuste['diferencia']) : '$0') }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    @if($ajuste['trabajo'])
+                                        <span class="rounded-full bg-success-50 px-2 py-0.5 text-xs font-medium text-success-600 dark:bg-success-500/10 dark:text-success-400">Sí</span>
+                                    @else
+                                        <span class="rounded-full bg-danger-50 px-2 py-0.5 text-xs font-medium text-danger-600 dark:bg-danger-500/10 dark:text-danger-400">No</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-400">Sin ajustes en este período.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
