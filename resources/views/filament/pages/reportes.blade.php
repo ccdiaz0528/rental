@@ -95,7 +95,7 @@
             </div>
         </section>
 
-        <section class="grid gap-8 md:grid-cols-2 xl:grid-cols-5">
+        <section class="grid gap-8 md:grid-cols-2 xl:grid-cols-6">
             <article class="rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <p class="text-sm text-slate-500">Esperado</p>
                 <p class="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{{ $this->money($resumen['esperado']) }}</p>
@@ -105,6 +105,11 @@
                 <p class="text-sm text-slate-500">Ingreso real</p>
                 <p class="mt-2 text-2xl font-semibold text-primary-600">{{ $this->money($resumen['real']) }}</p>
                 <p class="mt-2 text-xs text-slate-500">{{ $resumen['total_registros_modificados'] }} registros con cambios</p>
+            </article>
+            <article class="rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
+                <p class="text-sm text-slate-500">No percibido</p>
+                <p class="mt-2 text-2xl font-semibold text-amber-600 dark:text-amber-400">{{ $this->money($resumen['no_percibido']) }}</p>
+                <p class="mt-2 text-xs text-slate-500">{{ $resumen['dias_no_trabajados'] }} días no trabajados</p>
             </article>
             <article class="rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <p class="text-sm text-slate-500">Gastos</p>
