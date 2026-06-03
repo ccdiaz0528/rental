@@ -96,7 +96,7 @@
             </div>
         </section>
 
-        <section class="grid gap-4 sm:gap-6 xl:gap-8 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+        <section class="grid gap-4 sm:gap-6 xl:gap-8 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
             <article class="rounded-[24px] border border-gray-200 bg-white p-5 sm:p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <p class="text-sm text-slate-500">Esperado</p>
                 <p class="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{{ $this->money($resumen['esperado']) }}</p>
@@ -111,6 +111,11 @@
                 <p class="text-sm text-slate-500">No percibido</p>
                 <p class="mt-2 text-2xl font-semibold text-amber-600 dark:text-amber-400">{{ $this->money($resumen['no_percibido']) }}</p>
                 <p class="mt-2 text-xs text-slate-500">{{ $resumen['dias_no_trabajados'] }} días no trabajados</p>
+            </article>
+            <article class="rounded-[24px] border border-gray-200 bg-white p-5 sm:p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
+                <p class="text-sm text-slate-500">Dif. ajustes</p>
+                <p class="mt-2 text-2xl font-semibold {{ $resumen['diferencia'] < 0 ? 'text-danger-600' : ($resumen['diferencia'] > 0 ? 'text-success-600' : 'text-slate-500') }}">{{ $resumen['diferencia'] < 0 ? $this->money($resumen['diferencia']) : ($resumen['diferencia'] > 0 ? '+'.$this->money($resumen['diferencia']) : '$0') }}</p>
+                <p class="mt-2 text-xs text-slate-500">Diferencia total de ajustes</p>
             </article>
             <article class="rounded-[24px] border border-gray-200 bg-white p-5 sm:p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <p class="text-sm text-slate-500">Gastos</p>

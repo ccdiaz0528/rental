@@ -124,6 +124,7 @@ class Reportes extends Page
         $totalAdmin = 0;
         $totalNoPercibido = 0;
         $diasNoTrabajados = 0;
+        $totalDiferencia = 0;
 
         foreach ($vehiculos as $vehiculo) {
             if ($vehiculo->estado !== 'activo') {
@@ -135,9 +136,11 @@ class Reportes extends Page
                 $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
 
                 if ($registro) {
-                    $totalReal += $registro->trabajo ? (float) $registro->valor_generado : 0;
+                    $realDia = $registro->trabajo ? (float) $registro->valor_generado : 0;
+                    $totalReal += $realDia;
                     $totalGastos += (float) $registro->gasto;
                     $totalAdmin += (float) ($registro->administracion ?? $vehiculo->administracion ?? 0);
+                    $totalDiferencia += $realDia - (float) $vehiculo->cuota_diaria;
 
                     if (! $registro->trabajo) {
                         $totalNoPercibido += (float) $vehiculo->cuota_diaria;
@@ -156,6 +159,7 @@ class Reportes extends Page
             'gastos' => $totalGastos,
             'administracion' => $totalAdmin,
             'no_percibido' => $totalNoPercibido,
+            'diferencia' => $totalDiferencia,
             'dias_no_trabajados' => $diasNoTrabajados,
             'neto' => $totalReal - $totalGastos - $totalAdmin,
             'dias' => $diasEnRango,
