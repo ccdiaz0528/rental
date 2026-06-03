@@ -113,6 +113,19 @@ button:active {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
+/* ── Stat value responsiveness ── */
+.fi-wi-stats-overview-stat-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 1279px) {
+    .fi-wi-stats-overview-stat-value {
+        font-size: clamp(0.75rem, 3vw, 1.125rem) !important;
+    }
+}
+
 /* ── Form inputs focus ── */
 .fi-fo-field-wrp:focus-within {
     transition: box-shadow 150ms ease;
