@@ -114,7 +114,7 @@
             </article>
             <article class="rounded-[24px] border border-gray-200 bg-white p-5 sm:p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <p class="text-sm text-slate-500">Dif. ajustes</p>
-                <p class="mt-2 text-2xl font-semibold {{ $resumen['diferencia'] < 0 ? 'text-danger-600' : ($resumen['diferencia'] > 0 ? 'text-success-600' : 'text-slate-500') }}">{{ $resumen['diferencia'] < 0 ? $this->money($resumen['diferencia']) : ($resumen['diferencia'] > 0 ? '+'.$this->money($resumen['diferencia']) : '$0') }}</p>
+                <p class="mt-2 text-2xl font-semibold {{ $resumen['diferencia'] < 0 ? 'text-danger-600' : ($resumen['diferencia'] > 0 ? 'text-success-600' : 'text-slate-500') }}">{{ $resumen['diferencia'] != 0 ? $this->money(abs($resumen['diferencia'])) : '$0' }}</p>
                 <p class="mt-2 text-xs text-slate-500">Diferencia total de ajustes</p>
             </article>
             <article class="rounded-[24px] border border-gray-200 bg-white p-5 sm:p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
