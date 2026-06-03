@@ -80,15 +80,15 @@ class ResumenDiario extends BaseWidget
         });
 
         return [
-            Stat::make('Ingreso neto', $this->money($data['neto']))
-                ->description('Ingreso real del día')
-                ->descriptionIcon('heroicon-o-currency-dollar')
-                ->color($data['neto'] >= 0 ? 'success' : 'danger'),
-
             Stat::make('Esperado', $this->money($data['esperado']))
                 ->description('Cuota base diaria')
                 ->descriptionIcon('heroicon-o-banknotes')
                 ->color('info'),
+
+            Stat::make('Ingreso neto', $this->money($data['neto']))
+                ->description('Ingreso real del día')
+                ->descriptionIcon('heroicon-o-currency-dollar')
+                ->color($data['neto'] >= 0 ? 'success' : 'danger'),
 
             Stat::make('Gastos', $this->money($data['gastos']))
                 ->description('Total gastos del día')
