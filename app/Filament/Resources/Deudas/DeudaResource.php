@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Deudas;
 
 use App\Filament\Resources\Deudas\Pages\CreateDeuda;
+use App\Filament\Resources\Deudas\Pages\EditDeuda;
 use App\Filament\Resources\Deudas\Pages\ListDeudas;
+use App\Filament\Resources\Deudas\Pages\ViewDeuda;
 use App\Filament\Resources\Deudas\Schemas\DeudaForm;
 use App\Filament\Resources\Deudas\Tables\DeudasTable;
 use App\Models\Deuda;
@@ -41,6 +43,8 @@ class DeudaResource extends Resource
         return [
             'index' => ListDeudas::route('/'),
             'create' => CreateDeuda::route('/create'),
+            'edit' => EditDeuda::route('/{record}/edit'),
+            'view' => ViewDeuda::route('/{record}'),
         ];
     }
 }
