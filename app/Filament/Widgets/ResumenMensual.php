@@ -93,7 +93,7 @@ class ResumenMensual extends BaseWidget
                 ->color('info'),
 
             Stat::make('Neto', $this->money($data['neto']))
-                ->description('Ingreso menos gastos')
+                ->description('Ingreso menos gastos y admin')
                 ->descriptionIcon('heroicon-o-banknotes')
                 ->color($data['neto'] >= 0 ? 'success' : 'danger'),
 
