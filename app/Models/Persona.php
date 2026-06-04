@@ -2,38 +2,30 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
-use Illuminate\Database\Eloquent\Builder;
+use App\Concerns\BelongsToUser;
+use App\Concerns\HasUserScope;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
+#[Fillable([
+    'user_id',
+    'nombre',
+    'cedula',
+    'telefono',
+    'direccion',
+    'tipo',
+    'estado',
+    'observaciones',
+])]
 class Persona extends Model
 {
     use BelongsToUser;
+    use HasUserScope;
     use LogsActivity;
-
-    protected $fillable = [
-        'user_id',
-        'nombre',
-        'cedula',
-        'telefono',
-        'direccion',
-        'tipo',
-        'estado',
-        'observaciones',
-    ];
-
-    protected static function booted(): void
-    {
-        static::addGlobalScope('user', function (Builder $builder) {
-            if (auth()->check() && ! auth()->user()->hasRole('admin')) {
-                $builder->where('user_id', auth()->id());
-            }
-        });
-    }
 
     public function user(): BelongsTo
     {

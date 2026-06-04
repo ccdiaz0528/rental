@@ -6,38 +6,38 @@
     @php($ajustes = $this->getAjustes())
 
     <div class="flex flex-col gap-10">
-        <section class="overflow-hidden rounded-[32px] border border-gray-300 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.22),_transparent_28%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] text-white shadow-[0_30px_80px_rgba(15,23,42,0.28)] dark:border-white/10">
+        <section class="overflow-hidden rounded-[32px] border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.10),_transparent_28%),linear-gradient(135deg,#ffffff_0%,#f8fafc_55%,#f1f5f9_100%)] text-slate-900 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.22),_transparent_28%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] dark:text-white dark:shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
             <div class="grid gap-8 px-7 py-7 xl:grid-cols-[minmax(0,1fr)_30rem] xl:items-stretch">
                 <div>
-                    <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-blue-100 backdrop-blur-sm">
+                    <div class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 dark:border-white/15 dark:bg-white/10 dark:text-blue-100 dark:backdrop-blur-sm">
                         {{ $this->getPeriodoLabel() }}
                     </div>
                     <h2 class="mt-4 text-3xl font-semibold tracking-tight lg:text-4xl">
                         {{ \Carbon\Carbon::parse($fechaInicio)->format('d/m/Y') }} al {{ \Carbon\Carbon::parse($fechaFin)->format('d/m/Y') }}
                     </h2>
-                    <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-200/90">
+                    <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-200/90">
                         Consulta ingresos, gastos y rentabilidad de la flota para el período seleccionado.
                     </p>
                 </div>
 
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
-                    <div class="rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur-md xl:min-h-[140px] min-w-0">
-                        <p class="text-[11px] uppercase tracking-[0.24em] text-slate-300">Neto del período</p>
-                        <p class="mt-2 text-xl lg:text-2xl xl:text-3xl font-semibold truncate {{ $resumen['neto'] >= 0 ? 'text-emerald-300' : 'text-rose-300' }}">
+                    <div class="rounded-[24px] border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/10 dark:backdrop-blur-md xl:min-h-[140px] min-w-0">
+                        <p class="text-[11px] uppercase tracking-[0.24em] text-slate-500 dark:text-slate-300">Neto del período</p>
+                        <p class="mt-2 text-xl lg:text-2xl xl:text-3xl font-semibold truncate {{ $resumen['neto'] >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300' }}">
                             {{ $this->money($resumen['neto']) }}
                         </p>
                     </div>
                     <div class="grid grid-cols-2 xl:grid-cols-3 gap-3 xl:min-h-[140px]">
-                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-2 xl:p-3 backdrop-blur-md min-w-0">
-                            <p class="text-[9px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Gastos</p>
+                        <div class="rounded-[20px] border border-gray-200 bg-white p-2 xl:p-3 shadow-sm dark:border-white/10 dark:bg-white/10 dark:backdrop-blur-md min-w-0">
+                            <p class="text-[9px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">Gastos</p>
                             <p class="mt-2 text-xs sm:text-sm font-semibold truncate">{{ $this->money($resumen['gastos']) }}</p>
                         </div>
-                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-2 xl:p-3 backdrop-blur-md min-w-0">
-                            <p class="text-[9px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Ingresos</p>
+                        <div class="rounded-[20px] border border-gray-200 bg-white p-2 xl:p-3 shadow-sm dark:border-white/10 dark:bg-white/10 dark:backdrop-blur-md min-w-0">
+                            <p class="text-[9px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">Ingresos</p>
                             <p class="mt-2 text-xs sm:text-sm font-semibold truncate">{{ $this->money($resumen['real']) }}</p>
                         </div>
-                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-2 xl:p-3 backdrop-blur-md min-w-0 col-span-2 xl:col-span-1">
-                            <p class="text-[9px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-300">Admin</p>
+                        <div class="rounded-[20px] border border-gray-200 bg-white p-2 xl:p-3 shadow-sm dark:border-white/10 dark:bg-white/10 dark:backdrop-blur-md min-w-0 col-span-2 xl:col-span-1">
+                            <p class="text-[9px] xl:text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">Admin</p>
                             <p class="mt-2 text-xs sm:text-sm font-semibold truncate">{{ $this->money($resumen['administracion']) }}</p>
                         </div>
                     </div>

@@ -2,26 +2,29 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
+use App\Concerns\BelongsToUser;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
+#[Fillable([
+    'user_id',
+    'persona_id',
+    'valor',
+])]
 class Deuda extends Model
 {
     use BelongsToUser;
     use LogsActivity;
 
-    protected $fillable = [
-        'user_id',
-        'persona_id',
-        'valor',
-    ];
-
-    protected $casts = [
-        'valor' => 'decimal:2',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'valor' => 'decimal:2',
+        ];
+    }
 
     public function getActivitylogOptions(): LogOptions
     {

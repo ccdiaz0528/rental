@@ -2,16 +2,29 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
-use Illuminate\Database\Eloquent\Builder;
+use App\Concerns\BelongsToUser;
+use App\Concerns\HasUserScope;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
+#[Fillable([
+    'user_id',
+    'vehiculo_id',
+    'fecha',
+    'trabajo',
+    'valor_generado',
+    'gasto',
+    'administracion',
+    'categoria_gasto',
+    'observaciones',
+])]
 class ControlDiario extends Model
 {
     use BelongsToUser;
+    use HasUserScope;
     use LogsActivity;
 
     public const CATEGORIA_DAÑO = 'daño';
@@ -29,32 +42,14 @@ class ControlDiario extends Model
         self::CATEGORIA_OTRO,
     ];
 
-    protected $fillable = [
-        'user_id',
-        'vehiculo_id',
-        'fecha',
-        'trabajo',
-        'valor_generado',
-        'gasto',
-        'administracion',
-        'categoria_gasto',
-        'observaciones',
-    ];
-
-    protected $casts = [
-        'fecha' => 'date',
-        'trabajo' => 'boolean',
-        'administracion' => 'decimal:2',
-        'categoria_gasto' => 'string',
-    ];
-
-    protected static function booted(): void
+    protected function casts(): array
     {
-        static::addGlobalScope('user', function (Builder $builder) {
-            if (auth()->check() && ! auth()->user()->hasRole('admin')) {
-                $builder->where('user_id', auth()->id());
-            }
-        });
+        return [
+            'fecha' => 'date',
+            'trabajo' => 'boolean',
+            'administracion' => 'decimal:2',
+            'categoria_gasto' => 'string',
+        ];
     }
 
     public function user()

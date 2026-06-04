@@ -38,6 +38,11 @@ class DeudaResource extends Resource
         return DeudasTable::configure($table);
     }
 
+    public static function canAccess(): bool
+    {
+        return auth()->check() && auth()->user()->hasRole('admin');
+    }
+
     public static function getPages(): array
     {
         return [
