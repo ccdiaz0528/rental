@@ -22,6 +22,11 @@ class Reportes extends Page
 
     protected static ?string $title = 'Reportes';
 
+    public static function canAccess(): bool
+    {
+        return auth()->check() && auth()->user()->hasRole('admin');
+    }
+
     protected string $view = 'filament.pages.reportes';
 
     public string $periodo = 'este_mes';
