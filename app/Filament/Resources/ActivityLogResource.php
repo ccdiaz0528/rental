@@ -23,7 +23,7 @@ class ActivityLogResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Trazabilidad';
 
-    protected static ?int $navigationSort = 100;
+    protected static ?int $navigationSort = 8;
 
     public static function table(Table $table): Table
     {
