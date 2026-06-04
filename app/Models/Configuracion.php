@@ -4,12 +4,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Configuracion extends Model
 {
+    use LogsActivity;
+
     protected $table = 'configuraciones';
 
     protected $fillable = ['clave', 'valor'];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->useLogName('Configuracion')
+            ->setDescriptionForEvent(fn (string $eventName) => 'Configuración '.match ($eventName) {
+                'created' => 'creado',
+                'updated' => 'actualizado',
+                'deleted' => 'eliminado',
+                default => $eventName,
+            });
+    }
 
     public static function get(string $clave, mixed $default = null): mixed
     {
