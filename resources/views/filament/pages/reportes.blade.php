@@ -134,7 +134,7 @@
             </article>
         </section>
 
-        <div class="grid gap-8 xl:grid-cols-2">
+        <div class="flex flex-col gap-8">
             <section class="rounded-[24px] border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <div class="border-b border-gray-200 px-4 sm:px-5 py-3 sm:py-4 dark:border-white/10">
                     <h3 class="text-base sm:text-lg font-semibold text-slate-950 dark:text-white">Gastos por categoría</h3>
