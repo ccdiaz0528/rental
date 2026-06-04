@@ -8,6 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rules\Unique;
 
 class VehiculoForm
 {
@@ -17,7 +18,7 @@ class VehiculoForm
             TextInput::make('placa')
                 ->label('Placa')
                 ->required()
-                ->unique(ignoreRecord: true)
+                ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule) => $rule->whereNull('deleted_at'))
                 ->maxLength(10),
 
             Select::make('administrador_vehiculo')

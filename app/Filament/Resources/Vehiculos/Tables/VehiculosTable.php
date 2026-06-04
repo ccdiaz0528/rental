@@ -2,13 +2,15 @@
 
 namespace App\Filament\Resources\Vehiculos\Tables;
 
-use App\Models\Vehiculo;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class VehiculosTable
@@ -83,16 +85,16 @@ class VehiculosTable
             ->actions([
                 ViewAction::make(),
                 EditAction::make(),
-                DeleteAction::make()
-                    ->disabled(fn (Vehiculo $record): bool => ! $record->canBeDeleted())
-                    ->tooltip(fn (Vehiculo $record): ?string => $record->canBeDeleted()
-                        ? null
-                        : 'No se puede eliminar porque tiene '.$record->deletionBlockers().'.'),
+                DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
+            ])
+            ->filters([
+                TrashedFilter::make(),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()
-                        ->visible(false),
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -32,6 +33,7 @@ class Vehiculo extends Model
     use BelongsToUser;
     use HasUserScope;
     use LogsActivity;
+    use SoftDeletes;
 
     protected function casts(): array
     {
@@ -39,6 +41,7 @@ class Vehiculo extends Model
             'fecha_vencimiento_soat' => 'date',
             'fecha_vencimiento_tecnomecanico' => 'date',
             'administracion' => 'decimal:2',
+            'deleted_at' => 'datetime',
         ];
     }
 
@@ -64,21 +67,16 @@ class Vehiculo extends Model
 
     public function canBeDeleted(): bool
     {
-        return ($this->contratos_count ?? $this->contratos()->count()) === 0
-            && ($this->control_diarios_count ?? $this->controlDiarios()->count()) === 0;
+        return ! $this->trashed();
     }
 
     public function deletionBlockers(): string
     {
-        $blockers = [];
-        if (($this->contratos_count ?? $this->contratos()->count()) > 0) {
-            $blockers[] = 'contratos';
-        }
-        if (($this->control_diarios_count ?? $this->controlDiarios()->count()) > 0) {
-            $blockers[] = 'controles semanales';
+        if ($this->trashed()) {
+            return 'ya está eliminado';
         }
 
-        return implode(', ', $blockers);
+        return '';
     }
 
     public function getActivitylogOptions(): LogOptions
