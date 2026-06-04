@@ -58,7 +58,7 @@ Applied to: Personas, Vehiculos, Contratos, Deudas, User, ActivityLog.
 
 ### Models
 - All models use `#[Fillable]` PHP 8 attributes (not `$fillable` property)
-- User model `#[Fillable]` includes `roles` — Filament UserForm sends it via `->relationship()` on save
+- User model `#[Fillable]` does NOT include `roles` (it's a relationship, not a column). CreateUser/EditUser strip it via `mutateFormDataBeforeSave/Create`
 - All models use `LogsActivity` trait from spatie
 - **ControlDiario**: constants `CATEGORIA_DAÑO`, `MANTENIMIENTO`, `MULTA`, `OTRO`; casts `fecha` as date, `trabajo` as boolean
 - **Configuracion** (`configuraciones` table): KV store with static `get(clave, default)` / `set(clave, value)`, 1h cache
