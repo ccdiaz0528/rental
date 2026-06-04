@@ -40,7 +40,7 @@ Vite inputs: `resources/css/app.css`, `resources/js/app.js`, `resources/css/fila
 - **`BelongsToUser`** concern: auto-assigns `user_id = auth()->id()` on `creating` — on Persona, Vehiculo, Contrato, ControlDiario, Deuda
 - **`HasUserScope`** concern: global scope `where('user_id', auth()->id())` for non-admin — on Persona, Vehiculo, Contrato, ControlDiario (*not* Deuda — admin-only)
 - **`HasUserContext`** concern: admin can switch user context (persisted via cache, Livewire events). Used by all dashboard widgets + ControlSemanal + Reportes.
-- Admin-only resources: ActivityLogResource (Trazabilidad), UserResource (Usuarios), DeudaResource (Cartera)
+- Admin-only resources: ActivityLogResource (Trazabilidad), UserResource (Usuarios), DeudaResource (Cartera), Reportes page
 
 ### Filament Split Layout
 ```
