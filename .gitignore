@@ -24,4 +24,5 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
-# OpenCode screenshots (generated).opencode/screenshots/
+# OpenCode screenshots (generated)
+.opencode/screenshots/
