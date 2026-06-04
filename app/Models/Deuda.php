@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\BelongsToUser;
+use App\Concerns\HasUserScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,6 +18,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class Deuda extends Model
 {
     use BelongsToUser;
+    use HasUserScope;
     use LogsActivity;
 
     protected function casts(): array
