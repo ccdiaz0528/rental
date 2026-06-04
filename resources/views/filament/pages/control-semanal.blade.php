@@ -11,44 +11,44 @@
     ])
 
     <div class="space-y-6">
-        <section class="overflow-hidden rounded-[32px] border border-gray-300 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.22),_transparent_28%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] text-white shadow-[0_30px_80px_rgba(15,23,42,0.28)] dark:border-white/10">
+        <section class="overflow-hidden rounded-[32px] border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.10),_transparent_28%),linear-gradient(135deg,#ffffff_0%,#f8fafc_55%,#f1f5f9_100%)] text-slate-900 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.22),_transparent_28%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] dark:text-white dark:shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
             <div class="grid gap-8 px-7 py-7 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-stretch">
                 <div>
-                    <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100 backdrop-blur-sm">
+                    <div class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 dark:border-white/15 dark:bg-white/10 dark:text-cyan-100 dark:backdrop-blur-sm">
                         Control semanal
                     </div>
                     <h2 class="mt-4 text-3xl font-semibold tracking-tight lg:text-4xl">
                         {{ $dataset['weekStart']->format('d/m/Y') }} al {{ $dataset['weekEnd']->format('d/m/Y') }}
                     </h2>
-                    <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-200/90">
+                    <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-200/90">
                         Revisa lo que debía producir la flota, descuenta gastos por día y detecta rápidamente qué vehículo no trabajó.
                     </p>
-                    <div class="mt-5 flex flex-wrap gap-3 text-xs font-medium text-slate-200">
-                        <span class="rounded-full border border-white/10 bg-white/10 px-3 py-1.5">Semana domingo a sábado</span>
-                        <span class="rounded-full border border-white/10 bg-white/10 px-3 py-1.5">Edición por celda</span>
-                        <span class="rounded-full border border-white/10 bg-white/10 px-3 py-1.5">Control por vehículo</span>
+                    <div class="mt-5 flex flex-wrap gap-3 text-xs font-medium text-slate-500 dark:text-slate-200">
+                        <span class="rounded-full border border-gray-200 bg-gray-100 px-3 py-1.5 dark:border-white/10 dark:bg-white/10">Semana domingo a sábado</span>
+                        <span class="rounded-full border border-gray-200 bg-gray-100 px-3 py-1.5 dark:border-white/10 dark:bg-white/10">Edición por celda</span>
+                        <span class="rounded-full border border-gray-200 bg-gray-100 px-3 py-1.5 dark:border-white/10 dark:bg-white/10">Control por vehículo</span>
                     </div>
                 </div>
 
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
-                    <div class="rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur-md xl:min-h-[140px]">
-                        <p class="text-[11px] uppercase tracking-[0.24em] text-slate-300">Neto semanal</p>
+                    <div class="rounded-[24px] border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/10 dark:backdrop-blur-md">
+                        <p class="text-[11px] uppercase tracking-[0.24em] text-slate-500 dark:text-slate-300">Neto semanal</p>
                         <p class="mt-2 text-3xl font-semibold">{{ $this->money($dataset['summary']['neto']) }}</p>
-                        <div class="mt-3 text-xs text-slate-300">
+                        <div class="mt-3 text-xs text-slate-500 dark:text-slate-300">
                             @if($dataset['summary']['administracion'] > 0)
-                                <span class="text-rose-300">-{{ $this->money($dataset['summary']['administracion']) }} administración</span>
+                                <span class="text-rose-600 dark:text-rose-300">-{{ $this->money($dataset['summary']['administracion']) }} administración</span>
                             @else
                                 Ingreso menos gastos
                             @endif
                         </div>
                     </div>
                         <div class="grid grid-cols-2 gap-4 xl:min-h-[140px]">
-                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
-                            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Gastos</p>
+                        <div class="rounded-[20px] border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/10 dark:backdrop-blur-md">
+                            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">Gastos</p>
                             <p class="mt-2 text-xl font-semibold">{{ $this->money($dataset['summary']['gastos']) }}</p>
                         </div>
-                        <div class="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
-                            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-300">Administración</p>
+                        <div class="rounded-[20px] border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/10 dark:backdrop-blur-md">
+                            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">Administración</p>
                             <p class="mt-2 text-xl font-semibold">{{ $this->money($dataset['summary']['administracion']) }}</p>
                         </div>
                         </div>
