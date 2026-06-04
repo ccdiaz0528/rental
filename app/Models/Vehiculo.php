@@ -2,49 +2,44 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
-use Illuminate\Database\Eloquent\Builder;
+use App\Concerns\BelongsToUser;
+use App\Concerns\HasUserScope;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
+#[Fillable([
+    'user_id',
+    'administrador_vehiculo',
+    'placa',
+    'marca',
+    'modelo',
+    'anio',
+    'color',
+    'persona_id',
+    'cuota_diaria',
+    'administracion',
+    'estado',
+    'observaciones',
+    'fecha_vencimiento_soat',
+    'fecha_vencimiento_tecnomecanico',
+])]
 class Vehiculo extends Model
 {
     use BelongsToUser;
+    use HasUserScope;
     use LogsActivity;
 
-    protected $fillable = [
-        'user_id',
-        'administrador_vehiculo',
-        'placa',
-        'marca',
-        'modelo',
-        'anio',
-        'color',
-        'persona_id',
-        'cuota_diaria',
-        'administracion',
-        'estado',
-        'observaciones',
-        'fecha_vencimiento_soat',
-        'fecha_vencimiento_tecnomecanico',
-    ];
-
-    protected $casts = [
-        'fecha_vencimiento_soat' => 'date',
-        'fecha_vencimiento_tecnomecanico' => 'date',
-        'administracion' => 'decimal:2',
-    ];
-
-    protected static function booted(): void
+    protected function casts(): array
     {
-        static::addGlobalScope('user', function (Builder $builder) {
-            if (auth()->check() && ! auth()->user()->hasRole('admin')) {
-                $builder->where('user_id', auth()->id());
-            }
-        });
+        return [
+            'fecha_vencimiento_soat' => 'date',
+            'fecha_vencimiento_tecnomecanico' => 'date',
+            'administracion' => 'decimal:2',
+        ];
     }
 
     public function user()

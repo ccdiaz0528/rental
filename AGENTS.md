@@ -3,90 +3,80 @@
 ## Stack
 - Laravel 13 + Filament 5.6.1, PHP ^8.4
 - Vite + Tailwind CSS 4 (`@tailwindcss/vite`)
-- MySQL (Laragon local) / SQLite in-memory (tests)
+- MySQL (Laragon local) / SQLite :memory: (tests)
 - spatie/laravel-permission 7.x, spatie/laravel-activitylog
-- COP (pesos colombianos)
+- Locale: `es` / `es_CO`, timezone: `America/Bogota`
+- Session, cache, queue: all `database` driver
 
 ## Commands
-- `composer setup` — full install: deps, .env, key, migrate, npm install, build
-- `composer test` — runs `php artisan config:clear && php artisan test` (SQLite :memory:)
-- `composer dev` — Laravel serve + queue + logs + Vite concurrently (may fail on Windows)
-- `npm run dev` — Vite hot reload
-- `npm run build` — production Vite assets
-- `vendor/bin/pint` — PSR-12 format (run after every PHP change)
-- `php artisan tinker` — REPL
+- `composer setup` — install, .env, key, migrate, npm install & build
+- `composer test` — `php artisan config:clear && php artisan test`
+- `composer dev` — concurrently runs server, queue, pail logs, Vite
+- `npm run dev` — Vite hot reload; `npm run build` — production assets
+- `vendor/bin/pint` — PSR-12 format after every PHP change
 - `php artisan config:clear; php artisan view:clear` — clear caches
 - `Remove-Item -Recurse -Force public/build` — clear stale Vite assets (Windows)
-- `php artisan filament:upgrade` — runs automatically on `composer update`
+
+## Verification order
+1. `composer test` (15 classes: 6 Unit + 9 Feature)
+2. `vendor/bin/pint`
+3. `npm run build`
 
 ## Architecture
 
 ### Panel (`app/Providers/Filament/AdminPanelProvider.php`)
-- `/admin`, login required, global search
-- Colors: primary=Blue, gray=Slate — `primary-*` Tailwind classes render as blue
-- Vite theme: `resources/css/filament/admin/theme.css`
+- `/admin`, login required, global search enabled
+- primary=Blue, gray=Slate; custom Vite theme at `resources/css/filament/admin/theme.css`
 - Brand: `resources/views/filament/custom-logo.blade.php` + `public/favicon.png`
-- Auto-discovers resources/pages/widgets from `app/Filament/`
 
 ### RBAC
 - Roles: `admin` (unrestricted), `user` (scoped to own `user_id`)
 - Seeded: `admin@example.com` / `password`, `test@example.com` / `password`
-- Global scopes on Persona, Vehiculo, Contrato, ControlDiario filter by `user_id` for non-admin
-- `BelongsToUser` trait auto-assigns `user_id = auth()->id()` on create
-- `HasUserContext` trait lets admin switch user context (persisted via cache, syncs via Livewire events)
-- ActivityLogResource + UserResource + DeudaResource = admin-only
+- **`BelongsToUser` concern** (`app/Concerns/`): auto-assigns `user_id = auth()->id()` on create — used by all models including Deuda
+- **`HasUserScope` concern** (`app/Concerns/`): global scope filtering `user_id` for non-admin on Persona, Vehiculo, Contrato, ControlDiario (DRY, extracted from duplicated `booted()`)
+- **`HasUserContext` concern**: admin can switch user context (persisted via cache, Livewire events). Used by all dashboard widgets.
+- Admin-only resources: ActivityLogResource (Trazabilidad), UserResource, DeudaResource (Cartera — has `canAccess()`)
+- All models use `LogsActivity` from spatie; ActivityLogResource is read-only for admins
+- No Policy classes — access control via Resource `canAccess()`/`can*()` methods
 
-### Filament Pattern (Split Layout)
+### Filament Split Layout
 ```
 Resources/{Domain}/
-├── Resource.php          # delegating to Schemas/ and Tables/
+├── Resource.php          → delegates to Schemas/ and Tables/
 ├── Pages/{List,Create,Edit,View}{Domain}.php
 ├── Schemas/{Domain}Form.php, {Domain}Infolist.php
 └── Tables/{Domain}Table.php
 ```
 
-### Dashboard (7 widgets)
-| Sort | Widget | Type | Content |
-|------|--------|------|---------|
-| 0 | SelectorUsuarioWidget | blade | Admin user-context selector (sort=0, full width) |
-| 1 | ResumenDiario | stats | Neto, esperado, gastos by category (daño/mantenimiento/multa/otro), admin |
-| 2 | ResumenSemanal | stats | Same metrics, week (dom–sáb) |
-| 3 | ResumenMensual | stats | Same metrics, month to date |
-| 4 | IndicadoresFlota | stats | Vehículos activos, con conductor, ajustes semana, contratos alquiler/compra |
-| 5 | AlertasVencimientos | stats | SOAT/tecnomecánica por vencer ≤30d + vencidos |
-| 6 | PagosRecientesWidget | table | Last 10 control diario by updated_at |
-
-Stats widgets use `HasDashboardStats` trait (`money()`, `gastosPorCategoria()`). All widgets use `HasUserContext` for admin scope.
+### Custom Pages (Livewire + Blade)
+- **ControlSemanal**: Weekly grid (dom–sáb), cell editing via modal, 12-week sidebar
+- **Reportes**: Period selector + date range + summary tables
 
 ### Models
-| Model | Table | Key Fields |
-|-------|-------|------------|
-| Persona | personas | nombre, cedula (unique), telefono, tipo (conductor/propietario/otro), estado (activo/inactivo), user_id |
-| Vehiculo | vehiculos | placa (unique), marca, modelo, anio, color, persona_id (conductor), cuota_diaria, **administracion**, estado (activo/inactivo/mantenimiento), fecha_vencimiento_soat, fecha_vencimiento_tecnomecanico, **administrador_vehiculo**, user_id |
-| Contrato | contratos | vehiculo_id, persona_id, tipo (alquiler/opcion_compra), fecha_inicio, fecha_fin, valor_diario, estado, documento (file path), user_id |
-| ControlDiario | control_diarios | vehiculo_id+fecha (unique), trabajo (bool), valor_generado, gasto, **categoria_gasto** (daño/mantenimiento/multa/otro), **administracion** (per-day override), user_id |
-| Deuda | deudas | persona_id, valor, user_id (admin-only resource "Cartera") |
-| Configuracion | configuraciones | clave (unique, KV store) |
+- All models use `#[Fillable]` PHP 8 attributes (not `$fillable` property) — follow this convention
+- **ControlDiario**: constants `CATEGORIA_DAÑO`, `MANTENIMIENTO`, `MULTA`, `OTRO`; implicit-delete pattern when saving defaults
+- **Configuracion**: KV store with static `get(clave, default)` / `set(clave, value)`, 1h cache
+- **Persona**: has `estado` field; deletion blocked only if has **active** contratos
+- **Vehiculo**: deletion blocked if has contratos or controlDiarios
 
-### Key Behaviors
-- **ControlDiario defaults**: No DB record = assumes `trabajo=true, valor=cuota_diaria, admin=vehiculo.administracion`. Saving default values deletes the record (returns to implicit state).
-- **Vehiculo deletion**: Blocked if has contratos or controlDiarios (`canBeDeleted()` / `deletionBlockers()`).
-- **Persona deletion**: Blocked if has active contratos.
-- **ControlSemanal page** (`app/Filament/Pages/ControlSemanal.php` + `resources/views/filament/pages/control-semanal.blade.php`): Weekly grid (dom–sáb), cell editing via modal, 12-week history sidebar. Cell colors are inline Tailwind strings (danger=no trabajo, warning=has gasto, gray=default/changed).
-- **Contrato documentos**: Stored on `local` disk, served via `/documento/contratos/{path}` route (streamed, MIME detection, ownership check for non-admin).
-- **Cache**: Dashboard widgets cache 60-300s. Configuracion KV cached 1h. Cache keys include user_id + admin context.
+### Dashboard (7 widgets, by sort order)
+0. SelectorUsuarioWidget — admin user-context (full-width blade)
+1–3. ResumenDiario/Semanal/Mensual — neto, esperado, gastos por categoría
+4. IndicadoresFlota — vehicles, drivers, adjustments, contract counts
+5. AlertasVencimientos — SOAT/tecnomecánica ≤30d or expired
+6. PagosRecientesWidget — last 10 control_diarios by updated_at
+
+Stats widgets use `HasDashboardStats` trait (`money()`, `gastosPorCategoria()`) + `HasUserContext`.
 
 ### Routes
 - `/` → `welcome.blade.php`
 - `/admin/*` → Filament panel
-- `/documento/contratos/{path}` → document viewer (auth required, ownership enforced)
+- `/documento/contratos/{path}` → document viewer (auth required, ownership enforced for non-admin)
 
-## Testing
-- SQLite in-memory, `RefreshDatabase`, `config:clear` required before run
-- 15 test files: 6 Unit + 9 Feature
-- Key areas: RBAC isolation, stats calculations, CRUD operations, control semanal defaults, document auth
+## Testing quirks
+- SQLite in-memory, `RefreshDatabase`, `config:clear` required before run (`composer test` handles it)
+- Tests create roles manually (`Role::create`) in setUp — no seeder dependency
+- Week computation uses `Carbon::SUNDAY` as startOfWeek
 
-## Verification
-1. `composer test`
-2. `vendor/bin/pint`
-3. `npm run build`
+## Docs
+`docs/`: `arquitectura-tecnica.md`, `logica-de-negocio.md`, `modelo-de-negocio.md`, `manual-de-usuario.md`. Consult for business rules, calculations, schema details.

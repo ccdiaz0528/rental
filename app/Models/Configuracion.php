@@ -2,18 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
+#[Fillable(['clave', 'valor'])]
 class Configuracion extends Model
 {
     use LogsActivity;
 
     protected $table = 'configuraciones';
-
-    protected $fillable = ['clave', 'valor'];
 
     public function getActivitylogOptions(): LogOptions
     {
