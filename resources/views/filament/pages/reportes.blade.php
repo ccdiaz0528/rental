@@ -5,7 +5,7 @@
     @php($detalleDiario = $this->getDetalleDiario())
     @php($ajustes = $this->getAjustes())
 
-    <div class="flex flex-col gap-10">
+    <div class="flex flex-col gap-10 tabular-nums">
         <section class="overflow-hidden rounded-[32px] border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.10),_transparent_28%),linear-gradient(135deg,#ffffff_0%,#f8fafc_55%,#f1f5f9_100%)] text-slate-900 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.22),_transparent_28%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] dark:text-white dark:shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
             <div class="grid gap-8 px-7 py-7 xl:grid-cols-[minmax(0,1fr)_30rem] xl:items-stretch">
                 <div>

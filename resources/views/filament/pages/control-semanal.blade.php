@@ -10,7 +10,7 @@
         ['bg' => 'bg-sky-600', 'soft' => 'bg-sky-50 dark:bg-sky-500/10', 'text' => 'text-sky-700 dark:text-sky-300'],
     ])
 
-    <div class="space-y-6">
+    <div class="space-y-6 tabular-nums">
         <section class="overflow-hidden rounded-[32px] border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.10),_transparent_28%),linear-gradient(135deg,#ffffff_0%,#f8fafc_55%,#f1f5f9_100%)] text-slate-900 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.22),_transparent_28%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] dark:text-white dark:shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
             <div class="grid gap-8 px-7 py-7 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-stretch">
                 <div>
@@ -326,11 +326,27 @@
                 </div>
             </aside>
         </div>
-    </div>
 
-    @if ($isModalOpen)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 px-4">
-            <div class="w-full max-w-xl rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
+        <div
+            x-data="{ open: @entangle('isModalOpen') }"
+            x-show="open"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 px-4"
+        >
+            <div class="w-full max-w-xl rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
+                x-show="open"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+            >
                 <div class="border-b border-gray-200 px-6 py-4 dark:border-white/10">
                     <div class="flex items-start justify-between gap-4">
                         <div>
@@ -429,5 +445,5 @@
                 </div>
             </div>
         </div>
-    @endif
+    </div>
 </x-filament-panels::page>
