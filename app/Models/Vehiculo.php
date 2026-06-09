@@ -79,6 +79,17 @@ class Vehiculo extends Model
         return '';
     }
 
+    public function getEffectiveStartDate(): Carbon
+    {
+        if ($this->relationLoaded('contratos')) {
+            $fecha = $this->contratos->min('fecha_inicio');
+        } else {
+            $fecha = $this->contratos()->min('fecha_inicio');
+        }
+
+        return $fecha ? Carbon::parse($fecha)->startOfDay() : $this->created_at->startOfDay();
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
