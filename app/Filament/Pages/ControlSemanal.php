@@ -195,7 +195,7 @@ class ControlSemanal extends Page
         $weekEnd = $weekStart->copy()->addDays(6);
 
         $vehiculoQuery = Vehiculo::query()
-            ->with('persona')
+            ->with(['persona', 'contratos'])
             ->where('estado', 'activo')
             ->orderBy('placa');
         $this->applyUserScope($vehiculoQuery);
@@ -243,7 +243,7 @@ class ControlSemanal extends Page
             foreach ($vehiculos as $vehiculo) {
                 $registro = $registros->get($fecha->toDateString().'-'.$vehiculo->id);
 
-                if ($fecha->startOfDay()->lt($vehiculo->created_at->startOfDay()) && ! $registro) {
+                if ($fecha->startOfDay()->lt($vehiculo->getEffectiveStartDate()) && ! $registro) {
                     $row['cells'][] = [
                         'vehiculo_id' => $vehiculo->id,
                         'fecha' => $fecha->toDateString(),
@@ -336,7 +336,7 @@ class ControlSemanal extends Page
         $newestWeek = $baseWeek->copy()->addDays(6);
 
         $vehiculos = $this->applyUserScope(
-            Vehiculo::query()->where('estado', 'activo')
+            Vehiculo::query()->with('contratos')->where('estado', 'activo')
         )->get(['id', 'cuota_diaria', 'administracion', 'created_at']);
 
         $allRegistros = $vehiculos->isEmpty()
@@ -416,7 +416,7 @@ class ControlSemanal extends Page
             foreach ($vehiculos as $vehiculo) {
                 $fecha = $weekStart->copy()->addDays($offset);
 
-                if ($fecha->startOfDay()->lt($vehiculo->created_at->startOfDay())) {
+                if ($fecha->startOfDay()->lt($vehiculo->getEffectiveStartDate())) {
                     continue;
                 }
 
