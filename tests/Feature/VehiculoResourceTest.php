@@ -73,7 +73,7 @@ class VehiculoResourceTest extends TestCase
         $this->assertNotNull($ok);
     }
 
-    public function test_vehiculo_cannot_delete_with_contratos(): void
+    public function test_vehiculo_can_soft_delete_with_contratos(): void
     {
         $vehiculo = Vehiculo::create([
             'user_id' => $this->admin->id,
@@ -95,11 +95,11 @@ class VehiculoResourceTest extends TestCase
         ]);
 
         $this->actingAs($this->admin);
-        $this->assertFalse($vehiculo->fresh()->canBeDeleted());
-        $this->assertStringContainsString('contratos', $vehiculo->deletionBlockers());
+        $this->assertTrue($vehiculo->fresh()->canBeDeleted());
+        $this->assertEquals('', $vehiculo->deletionBlockers());
     }
 
-    public function test_vehiculo_cannot_delete_with_control_diarios(): void
+    public function test_vehiculo_can_soft_delete_with_control_diarios(): void
     {
         $vehiculo = Vehiculo::create([
             'user_id' => $this->admin->id,
@@ -117,8 +117,8 @@ class VehiculoResourceTest extends TestCase
         ]);
 
         $this->actingAs($this->admin);
-        $this->assertFalse($vehiculo->fresh()->canBeDeleted());
-        $this->assertStringContainsString('controles semanales', $vehiculo->deletionBlockers());
+        $this->assertTrue($vehiculo->fresh()->canBeDeleted());
+        $this->assertEquals('', $vehiculo->deletionBlockers());
     }
 
     public function test_vehiculo_can_delete_without_relations(): void

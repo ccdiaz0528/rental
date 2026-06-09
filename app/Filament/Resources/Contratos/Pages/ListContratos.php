@@ -20,6 +20,6 @@ class ListContratos extends ListRecords
 
     protected function getTableQuery(): Builder
     {
-        return parent::getTableQuery()->with(['vehiculo', 'persona']);
+        return parent::getTableQuery()->with(['vehiculo' => fn ($q) => $q->withTrashed(), 'persona']);
     }
 }

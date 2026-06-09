@@ -101,7 +101,7 @@ class Reportes extends Page
     public function getVehiculosDisponibles(): Collection
     {
         return $this->cachedVehiculos ??= $this->applyUserScope(
-            Vehiculo::query()->with('persona:id,nombre')->orderBy('placa')
+            Vehiculo::query()->withTrashed()->with('persona:id,nombre')->orderBy('placa')
         )->get();
     }
 

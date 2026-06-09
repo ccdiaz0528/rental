@@ -21,7 +21,10 @@ class PagosRecientesWidget extends BaseWidget
     public function table(Table $table): Table
     {
         $query = $this->applyUserScope(
-            ControlDiario::query()->with(['vehiculo.persona'])->latest('updated_at')->limit(10)
+            ControlDiario::query()
+                ->with(['vehiculo' => fn ($q) => $q->withTrashed()->with('persona')])
+                ->latest('updated_at')
+                ->limit(10)
         );
 
         return $table
