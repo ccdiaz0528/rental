@@ -160,6 +160,11 @@
 
                                 @foreach ($row['cells'] as $cell)
                                     <td class="border-r border-gray-200 px-2 py-2 text-center align-top dark:border-white/10">
+                                        @if ($cell['not_applicable'] ?? false)
+                                            <div class="w-full rounded-[20px] border border-gray-100 bg-gray-50/50 px-3 py-4 text-sm text-gray-300 dark:border-white/5 dark:bg-white/[0.02] dark:text-gray-600">
+                                                <div class="text-base font-semibold">—</div>
+                                            </div>
+                                        @else
                                         <button
                                             type="button"
                                             wire:click="openRegistroModal({{ $cell['vehiculo_id'] }}, '{{ $cell['fecha'] }}')"
@@ -197,6 +202,7 @@
                                                 <div class="mt-2 line-clamp-2 text-[11px] opacity-80">{{ $cell['observaciones'] }}</div>
                                             @endif
                                         </button>
+                                        @endif
                                     </td>
                                 @endforeach
 
