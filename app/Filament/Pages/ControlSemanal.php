@@ -241,7 +241,9 @@ class ControlSemanal extends Page
             ];
 
             foreach ($vehiculos as $vehiculo) {
-                if ($fecha->startOfDay()->lt($vehiculo->created_at->startOfDay())) {
+                $registro = $registros->get($fecha->toDateString().'-'.$vehiculo->id);
+
+                if ($fecha->startOfDay()->lt($vehiculo->created_at->startOfDay()) && ! $registro) {
                     $row['cells'][] = [
                         'vehiculo_id' => $vehiculo->id,
                         'fecha' => $fecha->toDateString(),
@@ -258,7 +260,6 @@ class ControlSemanal extends Page
                     continue;
                 }
 
-                $registro = $registros->get($fecha->toDateString().'-'.$vehiculo->id);
                 $valorBase = (float) $vehiculo->cuota_diaria;
                 $adminBase = (float) $vehiculo->administracion;
                 $trabajo = $registro?->trabajo ?? true;
