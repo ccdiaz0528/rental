@@ -63,7 +63,7 @@ Applied to: Personas, Vehiculos, Contratos, Deudas, User, ActivityLog.
 - **ControlDiario**: constants `CATEGORIA_DAÑO`, `MANTENIMIENTO`, `MULTA`, `OTRO`; casts `fecha` as date, `trabajo` as boolean
 - **Configuracion** (`configuraciones` table): KV store with static `get(clave, default)` / `set(clave, value)`, 1h cache
 - **Persona**: deletion blocked only if has **active** contratos (`canBeDeleted()`)
-- **Vehiculo**: uses `SoftDeletes` trait — soft delete preserves contratos/controlDiarios history. Restore + forceDelete via `TrashedFilter`
+- **Vehiculo**: uses `SoftDeletes` trait — soft delete preserves contratos/controlDiarios history. Restore + forceDelete via `TrashedFilter`. FK `control_diarios.vehiculo_id` uses `nullOnDelete` so force delete preserves historical records.
 
 ### Dashboard (7 widgets by `$sort`)
 | Sort | Widget | Description |

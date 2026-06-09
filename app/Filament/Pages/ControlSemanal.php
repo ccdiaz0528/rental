@@ -241,6 +241,23 @@ class ControlSemanal extends Page
             ];
 
             foreach ($vehiculos as $vehiculo) {
+                if ($fecha->startOfDay()->lt($vehiculo->created_at->startOfDay())) {
+                    $row['cells'][] = [
+                        'vehiculo_id' => $vehiculo->id,
+                        'fecha' => $fecha->toDateString(),
+                        'ingreso' => 0,
+                        'gasto' => 0,
+                        'administracion' => 0,
+                        'categoria_gasto' => null,
+                        'trabajo' => false,
+                        'has_changes' => false,
+                        'observaciones' => null,
+                        'not_applicable' => true,
+                    ];
+
+                    continue;
+                }
+
                 $registro = $registros->get($fecha->toDateString().'-'.$vehiculo->id);
                 $valorBase = (float) $vehiculo->cuota_diaria;
                 $adminBase = (float) $vehiculo->administracion;
@@ -319,7 +336,7 @@ class ControlSemanal extends Page
 
         $vehiculos = $this->applyUserScope(
             Vehiculo::query()->where('estado', 'activo')
-        )->get(['id', 'cuota_diaria', 'administracion']);
+        )->get(['id', 'cuota_diaria', 'administracion', 'created_at']);
 
         $allRegistros = $vehiculos->isEmpty()
             ? collect()
@@ -396,6 +413,12 @@ class ControlSemanal extends Page
             $key = $weekStart->copy()->addDays($offset)->format('Y-m-d');
 
             foreach ($vehiculos as $vehiculo) {
+                $fecha = $weekStart->copy()->addDays($offset);
+
+                if ($fecha->startOfDay()->lt($vehiculo->created_at->startOfDay())) {
+                    continue;
+                }
+
                 $valorBase = (float) $vehiculo->cuota_diaria;
                 $esperado += $valorBase;
 

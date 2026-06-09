@@ -114,7 +114,14 @@ class Reportes extends Page
         $totalEsperado = 0;
         foreach ($vehiculos as $vehiculo) {
             if ($vehiculo->estado === 'activo') {
-                $totalEsperado += (float) $vehiculo->cuota_diaria * $diasEnRango;
+                if ($vehiculo->created_at->startOfDay()->gt($end)) {
+                    continue;
+                }
+                $inicioEfectivo = $vehiculo->created_at->startOfDay()->gt($start)
+                    ? $vehiculo->created_at->startOfDay()
+                    : $start;
+                $diasActivo = max(1, (int) $inicioEfectivo->diffInDays($end) + 1);
+                $totalEsperado += (float) $vehiculo->cuota_diaria * $diasActivo;
             }
         }
 
@@ -132,7 +139,11 @@ class Reportes extends Page
             }
 
             for ($d = 0; $d < $diasEnRango; $d++) {
-                $fechaStr = $start->copy()->addDays($d)->toDateString();
+                $fecha = $start->copy()->addDays($d);
+                if ($fecha->startOfDay()->lt($vehiculo->created_at->startOfDay())) {
+                    continue;
+                }
+                $fechaStr = $fecha->toDateString();
                 $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
 
                 if ($registro) {
@@ -212,13 +223,22 @@ class Reportes extends Page
             $gastos = 0;
             $admin = 0;
             $diasModificados = 0;
-            $esperado = $vehiculo->estado === 'activo'
-                ? (float) $vehiculo->cuota_diaria * $diasEnRango
-                : 0;
+            $esperado = 0;
+            if ($vehiculo->estado === 'activo' && $vehiculo->created_at->startOfDay()->lte($end)) {
+                $inicioEfectivo = $vehiculo->created_at->startOfDay()->gt($start)
+                    ? $vehiculo->created_at->startOfDay()
+                    : $start;
+                $diasActivo = max(1, (int) $inicioEfectivo->diffInDays($end) + 1);
+                $esperado = (float) $vehiculo->cuota_diaria * $diasActivo;
+            }
 
             if ($vehiculo->estado === 'activo') {
                 for ($d = 0; $d < $diasEnRango; $d++) {
-                    $fechaStr = $start->copy()->addDays($d)->toDateString();
+                    $fecha = $start->copy()->addDays($d);
+                    if ($fecha->startOfDay()->lt($vehiculo->created_at->startOfDay())) {
+                        continue;
+                    }
+                    $fechaStr = $fecha->toDateString();
                     $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
 
                     if ($registro) {
@@ -273,6 +293,10 @@ class Reportes extends Page
             $registros = 0;
 
             foreach ($vehiculos as $vehiculo) {
+                if ($current->copy()->startOfDay()->lt($vehiculo->created_at->startOfDay())) {
+                    continue;
+                }
+
                 $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
 
                 if ($registro) {
