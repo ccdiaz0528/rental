@@ -160,17 +160,12 @@
 
                                 @foreach ($row['cells'] as $cell)
                                     <td class="border-r border-gray-200 px-2 py-2 text-center align-top dark:border-white/10">
-                                        @if ($cell['not_applicable'] ?? false)
-                                            <div class="w-full rounded-[20px] border border-gray-100 bg-gray-50/50 px-3 py-4 text-sm text-gray-300 dark:border-white/5 dark:bg-white/[0.02] dark:text-gray-600">
-                                                <div class="text-base font-semibold">—</div>
-                                            </div>
-                                        @else
                                         <button
                                             type="button"
                                             wire:click="openRegistroModal({{ $cell['vehiculo_id'] }}, '{{ $cell['fecha'] }}')"
-                                            class="w-full rounded-[20px] border px-3 py-4 text-sm shadow-sm transition {{ ! $cell['trabajo'] ? 'border-danger-200 bg-danger-50 text-danger-700 dark:border-danger-500/30 dark:bg-danger-500/10 dark:text-danger-300' : ($cell['gasto'] > 0 ? 'border-warning-200 bg-warning-50 text-warning-700 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300' : ($cell['has_changes'] ? 'border-gray-300 bg-gray-50 text-gray-700 dark:border-gray-500/30 dark:bg-gray-500/10 dark:text-gray-300' : 'border-gray-200 bg-white text-slate-800 hover:-translate-y-0.5 hover:border-gray-400 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:hover:bg-white/10')) }}"
+                                            class="w-full rounded-[20px] border px-3 py-4 text-sm shadow-sm transition {{ ($cell['not_applicable'] ?? false) ? 'border-dashed border-gray-300 bg-gray-50/50 text-gray-400 dark:border-gray-600 dark:bg-white/[0.03] dark:text-gray-500' : (!$cell['trabajo'] ? 'border-danger-200 bg-danger-50 text-danger-700 dark:border-danger-500/30 dark:bg-danger-500/10 dark:text-danger-300' : ($cell['gasto'] > 0 ? 'border-warning-200 bg-warning-50 text-warning-700 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300' : ($cell['has_changes'] ? 'border-gray-300 bg-gray-50 text-gray-700 dark:border-gray-500/30 dark:bg-gray-500/10 dark:text-gray-300' : 'border-gray-200 bg-white text-slate-800 hover:-translate-y-0.5 hover:border-gray-400 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:hover:bg-white/10'))) }}"
                                         >
-                                            <div class="text-base font-semibold">{{ $this->money($cell['ingreso']) }}</div>
+                                            <div class="text-base font-semibold">{{ ($cell['not_applicable'] ?? false) ? '—' : $this->money($cell['ingreso']) }}</div>
                                             @if (($cell['administracion'] ?? 0) > 0)
                                                 <div class="mt-1 text-[10px] font-medium text-slate-500">Admin: {{ $this->money($cell['administracion'] ?? 0) }}</div>
                                             @endif
@@ -195,14 +190,13 @@
                                                     </span>
                                                 @endif
                                             @endif
-                                            @if (! $cell['trabajo'])
+                                            @if (! $cell['trabajo'] && ! ($cell['not_applicable'] ?? false))
                                                 <div class="mt-1 text-xs font-medium">No trabajó</div>
                                             @endif
                                             @if ($cell['observaciones'])
                                                 <div class="mt-2 line-clamp-2 text-[11px] opacity-80">{{ $cell['observaciones'] }}</div>
                                             @endif
                                         </button>
-                                        @endif
                                     </td>
                                 @endforeach
 
