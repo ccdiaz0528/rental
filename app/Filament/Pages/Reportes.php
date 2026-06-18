@@ -310,6 +310,8 @@ class Reportes extends Page
             return [];
         }
 
+        $registrosEnRango = $this->getRegistrosEnRango();
+
         $dias = [];
         $current = $start->copy();
 
