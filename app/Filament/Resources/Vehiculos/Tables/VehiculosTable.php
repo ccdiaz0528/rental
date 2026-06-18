@@ -86,11 +86,14 @@ class VehiculosTable
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
-                RestoreAction::make(),
-                ForceDeleteAction::make(),
+                RestoreAction::make()
+                    ->visible(fn () => auth()->user()?->hasRole('admin')),
+                ForceDeleteAction::make()
+                    ->visible(fn () => auth()->user()?->hasRole('admin')),
             ])
             ->filters([
-                TrashedFilter::make(),
+                TrashedFilter::make()
+                    ->visible(fn () => auth()->user()?->hasRole('admin')),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

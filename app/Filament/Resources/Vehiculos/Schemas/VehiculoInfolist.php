@@ -52,6 +52,14 @@ class VehiculoInfolist
                 TextEntry::make('estado')
                     ->label('Estado')
                     ->badge(),
+                TextEntry::make('fecha_inactivacion')
+                    ->label('Inactivado el')
+                    ->dateTime()
+                    ->hidden(fn ($record) => $record?->fecha_inactivacion === null),
+                TextEntry::make('restored_at')
+                    ->label('Restaurado el')
+                    ->dateTime()
+                    ->hidden(fn ($record) => $record?->restored_at === null),
                 TextEntry::make('observaciones')
                     ->label('Observaciones')
                     ->placeholder('Sin observaciones')
