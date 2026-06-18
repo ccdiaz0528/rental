@@ -4,12 +4,12 @@ namespace App\Models;
 
 use App\Concerns\BelongsToUser;
 use App\Concerns\HasUserScope;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -62,6 +62,47 @@ class Vehiculo extends Model
                     $vehiculo->fecha_inactivacion = null;
                 }
             }
+
+            if ($vehiculo->isDirty(['persona_id', 'cuota_diaria', 'administracion'])) {
+                $now = now();
+
+                $earliest = $vehiculo->vehiculoHistorial()
+                    ->orderBy('fecha_inicio')
+                    ->first();
+
+                if ($earliest && $earliest->fecha_inicio->startOfDay()->gt($vehiculo->created_at->startOfDay())) {
+                    $fechaInicio = $vehiculo->contratos()->min('fecha_inicio');
+
+                    $vehiculo->vehiculoHistorial()->create([
+                        'persona_id' => $vehiculo->getOriginal('persona_id'),
+                        'cuota_diaria' => $vehiculo->getOriginal('cuota_diaria'),
+                        'administracion' => $vehiculo->getOriginal('administracion') ?? 0,
+                        'fecha_inicio' => $fechaInicio
+                            ? Carbon::parse($fechaInicio)->startOfDay()
+                            : $vehiculo->created_at->startOfDay(),
+                    ]);
+                }
+
+                $vehiculo->vehiculoHistorial()
+                    ->whereNull('fecha_fin')
+                    ->update(['fecha_fin' => $now]);
+
+                $vehiculo->vehiculoHistorial()->create([
+                    'persona_id' => $vehiculo->persona_id,
+                    'cuota_diaria' => $vehiculo->cuota_diaria,
+                    'administracion' => $vehiculo->administracion ?? 0,
+                    'fecha_inicio' => $now,
+                ]);
+            }
+        });
+
+        static::created(function (Vehiculo $vehiculo) {
+            $vehiculo->vehiculoHistorial()->create([
+                'persona_id' => $vehiculo->persona_id,
+                'cuota_diaria' => $vehiculo->cuota_diaria,
+                'administracion' => $vehiculo->administracion ?? 0,
+                'fecha_inicio' => $vehiculo->created_at,
+            ]);
         });
 
         static::deleting(function (Vehiculo $vehiculo) {
@@ -109,6 +150,61 @@ class Vehiculo extends Model
         }
 
         return '';
+    }
+
+    public function vehiculoHistorial(): HasMany
+    {
+        return $this->hasMany(VehiculoHistorial::class);
+    }
+
+    public function historialEnFecha(Carbon $fecha): ?VehiculoHistorial
+    {
+        $fechaStart = $fecha->copy()->startOfDay();
+
+        if ($this->relationLoaded('vehiculoHistorial')) {
+            return $this->vehiculoHistorial
+                ->filter(fn ($h) => $h->fecha_inicio->startOfDay()->lte($fechaStart) && ($h->fecha_fin === null || $h->fecha_fin->startOfDay()->gt($fechaStart)))
+                ->sortByDesc('fecha_inicio')
+                ->first();
+        }
+
+        return $this->vehiculoHistorial()
+            ->whereDate('fecha_inicio', '<=', $fechaStart)
+            ->where(function ($q) use ($fechaStart) {
+                $q->whereNull('fecha_fin')
+                    ->orWhereDate('fecha_fin', '>', $fechaStart);
+            })
+            ->orderBy('fecha_inicio', 'desc')
+            ->first();
+    }
+
+    public function cuotaDiariaEn(Carbon $fecha): float
+    {
+        return (float) ($this->historialEnFecha($fecha)?->cuota_diaria ?? $this->cuota_diaria);
+    }
+
+    public function administracionEn(Carbon $fecha): float
+    {
+        return (float) ($this->historialEnFecha($fecha)?->administracion ?? $this->administracion ?? 0);
+    }
+
+    public function personaNombreEn(Carbon $fecha): ?string
+    {
+        $historial = $this->historialEnFecha($fecha);
+
+        if ($historial) {
+            if ($historial->persona_id) {
+                if ($historial->relationLoaded('persona') && $historial->persona) {
+                    return $historial->persona->nombre;
+                }
+
+                return $historial->persona()->value('nombre');
+            }
+
+            return null;
+        }
+
+        return $this->persona?->nombre;
     }
 
     public function getEffectiveStartDate(): Carbon
