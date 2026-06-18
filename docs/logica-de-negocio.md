@@ -110,6 +110,43 @@ Si no:
 - Solo muestra semanas con novedades (al menos 1 registro)
 - Cada entrada muestra: esperado, ingreso, gastos, admin, neto
 
+## Historial de Vehículo (VehiculoHistorial)
+
+La tabla `vehiculo_historial` rastrea cambios en `persona_id`, `cuota_diaria` y `administracion` de cada vehículo a lo largo del tiempo.
+
+### Estructura
+
+```
+vehiculo_historial
+├── vehiculo_id (FK)
+├── persona_id (FK nullable, snapshot del conductor en ese momento)
+├── cuota_diaria (decimal)
+├── administracion (decimal)
+├── fecha_inicio (datetime) — cuándo empezó a regir este registro
+└── fecha_fin (datetime, nullable) — cuándo fue reemplazado (null = registro vigente)
+```
+
+### Comportamiento
+
+- **Al crear un vehículo**: se crea automáticamente un registro inicial con `fecha_inicio = created_at`
+- **Al actualizar** `persona_id`, `cuota_diaria` o `administracion`: se cierra el registro vigente (`fecha_fin = now()`) y se crea uno nuevo con los valores actualizados
+- **Campos no relevantes** (placa, marca, color, etc.): no disparan cambios en el historial
+- **Soft delete/restore**: no afectan el historial
+
+### Métodos de ayuda en Vehiculo
+
+- `historialEnFecha(Carbon $fecha)`: retorna el registro vigente en una fecha específica (usa la colección en memoria si la relación está cargada, o consulta DB si no)
+- `cuotaDiariaEn(Carbon $fecha)`: retorna la cuota diaria que regía en esa fecha
+- `administracionEn(Carbon $fecha)`: retorna la administración que regía en esa fecha
+- `personaNombreEn(Carbon $fecha)`: retorna el nombre del conductor asignado en esa fecha
+
+### ¿Dónde se usa?
+
+1. **ControlSemanal** (`getWeekDataset`): carga `vehiculoHistorial.persona` con eager loading; cada celda usa `cuotaDiariaEn($fecha)` y `administracionEn($fecha)` para mostrar/esperar los valores correctos según la fecha
+2. **ControlSemanal** (`openRegistroModal`): el modal de edición muestra los defaults basados en el historial de la fecha seleccionada (no los valores actuales del vehículo)
+3. **Reportes** (`getResumen`, `getDetallePorVehiculo`, `getDetalleDiario`, `getAjustes`): todos los cálculos de esperado, admin y conductor usan valores históricos por fecha
+4. **Dashboard** (ResumenDiario, ResumenSemanal, ResumenMensual): los valores base se obtienen del historial para respetar cambios intra-período
+
 ## Administración (campo)
 
 Cada vehículo tiene un campo `administracion` (costo operativo diario). En el control semanal:

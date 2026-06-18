@@ -125,13 +125,16 @@ User 1──N Deuda
 Persona 1──N Vehiculo (conductor)
 Persona 1──N Contrato
 Persona 1──N Deuda
+Persona 1──N VehiculoHistorial
 
 Vehiculo 1──N Contrato
 Vehiculo 1──N ControlDiario
+Vehiculo 1──N VehiculoHistorial
+VehiculoHistorial ──N Persona (snapshot del conductor en ese momento)
 ```
 
 ## Reglas de Eliminación
 
 - **Persona**: no se puede eliminar si tiene contratos activos
-- **Vehículo**: no se puede eliminar si tiene contratos o controles diarios asociados
+- **Vehículo**: se elimina con SoftDeletes (lógico). Las relaciones (contratos, control_diarios) se conservan gracias a `nullOnDelete` en la FK. El registro queda marcado como eliminado pero los datos históricos se preservan.
 - **Usuario**: no se puede eliminar a sí mismo

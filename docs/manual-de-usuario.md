@@ -72,11 +72,13 @@ Al iniciar sesión verás 6 widgets:
 ### Editar vehículo
 Haz clic en el icono de lápiz en la tabla.
 
+**Importante:** Al cambiar la **Cuota diaria**, **Administración** o **Conductor** de un vehículo, el sistema guarda automáticamente un historial del cambio. Los reportes y el control semanal usarán los valores correctos según la fecha, respetando los valores que regían en cada período.
+
 ### Ver detalle
 Haz clic en el icono de ojo para ver toda la información.
 
 ### Eliminar vehículo
-Solo se puede eliminar si no tiene contratos ni controles diarios asociados.
+Los vehículos se **eliminan de forma lógica** (soft delete): el registro se oculta pero los datos históricos (controles diarios, contratos, historial) se conservan. Los administradores pueden restaurar o eliminar permanentemente desde la tabla de vehículos, usando las acciones "Restaurar" o "Eliminar permanentemente" disponibles en el filtro "Eliminados".
 
 ## Gestión de Personas
 
@@ -131,9 +133,9 @@ Esta es la herramienta principal del sistema. Presenta una cuadrícula semanal (
 1. Haz clic en cualquier celda de la cuadrícula
 2. Se abre un modal con los siguientes campos:
    - **El vehículo trabajó este día**: si desmarcas, el ingreso será $0
-   - **Valor generado**: ingreso real del día (prellenado con la cuota)
+   - **Valor generado**: ingreso real del día (prellenado con la cuota que regía en esa fecha, no necesariamente la cuota actual del vehículo)
    - **Gasto del día**: si hay gasto, debes seleccionar una categoría
-   - **Administración**: costo operativo (prellenado con el valor del vehículo)
+   - **Administración**: costo operativo (prellenado con el valor histórico de esa fecha)
    - **Observaciones**: notas opcionales
 3. Haz clic en "Guardar"
 4. Si todos los valores son iguales a los defaults, el registro se elimina (vuelve al estado por defecto)
