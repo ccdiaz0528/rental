@@ -70,7 +70,36 @@ class ControlSemanal extends Page
 
     public function openRegistroModal(int $vehiculoId, string $fecha): void
     {
-        $vehiculo = Vehiculo::query()->with('persona')->findOrFail($vehiculoId);
+        $vehiculo = Vehiculo::query()->withTrashed()->with('persona')->findOrFail($vehiculoId);
+
+        $bloqueado = $vehiculo->estado === 'mantenimiento'
+            || ($vehiculo->estado === 'inactivo'
+                && $vehiculo->fecha_inactivacion
+                && Carbon::parse($fecha)->startOfDay()->gte($vehiculo->fecha_inactivacion->startOfDay()))
+            || ($vehiculo->trashed()
+                && $vehiculo->deleted_at
+                && Carbon::parse($fecha)->startOfDay()->gte($vehiculo->deleted_at->startOfDay()))
+            || ($vehiculo->fecha_eliminacion
+                && $vehiculo->restored_at
+                && Carbon::parse($fecha)->startOfDay()->gte($vehiculo->fecha_eliminacion->startOfDay())
+                && Carbon::parse($fecha)->startOfDay()->lt($vehiculo->restored_at->startOfDay()));
+
+        if ($bloqueado) {
+            $razon = match (true) {
+                $vehiculo->estado === 'mantenimiento' => 'en mantenimiento.',
+                $vehiculo->estado === 'inactivo' => 'inactivo.',
+                $vehiculo->trashed() => 'eliminado.',
+                default => 'eliminado (restaurado).',
+            };
+
+            Notification::make()
+                ->title('Registro bloqueado')
+                ->body("No puedes editar registros de un vehículo {$razon}")
+                ->danger()
+                ->send();
+
+            return;
+        }
 
         $this->cachedVehiculo = [
             'id' => $vehiculo->id,
@@ -135,6 +164,38 @@ class ControlSemanal extends Page
             return;
         }
 
+        $vehiculo = Vehiculo::query()->withTrashed()->find($this->selectedVehiculoId);
+        if ($vehiculo) {
+            $bloqueado = $vehiculo->estado === 'mantenimiento'
+                || ($vehiculo->estado === 'inactivo'
+                    && $vehiculo->fecha_inactivacion
+                    && Carbon::parse($this->selectedFecha)->startOfDay()->gte($vehiculo->fecha_inactivacion->startOfDay()))
+                || ($vehiculo->trashed()
+                    && $vehiculo->deleted_at
+                    && Carbon::parse($this->selectedFecha)->startOfDay()->gte($vehiculo->deleted_at->startOfDay()))
+                || ($vehiculo->fecha_eliminacion
+                    && $vehiculo->restored_at
+                    && Carbon::parse($this->selectedFecha)->startOfDay()->gte($vehiculo->fecha_eliminacion->startOfDay())
+                    && Carbon::parse($this->selectedFecha)->startOfDay()->lt($vehiculo->restored_at->startOfDay()));
+            if ($bloqueado) {
+                $razon = match (true) {
+                    $vehiculo->estado === 'mantenimiento' => 'en mantenimiento.',
+                    $vehiculo->estado === 'inactivo' => 'inactivo.',
+                    $vehiculo->trashed() => 'eliminado.',
+                    default => 'eliminado (restaurado).',
+                };
+
+                Notification::make()
+                    ->title('Registro bloqueado')
+                    ->body("No puedes guardar cambios en un vehículo {$razon}")
+                    ->danger()
+                    ->send();
+                $this->closeModal();
+
+                return;
+            }
+        }
+
         $valorPorDefecto = (float) ($this->cachedVehiculo['cuota_diaria'] ?? 0);
         $adminPorDefecto = (float) ($this->cachedVehiculo['administracion'] ?? 0);
 
@@ -195,8 +256,24 @@ class ControlSemanal extends Page
         $weekEnd = $weekStart->copy()->addDays(6);
 
         $vehiculoQuery = Vehiculo::query()
+            ->withTrashed()
             ->with(['persona', 'contratos'])
-            ->where('estado', 'activo')
+            ->where(function ($q) use ($weekStart) {
+                $q->whereNull('deleted_at')->where(function ($q) {
+                    $q->where('estado', 'activo')
+                        ->orWhere('estado', 'mantenimiento');
+                })
+                    ->orWhere(function ($q) use ($weekStart) {
+                        $q->whereNull('deleted_at')
+                            ->where('estado', 'inactivo')
+                            ->whereNotNull('fecha_inactivacion')
+                            ->where('fecha_inactivacion', '>', $weekStart);
+                    })
+                    ->orWhere(function ($q) use ($weekStart) {
+                        $q->whereNotNull('deleted_at')
+                            ->where('deleted_at', '>', $weekStart);
+                    });
+            })
             ->orderBy('placa');
         $this->applyUserScope($vehiculoQuery);
         $vehiculos = $vehiculoQuery->get();
@@ -255,6 +332,39 @@ class ControlSemanal extends Page
                         'has_changes' => false,
                         'observaciones' => null,
                         'not_applicable' => true,
+                        'bloqueado' => false,
+                        'estado' => $vehiculo->estado,
+                    ];
+
+                    continue;
+                }
+
+                $cellDisabled = $vehiculo->estado === 'mantenimiento'
+                    || ($vehiculo->estado === 'inactivo'
+                        && $vehiculo->fecha_inactivacion
+                        && $fecha->startOfDay()->gte($vehiculo->fecha_inactivacion->startOfDay()))
+                    || ($vehiculo->trashed()
+                        && $vehiculo->deleted_at
+                        && $fecha->startOfDay()->gte($vehiculo->deleted_at->startOfDay()))
+                    || ($vehiculo->fecha_eliminacion
+                        && $vehiculo->restored_at
+                        && $fecha->startOfDay()->gte($vehiculo->fecha_eliminacion->startOfDay())
+                        && $fecha->startOfDay()->lt($vehiculo->restored_at->startOfDay()));
+
+                if ($cellDisabled && ! $registro) {
+                    $row['cells'][] = [
+                        'vehiculo_id' => $vehiculo->id,
+                        'fecha' => $fecha->toDateString(),
+                        'ingreso' => 0,
+                        'gasto' => 0,
+                        'administracion' => 0,
+                        'categoria_gasto' => null,
+                        'trabajo' => false,
+                        'has_changes' => false,
+                        'observaciones' => null,
+                        'not_applicable' => true,
+                        'bloqueado' => false,
+                        'estado' => $vehiculo->estado,
                     ];
 
                     continue;
@@ -279,6 +389,8 @@ class ControlSemanal extends Page
                     'trabajo' => $trabajo,
                     'has_changes' => $registro !== null,
                     'observaciones' => $registro?->observaciones,
+                    'bloqueado' => $cellDisabled,
+                    'estado' => $vehiculo->estado,
                 ];
 
                 $row['gastos'] += $gasto;
@@ -336,8 +448,24 @@ class ControlSemanal extends Page
         $newestWeek = $baseWeek->copy()->addDays(6);
 
         $vehiculos = $this->applyUserScope(
-            Vehiculo::query()->with('contratos')->where('estado', 'activo')
-        )->get(['id', 'cuota_diaria', 'administracion', 'created_at']);
+            Vehiculo::query()->withTrashed()->with('contratos')
+                ->where(function ($q) use ($oldestWeek) {
+                    $q->whereNull('deleted_at')->where(function ($q) {
+                        $q->where('estado', 'activo')
+                            ->orWhere('estado', 'mantenimiento');
+                    })
+                        ->orWhere(function ($q) use ($oldestWeek) {
+                            $q->whereNull('deleted_at')
+                                ->where('estado', 'inactivo')
+                                ->whereNotNull('fecha_inactivacion')
+                                ->where('fecha_inactivacion', '>', $oldestWeek);
+                        })
+                        ->orWhere(function ($q) use ($oldestWeek) {
+                            $q->whereNotNull('deleted_at')
+                                ->where('deleted_at', '>', $oldestWeek);
+                        });
+                })
+        )->get(['id', 'cuota_diaria', 'administracion', 'created_at', 'estado', 'fecha_inactivacion', 'deleted_at', 'fecha_eliminacion', 'restored_at']);
 
         $allRegistros = $vehiculos->isEmpty()
             ? collect()
@@ -417,6 +545,22 @@ class ControlSemanal extends Page
                 $fecha = $weekStart->copy()->addDays($offset);
 
                 if ($fecha->startOfDay()->lt($vehiculo->getEffectiveStartDate())) {
+                    continue;
+                }
+
+                $cellDisabled = $vehiculo->estado === 'mantenimiento'
+                    || ($vehiculo->estado === 'inactivo'
+                        && $vehiculo->fecha_inactivacion
+                        && $fecha->startOfDay()->gte($vehiculo->fecha_inactivacion->startOfDay()))
+                    || ($vehiculo->trashed()
+                        && $vehiculo->deleted_at
+                        && $fecha->startOfDay()->gte($vehiculo->deleted_at->startOfDay()))
+                    || ($vehiculo->fecha_eliminacion
+                        && $vehiculo->restored_at
+                        && $fecha->startOfDay()->gte($vehiculo->fecha_eliminacion->startOfDay())
+                        && $fecha->startOfDay()->lt($vehiculo->restored_at->startOfDay()));
+
+                if ($cellDisabled) {
                     continue;
                 }
 

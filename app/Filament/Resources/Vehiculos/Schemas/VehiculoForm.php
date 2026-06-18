@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Vehiculos\Schemas;
 
 use App\Models\User;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -84,6 +85,11 @@ class VehiculoForm
                 ])
                 ->required()
                 ->default('activo'),
+
+            DateTimePicker::make('fecha_inactivacion')
+                ->label('Inactivado el')
+                ->disabled()
+                ->hidden(fn ($record) => $record === null || $record->estado !== 'inactivo'),
 
             Textarea::make('observaciones')
                 ->label('Observaciones')
