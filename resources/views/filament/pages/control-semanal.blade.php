@@ -126,13 +126,13 @@
                                         </div>
                                         <div class="mt-3 text-sm font-semibold text-slate-950 dark:text-white">{{ $vehiculo->placa }}</div>
                                         <div class="mt-1 text-xs font-normal text-slate-500">
-                                            {{ $vehiculo->persona?->nombre ?? 'Sin conductor' }}
+                                            {{ $vehiculo->personaNombreEn($dataset['weekStart']) ?? 'Sin conductor' }}
                                         </div>
                                         <div class="mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $palette['soft'] }} {{ $palette['text'] }} ring-1 ring-inset ring-black/5 dark:ring-white/10">
-                                            Cuota {{ $this->money($vehiculo->cuota_diaria) }}
+                                            Cuota {{ $this->money($vehiculo->cuotaDiariaEn($dataset['weekStart'])) }}
                                         </div>
                                         <div class="mt-1.5 inline-flex rounded-full px-3 py-1 text-[11px] font-semibold {{ $palette['soft'] }} {{ $palette['text'] }} ring-1 ring-inset ring-black/5 dark:ring-white/10 opacity-75">
-                                            Admin {{ $this->money($vehiculo->administracion ?? 0) }}
+                                            Admin {{ $this->money($vehiculo->administracionEn($dataset['weekStart'])) }}
                                         </div>
                                     </div>
                                 </th>

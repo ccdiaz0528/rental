@@ -5,9 +5,9 @@ namespace App\Filament\Pages;
 use App\Concerns\HasUserContext;
 use App\Models\ControlDiario;
 use App\Models\Vehiculo;
-use Carbon\Carbon;
 use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class Reportes extends Page
@@ -101,7 +101,7 @@ class Reportes extends Page
     public function getVehiculosDisponibles(): Collection
     {
         return $this->cachedVehiculos ??= $this->applyUserScope(
-            Vehiculo::query()->withTrashed()->with(['persona:id,nombre', 'contratos'])->orderBy('placa')
+            Vehiculo::query()->withTrashed()->with(['persona:id,nombre', 'contratos', 'vehiculoHistorial.persona'])->orderBy('placa')
         )->get();
     }
 
@@ -137,22 +137,9 @@ class Reportes extends Page
         $diasEnRango = max((int) $start->diffInDays($end) + 1, 1);
 
         $vehiculosPeriodo = $this->getVehiculosDelPeriodo();
-        $totalEsperado = 0;
-        foreach ($vehiculosPeriodo as $vehiculo) {
-            $inicioEfectivo = $vehiculo->getEffectiveStartDate()->gt($start)
-                ? $vehiculo->getEffectiveStartDate()
-                : $start;
-            $finEfectivo = $vehiculo->fecha_inactivacion
-                ? $vehiculo->fecha_inactivacion->copy()->subDay()->startOfDay()
-                : $end;
-            if ($finEfectivo->lt($inicioEfectivo)) {
-                continue;
-            }
-            $diasActivo = max(1, (int) $inicioEfectivo->diffInDays($finEfectivo) + 1);
-            $totalEsperado += (float) $vehiculo->cuota_diaria * $diasActivo;
-        }
-
         $registrosEnRango = $this->getRegistrosEnRango();
+
+        $totalEsperado = 0;
         $totalReal = 0;
         $totalGastos = 0;
         $totalAdmin = 0;
@@ -169,6 +156,11 @@ class Reportes extends Page
                 if (! $this->vehiculoActivoEnFecha($vehiculo, $fecha)) {
                     continue;
                 }
+
+                $cuotaDia = $vehiculo->cuotaDiariaEn($fecha);
+                $adminDia = $vehiculo->administracionEn($fecha);
+                $totalEsperado += $cuotaDia;
+
                 $fechaStr = $fecha->toDateString();
                 $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
 
@@ -176,17 +168,17 @@ class Reportes extends Page
                     $realDia = $registro->trabajo ? (float) $registro->valor_generado : 0;
                     $totalReal += $realDia;
                     $totalGastos += (float) $registro->gasto;
-                    $totalAdmin += (float) ($registro->administracion ?? $vehiculo->administracion ?? 0);
+                    $totalAdmin += (float) ($registro->administracion ?? $adminDia);
 
                     if (! $registro->trabajo) {
-                        $totalNoPercibido += (float) $vehiculo->cuota_diaria;
+                        $totalNoPercibido += $cuotaDia;
                         $diasNoTrabajados++;
-                    } elseif ((float) $registro->valor_generado != (float) $vehiculo->cuota_diaria) {
-                        $totalDiferencia += $realDia - (float) $vehiculo->cuota_diaria;
+                    } elseif ((float) $registro->valor_generado != $cuotaDia) {
+                        $totalDiferencia += $realDia - $cuotaDia;
                     }
                 } else {
-                    $totalReal += (float) $vehiculo->cuota_diaria;
-                    $totalAdmin += (float) ($vehiculo->administracion ?? 0);
+                    $totalReal += $cuotaDia;
+                    $totalAdmin += $adminDia;
                 }
             }
         }
@@ -250,17 +242,6 @@ class Reportes extends Page
             $diasModificados = 0;
             $esperado = 0;
 
-            $inicioEfectivo = $vehiculo->getEffectiveStartDate()->gt($start)
-                ? $vehiculo->getEffectiveStartDate()
-                : $start;
-            $finEfectivo = $vehiculo->fecha_inactivacion
-                ? $vehiculo->fecha_inactivacion->copy()->subDay()->startOfDay()
-                : $end;
-            if ($finEfectivo->gte($inicioEfectivo)) {
-                $diasActivo = max(1, (int) $inicioEfectivo->diffInDays($finEfectivo) + 1);
-                $esperado = (float) $vehiculo->cuota_diaria * $diasActivo;
-            }
-
             for ($d = 0; $d < $diasEnRango; $d++) {
                 $fecha = $start->copy()->addDays($d);
                 if ($fecha->startOfDay()->lt($vehiculo->getEffectiveStartDate())) {
@@ -269,23 +250,28 @@ class Reportes extends Page
                 if (! $this->vehiculoActivoEnFecha($vehiculo, $fecha)) {
                     continue;
                 }
+
+                $cuotaDia = $vehiculo->cuotaDiariaEn($fecha);
+                $adminDia = $vehiculo->administracionEn($fecha);
+                $esperado += $cuotaDia;
+
                 $fechaStr = $fecha->toDateString();
                 $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
 
                 if ($registro) {
                     $real += $registro->trabajo ? (float) $registro->valor_generado : 0;
                     $gastos += (float) $registro->gasto;
-                    $admin += (float) ($registro->administracion ?? $vehiculo->administracion ?? 0);
+                    $admin += (float) ($registro->administracion ?? $adminDia);
                     $diasModificados++;
                 } else {
-                    $real += (float) $vehiculo->cuota_diaria;
-                    $admin += (float) ($vehiculo->administracion ?? 0);
+                    $real += $cuotaDia;
+                    $admin += $adminDia;
                 }
             }
 
             $detalle[] = [
                 'placa' => $vehiculo->placa,
-                'conductor' => $vehiculo->persona?->nombre ?? 'Sin conductor',
+                'conductor' => $vehiculo->personaNombreEn($start) ?? 'Sin conductor',
                 'estado' => $vehiculo->estado,
                 'esperado' => $esperado,
                 'real' => $real,
@@ -293,7 +279,7 @@ class Reportes extends Page
                 'administracion' => $admin,
                 'neto' => $real - $gastos - $admin,
                 'dias_modificados' => $diasModificados,
-                'cuota_diaria' => (float) $vehiculo->cuota_diaria,
+                'cuota_diaria' => $vehiculo->cuotaDiariaEn($start),
             ];
         }
 
@@ -336,11 +322,11 @@ class Reportes extends Page
                 if ($registro) {
                     $real += $registro->trabajo ? (float) $registro->valor_generado : 0;
                     $gastos += (float) $registro->gasto;
-                    $admin += (float) ($registro->administracion ?? $vehiculo->administracion ?? 0);
+                    $admin += (float) ($registro->administracion ?? $vehiculo->administracionEn($current));
                     $registros++;
                 } else {
-                    $real += (float) $vehiculo->cuota_diaria;
-                    $admin += (float) ($vehiculo->administracion ?? 0);
+                    $real += $vehiculo->cuotaDiariaEn($current);
+                    $admin += $vehiculo->administracionEn($current);
                 }
             }
 
@@ -372,7 +358,7 @@ class Reportes extends Page
                 continue;
             }
 
-            $esperado = (float) $vehiculo->cuota_diaria;
+            $esperado = $vehiculo->cuotaDiariaEn($registro->fecha);
             $real = $registro->trabajo ? (float) $registro->valor_generado : 0;
             $diferencia = $real - $esperado;
 
@@ -424,7 +410,8 @@ class Reportes extends Page
 
         $query = $this->applyUserScope(
             ControlDiario::query()
-                ->whereBetween('fecha', [$start->toDateString(), $end->toDateString()])
+                ->whereDate('fecha', '>=', $start->toDateString())
+                ->whereDate('fecha', '<=', $end->toDateString())
         );
 
         if (! empty($this->vehiculosSeleccionados)) {

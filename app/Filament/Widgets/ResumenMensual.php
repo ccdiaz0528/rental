@@ -35,39 +35,56 @@ class ResumenMensual extends BaseWidget
             $hoy = now()->startOfDay();
             $diasMes = now()->day;
 
-            $vehiculosActivos = $this->applyUserScope(
-                Vehiculo::query()->where('estado', 'activo')
-            )->get(['id', 'cuota_diaria', 'administracion']);
+            $vehiculosMes = $this->applyUserScope(
+                Vehiculo::query()->withTrashed()->with('vehiculoHistorial')
+            )->get(['id', 'cuota_diaria', 'administracion', 'estado', 'fecha_inactivacion', 'created_at', 'deleted_at']);
 
-            $registrosMes = $vehiculosActivos->isEmpty()
+            $registrosMes = $vehiculosMes->isEmpty()
                 ? collect()
                 : $this->applyUserScope(
                     ControlDiario::query()
-                        ->whereIn('vehiculo_id', $vehiculosActivos->pluck('id'))
+                        ->whereIn('vehiculo_id', $vehiculosMes->pluck('id'))
                         ->whereBetween('fecha', [$inicioMes->toDateString(), $hoy->toDateString()])
                 )->get();
 
-            $esperadoMes = $vehiculosActivos->sum('cuota_diaria') * $diasMes;
+            $esperadoMes = 0;
             $gastosMes = 0;
             $adminMes = 0;
             $realMes = 0;
 
             $registrosIndexed = $registrosMes->keyBy(fn ($r) => $r->vehiculo_id.'-'.$r->fecha->format('Y-m-d'));
 
-            foreach ($vehiculosActivos as $v) {
-                $cuota = (float) $v->cuota_diaria;
-
+            foreach ($vehiculosMes as $v) {
                 for ($d = 1; $d <= $diasMes; $d++) {
-                    $key = $v->id.'-'.$inicioMes->copy()->addDays($d - 1)->format('Y-m-d');
+                    $dia = $inicioMes->copy()->addDays($d - 1);
+
+                    if ($v->getEffectiveStartDate()->gt($dia)) {
+                        continue;
+                    }
+
+                    $activo = $v->estado === 'activo'
+                        || ($v->estado === 'inactivo'
+                            && $v->fecha_inactivacion
+                            && $dia->lt($v->fecha_inactivacion->startOfDay()));
+
+                    if (! $activo) {
+                        continue;
+                    }
+
+                    $cuotaBase = $v->cuotaDiariaEn($dia);
+                    $adminBase = $v->administracionEn($dia);
+                    $esperadoMes += $cuotaBase;
+
+                    $key = $v->id.'-'.$dia->format('Y-m-d');
                     $registro = $registrosIndexed->get($key);
                     $gastosMes += (float) ($registro->gasto ?? 0);
-                    $adminMes += (float) ($registro->administracion ?? $v->administracion ?? 0);
+                    $adminMes += (float) ($registro->administracion ?? $adminBase);
 
                     if ($registro) {
                         $trabajo = $registro->trabajo ?? true;
                         $realMes += $trabajo ? (float) $registro->valor_generado : 0;
                     } else {
-                        $realMes += $cuota;
+                        $realMes += $cuotaBase;
                     }
                 }
             }

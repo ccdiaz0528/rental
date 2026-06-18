@@ -34,7 +34,7 @@ class ResumenDiario extends BaseWidget
             $hoy = now()->startOfDay();
 
             $vehiculosActivos = $this->applyUserScope(
-                Vehiculo::query()->where('estado', 'activo')
+                Vehiculo::query()->where('estado', 'activo')->with('vehiculoHistorial')
             )->get(['id', 'cuota_diaria', 'administracion']);
 
             $registrosHoy = $vehiculosActivos->isEmpty()
@@ -45,7 +45,8 @@ class ResumenDiario extends BaseWidget
                         ->whereDate('fecha', $hoy)
                 )->get();
 
-            $esperadoHoy = $vehiculosActivos->sum('cuota_diaria');
+            $hoyCarbon = $hoy;
+            $esperadoHoy = 0;
             $gastosHoy = 0;
             $adminHoy = 0;
             $realHoy = 0;
@@ -53,15 +54,19 @@ class ResumenDiario extends BaseWidget
             $registrosIndexed = $registrosHoy->keyBy('vehiculo_id');
 
             foreach ($vehiculosActivos as $v) {
+                $cuotaBase = $v->cuotaDiariaEn($hoyCarbon);
+                $adminBase = $v->administracionEn($hoyCarbon);
+                $esperadoHoy += $cuotaBase;
+
                 $registro = $registrosIndexed->get($v->id);
                 $gastosHoy += (float) ($registro->gasto ?? 0);
-                $adminHoy += (float) ($registro->administracion ?? $v->administracion ?? 0);
+                $adminHoy += (float) ($registro->administracion ?? $adminBase);
 
                 if ($registro) {
                     $trabajo = $registro->trabajo ?? true;
                     $realHoy += $trabajo ? (float) $registro->valor_generado : 0;
                 } else {
-                    $realHoy += (float) $v->cuota_diaria;
+                    $realHoy += $cuotaBase;
                 }
             }
 

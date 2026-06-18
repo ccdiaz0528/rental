@@ -35,19 +35,19 @@ class ResumenSemanal extends BaseWidget
             $inicioSemana = now()->startOfWeek(Carbon::SUNDAY)->startOfDay();
             $finSemana = $inicioSemana->copy()->addDays(6)->endOfDay();
 
-            $vehiculosActivos = $this->applyUserScope(
-                Vehiculo::query()->where('estado', 'activo')
-            )->get(['id', 'cuota_diaria', 'administracion']);
+            $vehiculosSemana = $this->applyUserScope(
+                Vehiculo::query()->withTrashed()->with('vehiculoHistorial')
+            )->get(['id', 'cuota_diaria', 'administracion', 'estado', 'fecha_inactivacion', 'created_at', 'deleted_at']);
 
-            $registrosSemana = $vehiculosActivos->isEmpty()
+            $registrosSemana = $vehiculosSemana->isEmpty()
                 ? collect()
                 : $this->applyUserScope(
                     ControlDiario::query()
-                        ->whereIn('vehiculo_id', $vehiculosActivos->pluck('id'))
+                        ->whereIn('vehiculo_id', $vehiculosSemana->pluck('id'))
                         ->whereBetween('fecha', [$inicioSemana->toDateString(), $finSemana->toDateString()])
                 )->get();
 
-            $esperadoSemana = $vehiculosActivos->sum('cuota_diaria') * 7;
+            $esperadoSemana = 0;
             $gastosSemana = 0;
             $adminSemana = 0;
             $realSemana = 0;
@@ -58,16 +58,33 @@ class ResumenSemanal extends BaseWidget
                 $dia = $inicioSemana->copy()->addDays($offset);
                 $key = $dia->format('Y-m-d');
 
-                foreach ($vehiculosActivos as $v) {
+                foreach ($vehiculosSemana as $v) {
+                    if ($v->getEffectiveStartDate()->gt($dia)) {
+                        continue;
+                    }
+
+                    $activo = $v->estado === 'activo'
+                        || ($v->estado === 'inactivo'
+                            && $v->fecha_inactivacion
+                            && $dia->lt($v->fecha_inactivacion->startOfDay()));
+
+                    if (! $activo) {
+                        continue;
+                    }
+
+                    $cuotaBase = $v->cuotaDiariaEn($dia);
+                    $adminBase = $v->administracionEn($dia);
+                    $esperadoSemana += $cuotaBase;
+
                     $registro = $registrosIndexed->get($v->id.'-'.$key);
                     $gastosSemana += (float) ($registro->gasto ?? 0);
-                    $adminSemana += (float) ($registro->administracion ?? $v->administracion ?? 0);
+                    $adminSemana += (float) ($registro->administracion ?? $adminBase);
 
                     if ($registro) {
                         $trabajo = $registro->trabajo ?? true;
                         $realSemana += $trabajo ? (float) $registro->valor_generado : 0;
                     } else {
-                        $realSemana += (float) $v->cuota_diaria;
+                        $realSemana += $cuotaBase;
                     }
                 }
             }

@@ -101,12 +101,16 @@ class ControlSemanal extends Page
             return;
         }
 
+        $fechaCarbon = Carbon::parse($fecha);
+        $cuotaBase = $vehiculo->cuotaDiariaEn($fechaCarbon);
+        $adminBase = $vehiculo->administracionEn($fechaCarbon);
+
         $this->cachedVehiculo = [
             'id' => $vehiculo->id,
             'placa' => $vehiculo->placa,
-            'cuota_diaria' => $vehiculo->cuota_diaria,
-            'administracion' => $vehiculo->administracion ?? 0,
-            'persona_nombre' => $vehiculo->persona?->nombre,
+            'cuota_diaria' => $cuotaBase,
+            'administracion' => $adminBase,
+            'persona_nombre' => $vehiculo->personaNombreEn($fechaCarbon),
             'user_id' => $vehiculo->user_id,
         ];
 
@@ -119,9 +123,9 @@ class ControlSemanal extends Page
         $this->selectedFecha = $fecha;
         $this->modalForm = [
             'trabajo' => $registro?->trabajo ?? true,
-            'valor_generado' => $registro?->valor_generado ?? $vehiculo->cuota_diaria,
+            'valor_generado' => $registro?->valor_generado ?? $cuotaBase,
             'gasto' => $registro?->gasto ?? 0,
-            'administracion' => $registro?->administracion ?? $vehiculo->administracion ?? 0,
+            'administracion' => $registro?->administracion ?? $adminBase,
             'categoria_gasto' => $registro?->categoria_gasto ?? 'otro',
             'observaciones' => $registro?->observaciones ?? '',
         ];
@@ -257,7 +261,11 @@ class ControlSemanal extends Page
 
         $vehiculoQuery = Vehiculo::query()
             ->withTrashed()
-            ->with(['persona', 'contratos'])
+            ->with([
+                'persona',
+                'contratos',
+                'vehiculoHistorial' => fn ($q) => $q->orderBy('fecha_inicio')->with('persona:id,nombre'),
+            ])
             ->where(function ($q) use ($weekStart) {
                 $q->whereNull('deleted_at')->where(function ($q) {
                     $q->where('estado', 'activo')
@@ -370,8 +378,8 @@ class ControlSemanal extends Page
                     continue;
                 }
 
-                $valorBase = (float) $vehiculo->cuota_diaria;
-                $adminBase = (float) $vehiculo->administracion;
+                $valorBase = $vehiculo->cuotaDiariaEn($fecha);
+                $adminBase = $vehiculo->administracionEn($fecha);
                 $trabajo = $registro?->trabajo ?? true;
                 $ingreso = $trabajo
                     ? (float) ($registro?->valor_generado ?? $valorBase)
@@ -448,7 +456,11 @@ class ControlSemanal extends Page
         $newestWeek = $baseWeek->copy()->addDays(6);
 
         $vehiculos = $this->applyUserScope(
-            Vehiculo::query()->withTrashed()->with('contratos')
+            Vehiculo::query()->withTrashed()->with([
+                'contratos',
+                'vehiculoHistorial' => fn ($q) => $q->orderBy('fecha_inicio')
+                    ->with('persona:id,nombre'),
+            ])
                 ->where(function ($q) use ($oldestWeek) {
                     $q->whereNull('deleted_at')->where(function ($q) {
                         $q->where('estado', 'activo')
@@ -564,14 +576,14 @@ class ControlSemanal extends Page
                     continue;
                 }
 
-                $valorBase = (float) $vehiculo->cuota_diaria;
+                $valorBase = $vehiculo->cuotaDiariaEn($fecha);
                 $esperado += $valorBase;
 
                 $registro = $registrosByKey->get($vehiculo->id.'-'.$key);
                 $trabajo = $registro?->trabajo ?? true;
                 $ingreso = $trabajo ? (float) ($registro?->valor_generado ?? $valorBase) : 0;
                 $gasto = (float) ($registro?->gasto ?? 0);
-                $adminDia = $registro?->administracion ?? (float) ($vehiculo->administracion ?? 0);
+                $adminDia = $registro?->administracion ?? $vehiculo->administracionEn($fecha);
 
                 $real += $ingreso;
                 $gastos += $gasto;
