@@ -72,17 +72,18 @@ class ControlSemanal extends Page
     {
         $vehiculo = Vehiculo::query()->withTrashed()->with('persona')->findOrFail($vehiculoId);
 
+        $fechaDia = Carbon::parse($fecha)->startOfDay();
         $bloqueado = $vehiculo->estado === 'mantenimiento'
             || ($vehiculo->estado === 'inactivo'
                 && $vehiculo->fecha_inactivacion
-                && Carbon::parse($fecha)->startOfDay()->gte($vehiculo->fecha_inactivacion->startOfDay()))
+                && $fechaDia->gte($vehiculo->fecha_inactivacion->copy()->startOfDay()))
             || ($vehiculo->trashed()
                 && $vehiculo->deleted_at
-                && Carbon::parse($fecha)->startOfDay()->gte($vehiculo->deleted_at->startOfDay()))
+                && $fechaDia->gte($vehiculo->deleted_at->copy()->startOfDay()))
             || ($vehiculo->fecha_eliminacion
                 && $vehiculo->restored_at
-                && Carbon::parse($fecha)->startOfDay()->gte($vehiculo->fecha_eliminacion->startOfDay())
-                && Carbon::parse($fecha)->startOfDay()->lt($vehiculo->restored_at->startOfDay()));
+                && $fechaDia->gte($vehiculo->fecha_eliminacion->copy()->startOfDay())
+                && $fechaDia->lt($vehiculo->restored_at->copy()->startOfDay()));
 
         if ($bloqueado) {
             $razon = match (true) {
@@ -170,17 +171,18 @@ class ControlSemanal extends Page
 
         $vehiculo = Vehiculo::query()->withTrashed()->find($this->selectedVehiculoId);
         if ($vehiculo) {
+            $fechaDia = Carbon::parse($this->selectedFecha)->startOfDay();
             $bloqueado = $vehiculo->estado === 'mantenimiento'
                 || ($vehiculo->estado === 'inactivo'
                     && $vehiculo->fecha_inactivacion
-                    && Carbon::parse($this->selectedFecha)->startOfDay()->gte($vehiculo->fecha_inactivacion->startOfDay()))
+                    && $fechaDia->gte($vehiculo->fecha_inactivacion->copy()->startOfDay()))
                 || ($vehiculo->trashed()
                     && $vehiculo->deleted_at
-                    && Carbon::parse($this->selectedFecha)->startOfDay()->gte($vehiculo->deleted_at->startOfDay()))
+                    && $fechaDia->gte($vehiculo->deleted_at->copy()->startOfDay()))
                 || ($vehiculo->fecha_eliminacion
                     && $vehiculo->restored_at
-                    && Carbon::parse($this->selectedFecha)->startOfDay()->gte($vehiculo->fecha_eliminacion->startOfDay())
-                    && Carbon::parse($this->selectedFecha)->startOfDay()->lt($vehiculo->restored_at->startOfDay()));
+                    && $fechaDia->gte($vehiculo->fecha_eliminacion->copy()->startOfDay())
+                    && $fechaDia->lt($vehiculo->restored_at->copy()->startOfDay()));
             if ($bloqueado) {
                 $razon = match (true) {
                     $vehiculo->estado === 'mantenimiento' => 'en mantenimiento.',
@@ -328,7 +330,7 @@ class ControlSemanal extends Page
             foreach ($vehiculos as $vehiculo) {
                 $registro = $registros->get($fecha->toDateString().'-'.$vehiculo->id);
 
-                if ($fecha->startOfDay()->lt($vehiculo->getEffectiveStartDate()) && ! $registro) {
+                if ($fecha->copy()->startOfDay()->lt($vehiculo->getEffectiveStartDate()) && ! $registro) {
                     $row['cells'][] = [
                         'vehiculo_id' => $vehiculo->id,
                         'fecha' => $fecha->toDateString(),
@@ -347,17 +349,18 @@ class ControlSemanal extends Page
                     continue;
                 }
 
+                $fechaDia = $fecha->copy()->startOfDay();
                 $cellDisabled = $vehiculo->estado === 'mantenimiento'
                     || ($vehiculo->estado === 'inactivo'
                         && $vehiculo->fecha_inactivacion
-                        && $fecha->startOfDay()->gte($vehiculo->fecha_inactivacion->startOfDay()))
+                        && $fechaDia->gte($vehiculo->fecha_inactivacion->copy()->startOfDay()))
                     || ($vehiculo->trashed()
                         && $vehiculo->deleted_at
-                        && $fecha->startOfDay()->gte($vehiculo->deleted_at->startOfDay()))
+                        && $fechaDia->gte($vehiculo->deleted_at->copy()->startOfDay()))
                     || ($vehiculo->fecha_eliminacion
                         && $vehiculo->restored_at
-                        && $fecha->startOfDay()->gte($vehiculo->fecha_eliminacion->startOfDay())
-                        && $fecha->startOfDay()->lt($vehiculo->restored_at->startOfDay()));
+                        && $fechaDia->gte($vehiculo->fecha_eliminacion->copy()->startOfDay())
+                        && $fechaDia->lt($vehiculo->restored_at->copy()->startOfDay()));
 
                 if ($cellDisabled && ! $registro) {
                     $row['cells'][] = [
@@ -555,22 +558,23 @@ class ControlSemanal extends Page
 
             foreach ($vehiculos as $vehiculo) {
                 $fecha = $weekStart->copy()->addDays($offset);
+                $fechaDia = $fecha->copy()->startOfDay();
 
-                if ($fecha->startOfDay()->lt($vehiculo->getEffectiveStartDate())) {
+                if ($fechaDia->lt($vehiculo->getEffectiveStartDate())) {
                     continue;
                 }
 
                 $cellDisabled = $vehiculo->estado === 'mantenimiento'
                     || ($vehiculo->estado === 'inactivo'
                         && $vehiculo->fecha_inactivacion
-                        && $fecha->startOfDay()->gte($vehiculo->fecha_inactivacion->startOfDay()))
+                        && $fechaDia->gte($vehiculo->fecha_inactivacion->copy()->startOfDay()))
                     || ($vehiculo->trashed()
                         && $vehiculo->deleted_at
-                        && $fecha->startOfDay()->gte($vehiculo->deleted_at->startOfDay()))
+                        && $fechaDia->gte($vehiculo->deleted_at->copy()->startOfDay()))
                     || ($vehiculo->fecha_eliminacion
                         && $vehiculo->restored_at
-                        && $fecha->startOfDay()->gte($vehiculo->fecha_eliminacion->startOfDay())
-                        && $fecha->startOfDay()->lt($vehiculo->restored_at->startOfDay()));
+                        && $fechaDia->gte($vehiculo->fecha_eliminacion->copy()->startOfDay())
+                        && $fechaDia->lt($vehiculo->restored_at->copy()->startOfDay()));
 
                 if ($cellDisabled) {
                     continue;

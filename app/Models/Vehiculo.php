@@ -70,7 +70,7 @@ class Vehiculo extends Model
                     ->orderBy('fecha_inicio')
                     ->first();
 
-                if ($earliest && $earliest->fecha_inicio->startOfDay()->gt($vehiculo->created_at->startOfDay())) {
+                if ($earliest && $earliest->fecha_inicio->copy()->startOfDay()->gt($vehiculo->created_at->copy()->startOfDay())) {
                     $fechaInicio = $vehiculo->contratos()->min('fecha_inicio');
 
                     $vehiculo->vehiculoHistorial()->create([
@@ -79,7 +79,7 @@ class Vehiculo extends Model
                         'administracion' => $vehiculo->getOriginal('administracion') ?? 0,
                         'fecha_inicio' => $fechaInicio
                             ? Carbon::parse($fechaInicio)->startOfDay()
-                            : $vehiculo->created_at->startOfDay(),
+                            : $vehiculo->created_at->copy()->startOfDay(),
                     ]);
                 }
 
@@ -163,7 +163,7 @@ class Vehiculo extends Model
 
         if ($this->relationLoaded('vehiculoHistorial')) {
             return $this->vehiculoHistorial
-                ->filter(fn ($h) => $h->fecha_inicio->startOfDay()->lte($fechaStart) && ($h->fecha_fin === null || $h->fecha_fin->startOfDay()->gt($fechaStart)))
+                ->filter(fn ($h) => $h->fecha_inicio->copy()->startOfDay()->lte($fechaStart) && ($h->fecha_fin === null || $h->fecha_fin->copy()->startOfDay()->gt($fechaStart)))
                 ->sortByDesc('fecha_inicio')
                 ->first();
         }

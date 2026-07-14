@@ -30,8 +30,6 @@ class Reportes extends Page
 
     public ?string $fechaFin = null;
 
-    public array $vehiculosSeleccionados = [];
-
     private ?Collection $cachedVehiculos = null;
 
     private ?Collection $cachedRegistros = null;
@@ -107,13 +105,22 @@ class Reportes extends Page
 
     private function vehiculoActivoEnFecha(Vehiculo $vehiculo, Carbon $fecha): bool
     {
+        if ($vehiculo->trashed()) {
+            return $vehiculo->deleted_at
+                && $fecha->copy()->startOfDay()->lt($vehiculo->deleted_at->copy()->startOfDay());
+        }
+
         if ($vehiculo->estado === 'activo') {
             return true;
         }
 
+        if ($vehiculo->estado === 'mantenimiento') {
+            return (bool) $this->getRegistrosEnRango()->get($fecha->toDateString().'-'.$vehiculo->id);
+        }
+
         return $vehiculo->estado === 'inactivo'
             && $vehiculo->fecha_inactivacion
-            && $fecha->startOfDay()->lt($vehiculo->fecha_inactivacion->startOfDay());
+            && $fecha->copy()->startOfDay()->lt($vehiculo->fecha_inactivacion->copy()->startOfDay());
     }
 
     private function getVehiculosDelPeriodo(): Collection
@@ -121,13 +128,18 @@ class Reportes extends Page
         [$start, $end] = $this->getDateRange();
 
         return $this->getVehiculosDisponibles()->filter(function ($v) use ($start) {
-            if ($v->estado === 'activo') {
+            if ($v->trashed()) {
+                return $v->deleted_at
+                    && $v->deleted_at->copy()->startOfDay()->gt($start);
+            }
+
+            if (in_array($v->estado, ['activo', 'mantenimiento'], true)) {
                 return true;
             }
 
             return $v->estado === 'inactivo'
                 && $v->fecha_inactivacion
-                && $v->fecha_inactivacion->startOfDay()->gt($start);
+                && $v->fecha_inactivacion->copy()->startOfDay()->gt($start);
         });
     }
 
@@ -150,7 +162,8 @@ class Reportes extends Page
         foreach ($vehiculosPeriodo as $vehiculo) {
             for ($d = 0; $d < $diasEnRango; $d++) {
                 $fecha = $start->copy()->addDays($d);
-                if ($fecha->startOfDay()->lt($vehiculo->getEffectiveStartDate())) {
+                $fechaDia = $fecha->copy()->startOfDay();
+                if ($fechaDia->lt($vehiculo->getEffectiveStartDate())) {
                     continue;
                 }
                 if (! $this->vehiculoActivoEnFecha($vehiculo, $fecha)) {
@@ -244,7 +257,8 @@ class Reportes extends Page
 
             for ($d = 0; $d < $diasEnRango; $d++) {
                 $fecha = $start->copy()->addDays($d);
-                if ($fecha->startOfDay()->lt($vehiculo->getEffectiveStartDate())) {
+                $fechaDia = $fecha->copy()->startOfDay();
+                if ($fechaDia->lt($vehiculo->getEffectiveStartDate())) {
                     continue;
                 }
                 if (! $this->vehiculoActivoEnFecha($vehiculo, $fecha)) {
@@ -413,10 +427,6 @@ class Reportes extends Page
                 ->whereDate('fecha', '>=', $start->toDateString())
                 ->whereDate('fecha', '<=', $end->toDateString())
         );
-
-        if (! empty($this->vehiculosSeleccionados)) {
-            $query->whereIn('vehiculo_id', $this->vehiculosSeleccionados);
-        }
 
         return $query;
     }
