@@ -3,13 +3,13 @@
 namespace App\Filament\Resources\Vehiculos\Schemas;
 
 use App\Models\User;
+use App\Models\Vehiculo;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
-use Illuminate\Validation\Rules\Unique;
 
 class VehiculoForm
 {
@@ -19,12 +19,24 @@ class VehiculoForm
             TextInput::make('placa')
                 ->label('Placa')
                 ->required()
-                ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule) => $rule->whereNull('deleted_at'))
+                ->unique(ignoreRecord: true)
+                ->validationMessages([
+                    'unique' => 'Ya existe un vehículo con esta placa (puede estar eliminado).',
+                ])
                 ->maxLength(10),
 
             Select::make('administrador_vehiculo')
                 ->label('Administrador vehículo')
-                ->options(fn () => User::pluck('name', 'name'))
+                ->options(function (?Vehiculo $record) {
+                    if (auth()->user()?->hasRole('admin')) {
+                        return User::pluck('name', 'name');
+                    }
+
+                    // Un usuario normal no debe ver la lista de usuarios del sistema.
+                    return collect([auth()->user()?->name, $record?->administrador_vehiculo])
+                        ->filter()
+                        ->mapWithKeys(fn (string $name) => [$name => $name]);
+                })
                 ->searchable()
                 ->nullable()
                 ->default(fn () => auth()->user()?->name),

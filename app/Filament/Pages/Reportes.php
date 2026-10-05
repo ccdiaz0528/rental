@@ -81,12 +81,30 @@ class Reportes extends Page
             'este_semestre' => [$this->semestreStart($now), $now->copy()],
             'este_anio' => [$now->copy()->startOfYear(), $now->copy()],
             'anio_pasado' => [$now->copy()->subYear()->startOfYear(), $now->copy()->subYear()->endOfYear()],
-            'personalizado' => [
-                $this->fechaInicio ? Carbon::parse($this->fechaInicio)->startOfDay() : $now->copy()->startOfMonth(),
-                $this->fechaFin ? Carbon::parse($this->fechaFin)->endOfDay() : $now->copy(),
-            ],
+            'personalizado' => $this->customRange($now),
             default => [$now->copy()->startOfMonth(), $now->copy()],
         };
+    }
+
+    private function customRange(Carbon $now): array
+    {
+        $start = $this->safeDate($this->fechaInicio)?->startOfDay() ?? $now->copy()->startOfMonth();
+        $end = $this->safeDate($this->fechaFin)?->endOfDay() ?? $now->copy();
+
+        return $end->lt($start) ? [$start, $start->copy()->endOfDay()] : [$start, $end];
+    }
+
+    private function safeDate(?string $value): ?Carbon
+    {
+        if (! $value || ! preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function semestreStart(Carbon $date): Carbon
@@ -382,7 +400,7 @@ class Reportes extends Page
 
             $ajustes[] = [
                 'placa' => $vehiculo->placa,
-                'conductor' => $vehiculo->persona?->nombre ?? 'Sin conductor',
+                'conductor' => $vehiculo->personaNombreEn($registro->fecha) ?? 'Sin conductor',
                 'fecha' => $registro->fecha,
                 'esperado' => $esperado,
                 'real' => $real,
@@ -422,12 +440,10 @@ class Reportes extends Page
     {
         [$start, $end] = $this->getDateRange();
 
-        $query = $this->applyUserScope(
+        return $this->applyUserScope(
             ControlDiario::query()
                 ->whereDate('fecha', '>=', $start->toDateString())
                 ->whereDate('fecha', '<=', $end->toDateString())
         );
-
-        return $query;
     }
 }

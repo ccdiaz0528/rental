@@ -66,6 +66,7 @@ class PersonasTable
                         ? null
                         : 'No se puede eliminar porque tiene '.$record->deletionBlockers().'.'),
             ])
+            ->checkIfRecordIsSelectableUsing(fn (Persona $record): bool => $record->canBeDeleted())
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

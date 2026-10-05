@@ -79,13 +79,13 @@ class PagosRecientesWidget extends BaseWidget
                     ->label('Categoria')
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
-                        'dano' => 'danger',
+                        ControlDiario::CATEGORIA_DAÑO => 'danger',
                         'mantenimiento' => 'info',
                         'multa' => 'warning',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'dano' => 'Dano',
+                        ControlDiario::CATEGORIA_DAÑO => 'Daño',
                         'mantenimiento' => 'Mant.',
                         'multa' => 'Multa',
                         'otro' => 'Otro',
