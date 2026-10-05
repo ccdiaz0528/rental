@@ -75,6 +75,7 @@ class VehiculosTable
                 TextColumn::make('estado')
                     ->label('Estado')
                     ->badge()
+                    ->sortable()
                     ->color(fn (string $state): string => match ($state) {
                         'activo' => 'success',
                         'inactivo' => 'danger',
