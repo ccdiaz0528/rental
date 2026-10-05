@@ -17,7 +17,7 @@ trait HasDashboardStats
 
         foreach ($registros as $r) {
             $cat = $r->categoria_gasto ?: 'otro';
-            $gastos[$cat] += (float) ($r->gasto ?? 0);
+            $gastos[$cat] = ($gastos[$cat] ?? 0.0) + (float) ($r->gasto ?? 0);
         }
 
         return $gastos;

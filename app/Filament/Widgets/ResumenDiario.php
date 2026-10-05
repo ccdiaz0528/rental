@@ -45,7 +45,6 @@ class ResumenDiario extends BaseWidget
                         ->whereDate('fecha', $hoy)
                 )->get();
 
-            $hoyCarbon = $hoy;
             $esperadoHoy = 0;
             $gastosHoy = 0;
             $adminHoy = 0;
@@ -54,8 +53,8 @@ class ResumenDiario extends BaseWidget
             $registrosIndexed = $registrosHoy->keyBy('vehiculo_id');
 
             foreach ($vehiculosActivos as $v) {
-                $cuotaBase = $v->cuotaDiariaEn($hoyCarbon);
-                $adminBase = $v->administracionEn($hoyCarbon);
+                $cuotaBase = $v->cuotaDiariaEn($hoy);
+                $adminBase = $v->administracionEn($hoy);
                 $esperadoHoy += $cuotaBase;
 
                 $registro = $registrosIndexed->get($v->id);

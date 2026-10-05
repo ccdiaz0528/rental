@@ -54,7 +54,7 @@ class IndicadoresFlota extends BaseWidget
 
             $contratoStats = $this->applyUserScope(
                 Contrato::query()->where('estado', 'activo')
-            )->selectRaw("SUM(tipo='alquiler') as alquiler, SUM(tipo='opcion_compra') as opcion_compra")->first();
+            )->selectRaw("COUNT(CASE WHEN tipo = 'alquiler' THEN 1 END) as alquiler, COUNT(CASE WHEN tipo = 'opcion_compra' THEN 1 END) as opcion_compra")->first();
 
             return [
                 'vehiculos_activos' => $vehiculosActivos->count(),

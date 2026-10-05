@@ -36,7 +36,7 @@ class ResumenSemanal extends BaseWidget
             $finSemana = $inicioSemana->copy()->addDays(6)->endOfDay();
 
             $vehiculosSemana = $this->applyUserScope(
-                Vehiculo::query()->withTrashed()->with('vehiculoHistorial')
+                Vehiculo::query()->withTrashed()->with(['vehiculoHistorial', 'contratos:id,vehiculo_id,fecha_inicio'])
             )->get(['id', 'cuota_diaria', 'administracion', 'estado', 'fecha_inactivacion', 'created_at', 'deleted_at']);
 
             $registrosSemana = $vehiculosSemana->isEmpty()
@@ -66,7 +66,7 @@ class ResumenSemanal extends BaseWidget
                     $activo = $v->estado === 'activo'
                         || ($v->estado === 'inactivo'
                             && $v->fecha_inactivacion
-                            && $dia->lt($v->fecha_inactivacion->startOfDay()));
+                            && $dia->lt($v->fecha_inactivacion->copy()->startOfDay()));
 
                     if (! $activo) {
                         continue;
