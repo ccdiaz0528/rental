@@ -4,10 +4,10 @@ Sistema de gestión de rentals de vehículos con Laravel 13 y Filament 5.
 
 ## Requisitos
 
-- PHP 8.2+
+- PHP 8.4+
 - Composer
 - Node.js 18+
-- SQLite (desarrollo) o MySQL/PostgreSQL (producción)
+- MySQL (desarrollo con Laragon y producción); SQLite en memoria para los tests
 
 ## Instalación
 
