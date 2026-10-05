@@ -169,39 +169,6 @@ class VehiculoSoftDeleteTest extends TestCase
         $this->assertNull($control->vehiculo_id);
     }
 
-    public function test_trashed_vehicle_can_be_deleted_returns_false(): void
-    {
-        $vehiculo = Vehiculo::create([
-            'user_id' => $this->admin->id,
-            'placa' => 'SD008',
-            'cuota_diaria' => 80000,
-            'estado' => 'activo',
-        ]);
-
-        $this->assertTrue($vehiculo->canBeDeleted());
-
-        $vehiculo->delete();
-        $this->assertFalse($vehiculo->fresh()->canBeDeleted());
-
-        $vehiculo->restore();
-        $this->assertTrue($vehiculo->fresh()->canBeDeleted());
-    }
-
-    public function test_deletion_blockers_shows_correct_message_for_trashed(): void
-    {
-        $vehiculo = Vehiculo::create([
-            'user_id' => $this->admin->id,
-            'placa' => 'SD009',
-            'cuota_diaria' => 80000,
-            'estado' => 'activo',
-        ]);
-
-        $this->assertEquals('', $vehiculo->deletionBlockers());
-
-        $vehiculo->delete();
-        $this->assertEquals('ya está eliminado', $vehiculo->fresh()->deletionBlockers());
-    }
-
     public function test_multiple_deletes_do_not_overwrite_fecha_eliminacion(): void
     {
         $vehiculo = Vehiculo::create([

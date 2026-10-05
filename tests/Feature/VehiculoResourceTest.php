@@ -95,8 +95,8 @@ class VehiculoResourceTest extends TestCase
         ]);
 
         $this->actingAs($this->admin);
-        $this->assertTrue($vehiculo->fresh()->canBeDeleted());
-        $this->assertEquals('', $vehiculo->deletionBlockers());
+        $vehiculo->delete();
+        $this->assertSoftDeleted('vehiculos', ['id' => $vehiculo->id]);
     }
 
     public function test_vehiculo_can_soft_delete_with_control_diarios(): void
@@ -117,8 +117,8 @@ class VehiculoResourceTest extends TestCase
         ]);
 
         $this->actingAs($this->admin);
-        $this->assertTrue($vehiculo->fresh()->canBeDeleted());
-        $this->assertEquals('', $vehiculo->deletionBlockers());
+        $vehiculo->delete();
+        $this->assertSoftDeleted('vehiculos', ['id' => $vehiculo->id]);
     }
 
     public function test_vehiculo_can_delete_without_relations(): void
@@ -130,6 +130,7 @@ class VehiculoResourceTest extends TestCase
             'estado' => 'activo',
         ]);
 
-        $this->assertTrue($vehiculo->canBeDeleted());
+        $vehiculo->delete();
+        $this->assertSoftDeleted('vehiculos', ['id' => $vehiculo->id]);
     }
 }

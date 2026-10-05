@@ -138,20 +138,6 @@ class Vehiculo extends Model
         return $this->hasMany(ControlDiario::class);
     }
 
-    public function canBeDeleted(): bool
-    {
-        return ! $this->trashed();
-    }
-
-    public function deletionBlockers(): string
-    {
-        if ($this->trashed()) {
-            return 'ya está eliminado';
-        }
-
-        return '';
-    }
-
     public function vehiculoHistorial(): HasMany
     {
         return $this->hasMany(VehiculoHistorial::class);
@@ -205,6 +191,33 @@ class Vehiculo extends Model
         }
 
         return $this->persona?->nombre;
+    }
+
+    public function estaBloqueadoEn(Carbon $fecha): bool
+    {
+        $dia = $fecha->copy()->startOfDay();
+
+        return $this->estado === 'mantenimiento'
+            || ($this->estado === 'inactivo'
+                && $this->fecha_inactivacion
+                && $dia->gte($this->fecha_inactivacion->copy()->startOfDay()))
+            || ($this->trashed()
+                && $this->deleted_at
+                && $dia->gte($this->deleted_at->copy()->startOfDay()))
+            || ($this->fecha_eliminacion
+                && $this->restored_at
+                && $dia->gte($this->fecha_eliminacion->copy()->startOfDay())
+                && $dia->lt($this->restored_at->copy()->startOfDay()));
+    }
+
+    public function motivoBloqueo(): string
+    {
+        return match (true) {
+            $this->estado === 'mantenimiento' => 'en mantenimiento.',
+            $this->estado === 'inactivo' => 'inactivo.',
+            $this->trashed() => 'eliminado.',
+            default => 'eliminado (restaurado).',
+        };
     }
 
     public function getEffectiveStartDate(): Carbon

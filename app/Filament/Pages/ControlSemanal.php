@@ -10,6 +10,8 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Locked;
 
 class ControlSemanal extends Page
 {
@@ -29,10 +31,13 @@ class ControlSemanal extends Page
 
     public bool $isModalOpen = false;
 
+    #[Locked]
     public ?int $selectedVehiculoId = null;
 
+    #[Locked]
     public ?string $selectedFecha = null;
 
+    #[Locked]
     public ?array $cachedVehiculo = null;
 
     public array $modalForm = [
@@ -68,41 +73,30 @@ class ControlSemanal extends Page
         $this->selectedDate = now()->toDateString();
     }
 
+    public function updatedSelectedDate(): void
+    {
+        $this->selectedDate = $this->parseDate($this->selectedDate)?->toDateString() ?? now()->toDateString();
+    }
+
     public function openRegistroModal(int $vehiculoId, string $fecha): void
     {
+        $fechaCarbon = $this->parseDate($fecha);
+        abort_if($fechaCarbon === null, 422);
+        $fecha = $fechaCarbon->toDateString();
+
+        // El scope por usuario aplica aquí: un usuario no puede abrir vehículos ajenos.
         $vehiculo = Vehiculo::query()->withTrashed()->with('persona')->findOrFail($vehiculoId);
 
-        $fechaDia = Carbon::parse($fecha)->startOfDay();
-        $bloqueado = $vehiculo->estado === 'mantenimiento'
-            || ($vehiculo->estado === 'inactivo'
-                && $vehiculo->fecha_inactivacion
-                && $fechaDia->gte($vehiculo->fecha_inactivacion->copy()->startOfDay()))
-            || ($vehiculo->trashed()
-                && $vehiculo->deleted_at
-                && $fechaDia->gte($vehiculo->deleted_at->copy()->startOfDay()))
-            || ($vehiculo->fecha_eliminacion
-                && $vehiculo->restored_at
-                && $fechaDia->gte($vehiculo->fecha_eliminacion->copy()->startOfDay())
-                && $fechaDia->lt($vehiculo->restored_at->copy()->startOfDay()));
-
-        if ($bloqueado) {
-            $razon = match (true) {
-                $vehiculo->estado === 'mantenimiento' => 'en mantenimiento.',
-                $vehiculo->estado === 'inactivo' => 'inactivo.',
-                $vehiculo->trashed() => 'eliminado.',
-                default => 'eliminado (restaurado).',
-            };
-
+        if ($vehiculo->estaBloqueadoEn($fechaCarbon)) {
             Notification::make()
                 ->title('Registro bloqueado')
-                ->body("No puedes editar registros de un vehículo {$razon}")
+                ->body("No puedes editar registros de un vehículo {$vehiculo->motivoBloqueo()}")
                 ->danger()
                 ->send();
 
             return;
         }
 
-        $fechaCarbon = Carbon::parse($fecha);
         $cuotaBase = $vehiculo->cuotaDiariaEn($fechaCarbon);
         $adminBase = $vehiculo->administracionEn($fechaCarbon);
 
@@ -160,7 +154,7 @@ class ControlSemanal extends Page
         ];
 
         if ($this->modalForm['gasto'] > 0) {
-            $rules['modalForm.categoria_gasto'] = ['required', 'in:daño,mantenimiento,multa,otro'];
+            $rules['modalForm.categoria_gasto'] = ['required', Rule::in(ControlDiario::CATEGORIAS)];
         }
 
         $this->validate($rules);
@@ -169,41 +163,25 @@ class ControlSemanal extends Page
             return;
         }
 
-        $vehiculo = Vehiculo::query()->withTrashed()->find($this->selectedVehiculoId);
-        if ($vehiculo) {
-            $fechaDia = Carbon::parse($this->selectedFecha)->startOfDay();
-            $bloqueado = $vehiculo->estado === 'mantenimiento'
-                || ($vehiculo->estado === 'inactivo'
-                    && $vehiculo->fecha_inactivacion
-                    && $fechaDia->gte($vehiculo->fecha_inactivacion->copy()->startOfDay()))
-                || ($vehiculo->trashed()
-                    && $vehiculo->deleted_at
-                    && $fechaDia->gte($vehiculo->deleted_at->copy()->startOfDay()))
-                || ($vehiculo->fecha_eliminacion
-                    && $vehiculo->restored_at
-                    && $fechaDia->gte($vehiculo->fecha_eliminacion->copy()->startOfDay())
-                    && $fechaDia->lt($vehiculo->restored_at->copy()->startOfDay()));
-            if ($bloqueado) {
-                $razon = match (true) {
-                    $vehiculo->estado === 'mantenimiento' => 'en mantenimiento.',
-                    $vehiculo->estado === 'inactivo' => 'inactivo.',
-                    $vehiculo->trashed() => 'eliminado.',
-                    default => 'eliminado (restaurado).',
-                };
+        $fechaDia = $this->parseDate($this->selectedFecha);
+        abort_if($fechaDia === null, 422);
 
-                Notification::make()
-                    ->title('Registro bloqueado')
-                    ->body("No puedes guardar cambios en un vehículo {$razon}")
-                    ->danger()
-                    ->send();
-                $this->closeModal();
+        // Se revalida en el servidor: el scope por usuario oculta vehículos ajenos (404).
+        $vehiculo = Vehiculo::query()->withTrashed()->findOrFail($this->selectedVehiculoId);
 
-                return;
-            }
+        if ($vehiculo->estaBloqueadoEn($fechaDia)) {
+            Notification::make()
+                ->title('Registro bloqueado')
+                ->body("No puedes guardar cambios en un vehículo {$vehiculo->motivoBloqueo()}")
+                ->danger()
+                ->send();
+            $this->closeModal();
+
+            return;
         }
 
-        $valorPorDefecto = (float) ($this->cachedVehiculo['cuota_diaria'] ?? 0);
-        $adminPorDefecto = (float) ($this->cachedVehiculo['administracion'] ?? 0);
+        $valorPorDefecto = $vehiculo->cuotaDiariaEn($fechaDia);
+        $adminPorDefecto = $vehiculo->administracionEn($fechaDia);
 
         $registro = ControlDiario::withoutGlobalScope('user')->firstOrNew([
             'vehiculo_id' => $this->selectedVehiculoId,
@@ -238,7 +216,7 @@ class ControlSemanal extends Page
         }
 
         $registro->fill([
-            'user_id' => $this->cachedVehiculo['user_id'] ?? auth()->id(),
+            'user_id' => $vehiculo->user_id,
             'trabajo' => $trabajo,
             'valor_generado' => $valorGenerado,
             'gasto' => $gasto,
@@ -349,18 +327,7 @@ class ControlSemanal extends Page
                     continue;
                 }
 
-                $fechaDia = $fecha->copy()->startOfDay();
-                $cellDisabled = $vehiculo->estado === 'mantenimiento'
-                    || ($vehiculo->estado === 'inactivo'
-                        && $vehiculo->fecha_inactivacion
-                        && $fechaDia->gte($vehiculo->fecha_inactivacion->copy()->startOfDay()))
-                    || ($vehiculo->trashed()
-                        && $vehiculo->deleted_at
-                        && $fechaDia->gte($vehiculo->deleted_at->copy()->startOfDay()))
-                    || ($vehiculo->fecha_eliminacion
-                        && $vehiculo->restored_at
-                        && $fechaDia->gte($vehiculo->fecha_eliminacion->copy()->startOfDay())
-                        && $fechaDia->lt($vehiculo->restored_at->copy()->startOfDay()));
+                $cellDisabled = $vehiculo->estaBloqueadoEn($fecha);
 
                 if ($cellDisabled && ! $registro) {
                     $row['cells'][] = [
@@ -534,6 +501,19 @@ class ControlSemanal extends Page
         return $this->cachedVehiculo;
     }
 
+    private function parseDate(?string $value): ?Carbon
+    {
+        if ($value === null || ! preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
     private function weekStart(): Carbon
     {
         return Carbon::parse($this->selectedDate)->startOfWeek(Carbon::SUNDAY);
@@ -564,19 +544,7 @@ class ControlSemanal extends Page
                     continue;
                 }
 
-                $cellDisabled = $vehiculo->estado === 'mantenimiento'
-                    || ($vehiculo->estado === 'inactivo'
-                        && $vehiculo->fecha_inactivacion
-                        && $fechaDia->gte($vehiculo->fecha_inactivacion->copy()->startOfDay()))
-                    || ($vehiculo->trashed()
-                        && $vehiculo->deleted_at
-                        && $fechaDia->gte($vehiculo->deleted_at->copy()->startOfDay()))
-                    || ($vehiculo->fecha_eliminacion
-                        && $vehiculo->restored_at
-                        && $fechaDia->gte($vehiculo->fecha_eliminacion->copy()->startOfDay())
-                        && $fechaDia->lt($vehiculo->restored_at->copy()->startOfDay()));
-
-                if ($cellDisabled) {
+                if ($vehiculo->estaBloqueadoEn($fecha)) {
                     continue;
                 }
 
