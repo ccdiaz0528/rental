@@ -18,6 +18,7 @@ class IndicadoresFlota extends BaseWidget
     use HasUserContext;
 
     protected static ?int $sort = 4;
+    protected static bool $isLazy = true;
 
     protected ?string $pollingInterval = '120s';
 

@@ -17,6 +17,7 @@ class ResumenSemanal extends BaseWidget
     use HasUserContext;
 
     protected static ?int $sort = 2;
+    protected static bool $isLazy = true;
 
     protected ?string $pollingInterval = '60s';
 

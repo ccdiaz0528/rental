@@ -13,6 +13,7 @@ class AlertasVencimientos extends BaseWidget
     use HasUserContext;
 
     protected static ?int $sort = 5;
+    protected static bool $isLazy = true;
 
     protected ?string $pollingInterval = '300s';
 

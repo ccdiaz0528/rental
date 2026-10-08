@@ -16,6 +16,7 @@ class ResumenDiario extends BaseWidget
     use HasUserContext;
 
     protected static ?int $sort = 1;
+    protected static bool $isLazy = true;
 
     protected ?string $pollingInterval = '60s';
 

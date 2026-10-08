@@ -39,6 +39,8 @@ class Vehiculo extends Model
     use LogsActivity;
     use SoftDeletes;
 
+    protected ?Carbon $effectiveStartDateCache = null;
+
     protected function casts(): array
     {
         return [
@@ -145,20 +147,20 @@ class Vehiculo extends Model
 
     public function historialEnFecha(Carbon $fecha): ?VehiculoHistorial
     {
-        $fechaStart = $fecha->copy()->startOfDay();
+        $fechaStartStr = $fecha->toDateString();
 
         if ($this->relationLoaded('vehiculoHistorial')) {
             return $this->vehiculoHistorial
-                ->filter(fn ($h) => $h->fecha_inicio->copy()->startOfDay()->lte($fechaStart) && ($h->fecha_fin === null || $h->fecha_fin->copy()->startOfDay()->gt($fechaStart)))
+                ->filter(fn ($h) => $h->fecha_inicio->toDateString() <= $fechaStartStr && ($h->fecha_fin === null || $h->fecha_fin->toDateString() > $fechaStartStr))
                 ->sortByDesc('fecha_inicio')
                 ->first();
         }
 
         return $this->vehiculoHistorial()
-            ->whereDate('fecha_inicio', '<=', $fechaStart)
-            ->where(function ($q) use ($fechaStart) {
+            ->whereDate('fecha_inicio', '<=', $fechaStartStr)
+            ->where(function ($q) use ($fechaStartStr) {
                 $q->whereNull('fecha_fin')
-                    ->orWhereDate('fecha_fin', '>', $fechaStart);
+                    ->orWhereDate('fecha_fin', '>', $fechaStartStr);
             })
             ->orderBy('fecha_inicio', 'desc')
             ->first();
@@ -195,19 +197,19 @@ class Vehiculo extends Model
 
     public function estaBloqueadoEn(Carbon $fecha): bool
     {
-        $dia = $fecha->copy()->startOfDay();
+        $diaStr = $fecha->toDateString();
 
         return $this->estado === 'mantenimiento'
             || ($this->estado === 'inactivo'
                 && $this->fecha_inactivacion
-                && $dia->gte($this->fecha_inactivacion->copy()->startOfDay()))
+                && $diaStr >= $this->fecha_inactivacion->toDateString())
             || ($this->trashed()
                 && $this->deleted_at
-                && $dia->gte($this->deleted_at->copy()->startOfDay()))
+                && $diaStr >= $this->deleted_at->toDateString())
             || ($this->fecha_eliminacion
                 && $this->restored_at
-                && $dia->gte($this->fecha_eliminacion->copy()->startOfDay())
-                && $dia->lt($this->restored_at->copy()->startOfDay()));
+                && $diaStr >= $this->fecha_eliminacion->toDateString()
+                && $diaStr < $this->restored_at->toDateString());
     }
 
     public function motivoBloqueo(): string
@@ -222,13 +224,17 @@ class Vehiculo extends Model
 
     public function getEffectiveStartDate(): Carbon
     {
+        if ($this->effectiveStartDateCache !== null) {
+            return $this->effectiveStartDateCache;
+        }
+
         if ($this->relationLoaded('contratos')) {
             $fecha = $this->contratos->min('fecha_inicio');
         } else {
             $fecha = $this->contratos()->min('fecha_inicio');
         }
 
-        return $fecha ? Carbon::parse($fecha)->startOfDay() : $this->created_at->startOfDay();
+        return $this->effectiveStartDateCache = ($fecha ? Carbon::parse($fecha)->startOfDay() : $this->created_at->copy()->startOfDay());
     }
 
     public function getActivitylogOptions(): LogOptions
