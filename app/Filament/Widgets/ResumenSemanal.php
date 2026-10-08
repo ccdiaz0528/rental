@@ -17,6 +17,7 @@ class ResumenSemanal extends BaseWidget
     use HasUserContext;
 
     protected static ?int $sort = 2;
+
     protected static bool $isLazy = true;
 
     protected ?string $pollingInterval = '60s';
@@ -118,7 +119,7 @@ class ResumenSemanal extends BaseWidget
             Stat::make('Gastos', $this->money($data['gastos']))
                 ->description('Total gastos semanales')
                 ->descriptionIcon('heroicon-o-receipt-percent')
-                ->color('warning'),
+                ->color('danger'),
 
             Stat::make('Administración', $this->money($data['administracion']))
                 ->description('Costo operativo semanal')

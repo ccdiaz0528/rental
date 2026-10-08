@@ -33,8 +33,12 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(view('filament.custom-logo'))
             ->globalSearch()
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Indigo,
                 'gray' => Color::Slate,
+                'danger' => Color::Rose,
+                'success' => Color::Emerald,
+                'warning' => Color::Amber,
+                'info' => Color::Sky,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

@@ -9,7 +9,7 @@
         <section class="overflow-hidden rounded-[32px] border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.10),_transparent_28%),linear-gradient(135deg,#ffffff_0%,#f8fafc_55%,#f1f5f9_100%)] text-slate-900 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.22),_transparent_28%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] dark:text-white dark:shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
             <div class="grid gap-8 px-7 py-7 xl:grid-cols-[minmax(0,1fr)_30rem] xl:items-stretch">
                 <div>
-                    <div class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 dark:border-white/15 dark:bg-white/10 dark:text-blue-100 dark:backdrop-blur-sm">
+                    <div class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 dark:border-white/15 dark:bg-white/10 dark:text-sky-100 dark:backdrop-blur-sm">
                         {{ $this->getPeriodoLabel() }}
                     </div>
                     <h2 class="mt-4 text-3xl font-semibold tracking-tight lg:text-4xl">
@@ -23,7 +23,7 @@
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                     <div class="rounded-[24px] border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/10 dark:backdrop-blur-md xl:min-h-[140px] min-w-0">
                         <p class="text-[11px] uppercase tracking-[0.24em] text-slate-500 dark:text-slate-300">Neto del período</p>
-                        <p class="mt-2 text-xl lg:text-2xl xl:text-3xl font-semibold truncate {{ $resumen['neto'] >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300' }}">
+                        <p class="mt-2 text-xl lg:text-2xl xl:text-3xl font-semibold truncate {{ $resumen['neto'] >= 0 ? 'text-success-600 dark:text-success-300' : 'text-danger-600 dark:text-danger-300' }}">
                             {{ $this->money($resumen['neto']) }}
                         </p>
                     </div>
@@ -109,7 +109,7 @@
             </article>
             <article class="rounded-[24px] border border-gray-200 bg-white p-5 sm:p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <p class="text-sm text-slate-500">No percibido</p>
-                <p class="mt-2 text-2xl font-semibold text-amber-600 dark:text-amber-400">{{ $this->money($resumen['no_percibido']) }}</p>
+                <p class="mt-2 text-2xl font-semibold text-warning-600 dark:text-warning-400">{{ $this->money($resumen['no_percibido']) }}</p>
                 <p class="mt-2 text-xs text-slate-500">{{ $resumen['dias_no_trabajados'] }} días no trabajados</p>
             </article>
             <article class="rounded-[24px] border border-gray-200 bg-white p-5 sm:p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
@@ -143,7 +143,7 @@
 
                 <div class="p-4 sm:p-5">
                     @if($gastosCat['total'] > 0)
-                        @php($categorias = ['daño' => ['label' => 'Daño', 'color' => 'bg-danger-500'], 'mantenimiento' => ['label' => 'Mantenimiento', 'color' => 'bg-blue-500'], 'multa' => ['label' => 'Multa', 'color' => 'bg-amber-500'], 'otro' => ['label' => 'Otro', 'color' => 'bg-slate-500']])
+                        @php($categorias = ['daño' => ['label' => 'Daño', 'color' => 'bg-danger-500'], 'mantenimiento' => ['label' => 'Mantenimiento', 'color' => 'bg-info-500'], 'multa' => ['label' => 'Multa', 'color' => 'bg-warning-500'], 'otro' => ['label' => 'Otro', 'color' => 'bg-gray-500']])
                         <div class="space-y-3">
                             @foreach($categorias as $key => $cat)
                                 @php($valor = $gastosCat['categorias'][$key] ?? 0)

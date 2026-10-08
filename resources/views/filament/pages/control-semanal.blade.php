@@ -1,20 +1,12 @@
 <x-filament-panels::page>
     @php($dataset = $this->getWeekDataset())
     @php($history = $this->getWeekHistory())
-    @php($headerPalettes = [
-        ['bg' => 'bg-cyan-500', 'soft' => 'bg-cyan-50 dark:bg-cyan-500/10', 'text' => 'text-cyan-700 dark:text-cyan-300'],
-        ['bg' => 'bg-emerald-500', 'soft' => 'bg-emerald-50 dark:bg-emerald-500/10', 'text' => 'text-emerald-700 dark:text-emerald-300'],
-        ['bg' => 'bg-violet-500', 'soft' => 'bg-violet-50 dark:bg-violet-500/10', 'text' => 'text-violet-700 dark:text-violet-300'],
-        ['bg' => 'bg-amber-500', 'soft' => 'bg-amber-50 dark:bg-amber-500/10', 'text' => 'text-amber-700 dark:text-amber-300'],
-        ['bg' => 'bg-rose-500', 'soft' => 'bg-rose-50 dark:bg-rose-500/10', 'text' => 'text-rose-700 dark:text-rose-300'],
-        ['bg' => 'bg-sky-600', 'soft' => 'bg-sky-50 dark:bg-sky-500/10', 'text' => 'text-sky-700 dark:text-sky-300'],
-    ])
 
-    <div class="space-y-6 tabular-nums">
+    <div class="space-y-6 tabular-nums w-full min-w-0">
         <section class="overflow-hidden rounded-[32px] border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.10),_transparent_28%),linear-gradient(135deg,#ffffff_0%,#f8fafc_55%,#f1f5f9_100%)] text-slate-900 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.22),_transparent_28%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#1e293b_100%)] dark:text-white dark:shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
             <div class="grid gap-8 px-7 py-7 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-stretch">
                 <div>
-                    <div class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 dark:border-white/15 dark:bg-white/10 dark:text-cyan-100 dark:backdrop-blur-sm">
+                    <div class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 dark:border-white/15 dark:bg-white/10 dark:text-info-100 dark:backdrop-blur-sm">
                         Control semanal
                     </div>
                     <h2 class="mt-4 text-3xl font-semibold tracking-tight lg:text-4xl">
@@ -36,7 +28,7 @@
                         <p class="mt-2 text-3xl font-semibold">{{ $this->money($dataset['summary']['neto']) }}</p>
                         <div class="mt-3 text-xs text-slate-500 dark:text-slate-300">
                             @if($dataset['summary']['administracion'] > 0)
-                                <span class="text-rose-600 dark:text-rose-300">-{{ $this->money($dataset['summary']['administracion']) }} administración</span>
+                                <span class="text-danger-600 dark:text-danger-300">-{{ $this->money($dataset['summary']['administracion']) }} administración</span>
                             @else
                                 Ingreso menos gastos
                             @endif
@@ -85,25 +77,27 @@
 
                     <div class="flex flex-wrap items-end gap-4 xl:gap-6">
                         <div class="flex flex-col gap-1.5">
-                            <span class="text-xs font-medium text-slate-500 dark:text-slate-300">Ir a una fecha</span>
-                            <input
-                                type="date"
-                                wire:model.live="selectedDate"
-                                class="rounded-2xl border border-gray-300 bg-white px-4 py-2.5 text-sm shadow-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/20 dark:border-white/10 dark:bg-gray-950 dark:text-white min-w-[180px]"
-                            >
+                            <span class="text-xs font-medium text-slate-500 dark:text-gray-400">Ir a una fecha</span>
+                            <div class="relative flex items-center">
+                                <input
+                                    type="date"
+                                    wire:model.live="selectedDate"
+                                    class="w-full min-w-[180px] rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition duration-150 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:focus:border-primary-500/50"
+                                >
+                            </div>
                         </div>
 
-                        <div class="flex items-center gap-2">
-                            <button wire:click="previousWeek" type="button" class="flex items-center gap-1 rounded-2xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5">
-                                <span>‹</span>
-                                <span>Anterior</span>
+                        <div class="flex items-center gap-1.5 rounded-2xl border border-gray-200 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-white/5">
+                            <button wire:click="previousWeek" type="button" class="flex h-9 items-center justify-center rounded-xl px-4 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white">
+                                <span class="mr-1">&larr;</span> Anterior
                             </button>
-                            <button wire:click="goToCurrentWeek" type="button" class="rounded-2xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-500">
+                            <div class="h-4 w-px bg-gray-200 dark:bg-white/10"></div>
+                            <button wire:click="goToCurrentWeek" type="button" class="flex h-9 items-center justify-center rounded-xl bg-primary-500 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50 dark:bg-primary-600 dark:hover:bg-primary-500">
                                 Semana actual
                             </button>
-                            <button wire:click="nextWeek" type="button" class="flex items-center gap-1 rounded-2xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5">
-                                <span>Siguiente</span>
-                                <span>›</span>
+                            <div class="h-4 w-px bg-gray-200 dark:bg-white/10"></div>
+                            <button wire:click="nextWeek" type="button" class="flex h-9 items-center justify-center rounded-xl px-4 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white">
+                                Siguiente <span class="ml-1">&rarr;</span>
                             </button>
                         </div>
                     </div>
@@ -118,31 +112,42 @@
                                 Día
                             </th>
                             @forelse ($dataset['vehiculos'] as $vehiculo)
-                                @php($palette = $headerPalettes[$loop->index % count($headerPalettes)])
                                 <th class="min-w-52 border-b border-r border-gray-200 px-3 py-3 text-center dark:border-white/10">
-                                    <div class="rounded-[20px] {{ $palette['soft'] }} px-3 py-3">
-                                        <div class="mx-auto flex h-8 w-8 items-center justify-center rounded-full {{ $palette['bg'] }} text-xs font-bold text-white">
-                                            {{ strtoupper(substr($vehiculo->placa, 0, 2)) }}
+                                    @php($color = $vehiculo->getColorClase())
+                                        {{-- Fake classes for Tailwind extractor: bg-red-500/80 dark:bg-red-500/50 bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300 bg-orange-500/80 dark:bg-orange-500/50 bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300 bg-amber-500/80 dark:bg-amber-500/50 bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 bg-green-500/80 dark:bg-green-500/50 bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300 bg-emerald-500/80 dark:bg-emerald-500/50 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 bg-teal-500/80 dark:bg-teal-500/50 bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300 bg-cyan-500/80 dark:bg-cyan-500/50 bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300 bg-sky-500/80 dark:bg-sky-500/50 bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 bg-blue-500/80 dark:bg-blue-500/50 bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 bg-indigo-500/80 dark:bg-indigo-500/50 bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 bg-violet-500/80 dark:bg-violet-500/50 bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300 bg-purple-500/80 dark:bg-purple-500/50 bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 bg-fuchsia-500/80 dark:bg-fuchsia-500/50 bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-500/20 dark:text-fuchsia-300 bg-pink-500/80 dark:bg-pink-500/50 bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-300 bg-rose-500/80 dark:bg-rose-500/50 bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 --}}
+                                    <div class="relative overflow-hidden rounded-[1.25rem] border border-gray-200 bg-white px-3 py-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
+                                        <div class="absolute inset-x-0 top-0 h-1 bg-{{ $color }}-500/80 dark:bg-{{ $color }}-500/50"></div>
+                                        <div class="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-{{ $color }}-100 text-[16px] font-bold tracking-wide text-{{ $color }}-700 dark:bg-{{ $color }}-500/20 dark:text-{{ $color }}-300">
+                                            {{ $vehiculo->getTipoVehiculo() === 'moto' ? '🏍️' : '🚗' }}
                                         </div>
-                                        <div class="mt-3 text-sm font-semibold text-slate-950 dark:text-white">{{ $vehiculo->placa }}</div>
-                                        <div class="mt-1 text-xs font-normal text-slate-500">
+                                        <div class="mt-2 text-sm font-bold tracking-tight text-slate-950 dark:text-white">{{ $vehiculo->placa }}</div>
+                                        <div class="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                                             {{ $vehiculo->personaNombreEn($dataset['weekStart']) ?? 'Sin conductor' }}
                                         </div>
-                                        <div class="mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $palette['soft'] }} {{ $palette['text'] }} ring-1 ring-inset ring-black/5 dark:ring-white/10">
-                                            Cuota {{ $this->money($vehiculo->cuotaDiariaEn($dataset['weekStart'])) }}
-                                        </div>
-                                        <div class="mt-1.5 inline-flex rounded-full px-3 py-1 text-[11px] font-semibold {{ $palette['soft'] }} {{ $palette['text'] }} ring-1 ring-inset ring-black/5 dark:ring-white/10 opacity-75">
-                                            Admin {{ $this->money($vehiculo->administracionEn($dataset['weekStart'])) }}
+                                        <div class="mt-3 flex w-full flex-col gap-1.5">
+                                            <div class="flex w-full items-center justify-between rounded-lg bg-slate-50 px-2.5 py-1.5 text-[11px] border border-gray-100 dark:border-white/5 dark:bg-white/5">
+                                                <span class="text-slate-500 dark:text-slate-400">Cuota</span>
+                                                <span class="font-semibold text-slate-800 dark:text-gray-200">{{ $this->money($vehiculo->cuotaDiariaEn($dataset['weekStart'])) }}</span>
+                                            </div>
+                                            <div class="flex w-full items-center justify-between rounded-lg bg-slate-50 px-2.5 py-1.5 text-[11px] border border-gray-100 dark:border-white/5 dark:bg-white/5">
+                                                <span class="text-slate-500 dark:text-slate-400">Admin</span>
+                                                <span class="font-semibold text-slate-800 dark:text-gray-200">{{ $this->money($vehiculo->administracionEn($dataset['weekStart'])) }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </th>
                             @empty
-                                <th class="border-b border-r border-gray-200 px-4 py-3 text-left dark:border-white/10">No hay vehículos activos</th>
+                                <th class="border-b border-r border-gray-200 px-4 py-8 text-center text-slate-500 dark:border-white/10 dark:text-gray-400">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <x-heroicon-o-truck class="h-8 w-8 text-gray-300 dark:text-gray-600" />
+                                        <span class="text-sm">No hay vehículos activos esta semana.</span>
+                                    </div>
+                                </th>
                             @endforelse
-                            <th class="min-w-36 border-b border-r border-gray-200 px-4 py-4 text-center font-semibold text-danger-700 dark:border-white/10 dark:text-danger-300">
+                            <th class="min-w-36 border-b border-r border-gray-200 px-4 py-4 text-center font-semibold text-danger-600 dark:border-white/10 dark:text-danger-400">
                                 Gastos
                             </th>
-                            <th class="min-w-36 border-b border-r border-gray-200 px-4 py-4 text-center font-semibold text-success-700 dark:border-white/10 dark:text-success-300">
+                            <th class="min-w-36 border-b border-r border-gray-200 px-4 py-4 text-center font-semibold text-success-600 dark:border-white/10 dark:text-success-400">
                                 Total día
                             </th>
                             <th class="min-w-40 border-b border-gray-200 px-4 py-4 text-center font-semibold text-slate-900 dark:border-white/10 dark:text-white">
@@ -164,9 +169,9 @@
                                         <button
                                             type="button"
                                             @if(!$cellDisabled) wire:click="openRegistroModal({{ $cell['vehiculo_id'] }}, '{{ $cell['fecha'] }}')" @else disabled @endif
-                                            class="w-full rounded-[20px] border px-3 py-4 text-sm shadow-sm transition {{ ($cell['bloqueado'] ?? false) ? 'border-gray-200 bg-gray-100/70 text-gray-400 cursor-not-allowed dark:border-gray-700 dark:bg-white/[0.03] dark:text-gray-500' : (($cell['not_applicable'] ?? false) ? 'border-dashed border-gray-300 bg-gray-50/50 text-gray-400 dark:border-gray-600 dark:bg-white/[0.03] dark:text-gray-500' : ((!$cell['trabajo']) ? 'border-danger-200 bg-danger-50 text-danger-700 dark:border-danger-500/30 dark:bg-danger-500/10 dark:text-danger-300' : (($cell['gasto'] > 0) ? 'border-warning-200 bg-warning-50 text-warning-700 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300' : (($cell['has_changes']) ? 'border-gray-300 bg-gray-50 text-gray-700 dark:border-gray-500/30 dark:bg-gray-500/10 dark:text-gray-300' : 'border-gray-200 bg-white text-slate-800 hover:-translate-y-0.5 hover:border-gray-400 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:hover:bg-white/10')))) }}"
+                                            class="relative w-full rounded-2xl border px-3 py-4 text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary-500/50 {{ ($cell['bloqueado'] ?? false) ? 'border-dashed border-gray-200 bg-gray-50/50 text-gray-400 cursor-not-allowed dark:border-white/5 dark:bg-transparent dark:text-gray-600' : (($cell['not_applicable'] ?? false) ? 'border-dashed border-gray-200 bg-gray-50/50 text-gray-400 cursor-not-allowed dark:border-white/5 dark:bg-transparent dark:text-gray-600' : ((!$cell['trabajo']) ? 'border-danger-100 bg-danger-50/50 text-danger-900 hover:border-danger-300 hover:bg-danger-50 dark:border-danger-500/20 dark:bg-danger-500/5 dark:text-danger-200' : (($cell['gasto'] > 0) ? 'border-warning-200 bg-warning-50/50 text-warning-900 hover:border-warning-300 hover:bg-warning-50 dark:border-warning-500/20 dark:bg-warning-500/5 dark:text-warning-200' : (($cell['has_changes']) ? 'border-primary-100 bg-primary-50/50 text-slate-800 hover:border-primary-300 hover:bg-primary-50 dark:border-primary-500/20 dark:bg-primary-500/5 dark:text-gray-200' : 'border-gray-200 bg-white text-slate-800 hover:border-gray-300 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10')))) }}"
                                         >
-                                            <div class="text-base font-semibold">{{ ($cell['not_applicable'] ?? false) ? '—' : $this->money($cell['ingreso']) }}</div>
+                                            <div class="text-base font-semibold {{ ($cell['not_applicable'] ?? false) || ($cell['bloqueado'] ?? false) ? '' : ((!$cell['trabajo']) ? 'text-danger-600 dark:text-danger-400' : 'text-slate-900 dark:text-white') }}">{{ ($cell['not_applicable'] ?? false) ? '—' : $this->money($cell['ingreso']) }}</div>
                                             @if ($cell['bloqueado'] ?? false)
                                                 <div class="mt-1 text-[10px] font-medium text-gray-400">{{ ($cell['estado'] ?? '') === 'mantenimiento' ? 'Mantenimiento' : 'Inactivado' }}</div>
                                             @endif
@@ -174,14 +179,14 @@
                                                 <div class="mt-1 text-[10px] font-medium text-slate-500">Admin: {{ $this->money($cell['administracion'] ?? 0) }}</div>
                                             @endif
                                             @if ($cell['gasto'] > 0)
-                                                <div class="mt-1 text-xs font-medium">Gasto: {{ $this->money($cell['gasto']) }}</div>
+                                                <div class="mt-1 text-xs font-medium text-danger-600 dark:text-danger-400">Gasto: {{ $this->money($cell['gasto']) }}</div>
                                                 @if ($cell['categoria_gasto'] && strlen($cell['categoria_gasto']) > 0)
                                                     @php($categoria = $cell['categoria_gasto'])
                                                     @php($colors = [
                                                         'daño' => 'bg-danger-100 text-danger-700 dark:bg-danger-500/20 dark:text-danger-300',
-                                                        'mantenimiento' => 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
-                                                        'multa' => 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
-                                                        'otro' => 'bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300'
+                                                        'mantenimiento' => 'bg-info-100 text-info-700 dark:bg-info-500/20 dark:text-info-300',
+                                                        'multa' => 'bg-warning-100 text-warning-700 dark:bg-warning-500/20 dark:text-warning-300',
+                                                        'otro' => 'bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-300'
                                                     ])
                                                     @php($labels = [
                                                         'daño' => '🛠️ Daño',
@@ -204,10 +209,10 @@
                                     </td>
                                 @endforeach
 
-                                <td class="border-r border-gray-200 px-4 py-4 text-right font-semibold text-danger-600 dark:border-white/10">
+                                <td class="border-r border-gray-200 px-4 py-4 text-right font-semibold text-danger-600 dark:border-white/10 dark:text-danger-400">
                                     {{ $this->money($row['gastos']) }}
                                 </td>
-                                <td class="border-r border-gray-200 px-4 py-4 text-right font-semibold {{ $row['total'] >= 0 ? 'text-success-600' : 'text-danger-600' }} dark:border-white/10">
+                                <td class="border-r border-gray-200 px-4 py-4 text-right font-semibold {{ $row['total'] >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400' }} dark:border-white/10">
                                     {{ $this->money($row['total']) }}
                                 </td>
                                 <td class="px-4 py-4 text-right font-semibold text-slate-900 dark:text-white">
@@ -216,34 +221,34 @@
                             </tr>
                         @endforeach
 
-                        <tr class="bg-slate-100/70 dark:bg-white/5">
-                            <td class="sticky left-0 z-10 border-r border-t border-gray-200 bg-slate-100 px-4 py-4 align-top font-semibold text-slate-950 dark:border-white/10 dark:bg-gray-900 dark:text-white">
+                        <tr class="bg-slate-100/70 shadow-sm dark:bg-white/5">
+                            <td class="sticky left-0 z-10 border-r border-t border-gray-200 bg-slate-100 px-4 py-6 align-top font-semibold text-slate-950 dark:border-white/10 dark:bg-gray-900 dark:text-white">
                                 Total semanal
                                 <div class="mt-1 text-xs font-normal text-slate-500">Resumen por vehículo</div>
                             </td>
 
                             @foreach ($dataset['vehiculos'] as $vehiculo)
                                 @php($totalVehiculo = $dataset['vehicleTotals'][$vehiculo->id] ?? ['real' => 0, 'gastos' => 0, 'neto' => 0])
-                                <td class="border-r border-t border-gray-200 px-4 py-4 text-center dark:border-white/10">
-                                    <div class="text-base font-semibold {{ $totalVehiculo['neto'] >= 0 ? 'text-success-600' : 'text-danger-600' }}">
+                                <td class="border-r border-t border-gray-200 px-4 py-6 text-center dark:border-white/10">
+                                    <div class="text-base font-semibold {{ $totalVehiculo['neto'] >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400' }}">
                                         {{ $this->money($totalVehiculo['neto']) }}
                                     </div>
-                                    <div class="mt-1 text-xs text-slate-500">
-                                        Ing: {{ $this->money($totalVehiculo['real']) }}
+                                    <div class="mt-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+                                        Ingreso: {{ $this->money($totalVehiculo['real']) }}
                                     </div>
-                                    <div class="mt-1 text-xs text-slate-500">
-                                        Gas: {{ $this->money($totalVehiculo['gastos']) }}
+                                    <div class="mt-1 text-xs font-medium text-danger-600/80 dark:text-danger-400/80">
+                                        Gastos: {{ $this->money($totalVehiculo['gastos']) }}
                                     </div>
                                 </td>
                             @endforeach
 
-                            <td class="border-r border-t border-gray-200 px-4 py-4 text-right font-semibold text-danger-600 dark:border-white/10">
+                            <td class="border-r border-t border-gray-200 px-4 py-6 text-right text-base font-bold text-danger-600 dark:border-white/10 dark:text-danger-400">
                                 {{ $this->money($dataset['summary']['gastos']) }}
                             </td>
-                            <td class="border-r border-t border-gray-200 px-4 py-4 text-right font-semibold {{ $dataset['summary']['neto'] >= 0 ? 'text-success-600' : 'text-danger-600' }} dark:border-white/10">
+                            <td class="border-r border-t border-gray-200 px-4 py-6 text-right text-base font-bold {{ $dataset['summary']['neto'] >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400' }} dark:border-white/10">
                                 {{ $this->money($dataset['summary']['neto']) }}
                             </td>
-                            <td class="border-t border-gray-200 px-4 py-4 text-right font-semibold text-slate-950 dark:border-white/10 dark:text-white">
+                            <td class="border-t border-gray-200 px-4 py-6 text-right text-base font-bold text-slate-950 dark:border-white/10 dark:text-white">
                                 {{ $this->money($dataset['summary']['neto']) }}
                             </td>
                         </tr>

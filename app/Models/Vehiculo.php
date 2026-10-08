@@ -195,6 +195,41 @@ class Vehiculo extends Model
         return $this->persona?->nombre;
     }
 
+    public function getTipoVehiculo(): string
+    {
+        $placa = preg_replace('/[^A-Z0-9]/', '', strtoupper($this->placa));
+
+        $letras = preg_match_all('/[A-Z]/', $placa);
+        $numeros = preg_match_all('/[0-9]/', $placa);
+
+        if ($letras === 4 && $numeros === 2) {
+            return 'moto';
+        }
+
+        if (preg_match('/^[A-Z]{3}[0-9]{2}[A-Z]$/', $placa)) {
+            return 'moto';
+        }
+
+        // Motos antiguas 3 letras, 2 números
+        if (preg_match('/^[A-Z]{3}[0-9]{2}$/', $placa)) {
+            return 'moto';
+        }
+
+        return 'carro';
+    }
+
+    public function getColorClase(): string
+    {
+        $colors = [
+            'red', 'orange', 'amber', 'green', 'emerald', 'teal', 'cyan',
+            'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose',
+        ];
+
+        $index = abs(crc32($this->placa)) % count($colors);
+
+        return $colors[$index];
+    }
+
     public function estaBloqueadoEn(Carbon $fecha): bool
     {
         $diaStr = $fecha->toDateString();
