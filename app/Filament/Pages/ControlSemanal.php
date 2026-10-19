@@ -87,7 +87,7 @@ class ControlSemanal extends Page
         // El scope por usuario aplica aquí: un usuario no puede abrir vehículos ajenos.
         $vehiculo = Vehiculo::query()->withTrashed()->with('persona')->findOrFail($vehiculoId);
 
-        if ($vehiculo->estaBloqueadoEn($fechaCarbon)) {
+        if ($vehiculo->edicionBloqueadaEn($fechaCarbon)) {
             Notification::make()
                 ->title('Registro bloqueado')
                 ->body("No puedes editar registros de un vehículo {$vehiculo->motivoBloqueo()}")
@@ -97,8 +97,9 @@ class ControlSemanal extends Page
             return;
         }
 
-        $cuotaBase = $vehiculo->cuotaDiariaEn($fechaCarbon);
-        $adminBase = $vehiculo->administracionEn($fechaCarbon);
+        $inactivo = $vehiculo->inactivoEn($fechaCarbon);
+        $cuotaBase = $inactivo ? 0 : $vehiculo->cuotaDiariaEn($fechaCarbon);
+        $adminBase = $inactivo ? 0 : $vehiculo->administracionEn($fechaCarbon);
 
         $this->cachedVehiculo = [
             'id' => $vehiculo->id,
@@ -117,7 +118,7 @@ class ControlSemanal extends Page
         $this->selectedVehiculoId = $vehiculoId;
         $this->selectedFecha = $fecha;
         $this->modalForm = [
-            'trabajo' => $registro?->trabajo ?? true,
+            'trabajo' => $registro?->trabajo ?? ! $inactivo,
             'valor_generado' => $registro?->valor_generado ?? $cuotaBase,
             'gasto' => $registro?->gasto ?? 0,
             'administracion' => $registro?->administracion ?? $adminBase,
@@ -169,7 +170,7 @@ class ControlSemanal extends Page
         // Se revalida en el servidor: el scope por usuario oculta vehículos ajenos (404).
         $vehiculo = Vehiculo::query()->withTrashed()->findOrFail($this->selectedVehiculoId);
 
-        if ($vehiculo->estaBloqueadoEn($fechaDia)) {
+        if ($vehiculo->edicionBloqueadaEn($fechaDia)) {
             Notification::make()
                 ->title('Registro bloqueado')
                 ->body("No puedes guardar cambios en un vehículo {$vehiculo->motivoBloqueo()}")
@@ -180,8 +181,9 @@ class ControlSemanal extends Page
             return;
         }
 
-        $valorPorDefecto = $vehiculo->cuotaDiariaEn($fechaDia);
-        $adminPorDefecto = $vehiculo->administracionEn($fechaDia);
+        $inactivo = $vehiculo->inactivoEn($fechaDia);
+        $valorPorDefecto = $inactivo ? 0 : $vehiculo->cuotaDiariaEn($fechaDia);
+        $adminPorDefecto = $inactivo ? 0 : $vehiculo->administracionEn($fechaDia);
 
         $registro = ControlDiario::withoutGlobalScope('user')->firstOrNew([
             'vehiculo_id' => $this->selectedVehiculoId,
@@ -194,7 +196,8 @@ class ControlSemanal extends Page
         $administracion = (float) ($this->modalForm['administracion'] ?? 0);
         $observaciones = trim((string) ($this->modalForm['observaciones'] ?? ''));
 
-        $isDefault = $trabajo
+        // En un día inactivo el estado por defecto es "no trabajó" sin valores.
+        $isDefault = ($trabajo === ! $inactivo)
             && abs($valorGenerado - $valorPorDefecto) < 0.01
             && abs($administracion - $adminPorDefecto) < 0.01
             && abs($gasto) < 0.01
@@ -327,9 +330,11 @@ class ControlSemanal extends Page
                     continue;
                 }
 
-                $cellDisabled = $vehiculo->estaBloqueadoEn($fecha);
+                $cellDisabled = $vehiculo->edicionBloqueadaEn($fecha);
+                $inactivo = $vehiculo->inactivoEn($fecha);
 
                 if (! $vehiculo->cuentaEn($fecha, $registro)) {
+                    $editable = $inactivo && ! $cellDisabled;
                     $row['cells'][] = [
                         'vehiculo_id' => $vehiculo->id,
                         'fecha' => $fecha->toDateString(),
@@ -340,7 +345,8 @@ class ControlSemanal extends Page
                         'trabajo' => false,
                         'has_changes' => false,
                         'observaciones' => null,
-                        'not_applicable' => true,
+                        'not_applicable' => ! $editable,
+                        'inactivo' => $editable,
                         'bloqueado' => false,
                         'estado' => $vehiculo->estado,
                     ];
@@ -369,6 +375,7 @@ class ControlSemanal extends Page
                     'has_changes' => $registro !== null,
                     'observaciones' => $registro?->observaciones,
                     'bloqueado' => $cellDisabled,
+                    'inactivo' => $inactivo,
                     'estado' => $vehiculo->estado,
                 ];
 

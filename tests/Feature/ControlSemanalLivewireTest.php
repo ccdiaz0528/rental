@@ -59,6 +59,30 @@ class ControlSemanalLivewireTest extends TestCase
         $this->assertEquals($this->owner->id, $registro->user_id);
     }
 
+    public function test_dia_inactivo_se_puede_editar_y_cuenta_solo_si_hay_registro_manual(): void
+    {
+        $this->vehiculo->periodos_inactivo = [['desde' => now()->subDays(10)->toDateString(), 'hasta' => now()->subDays(2)->toDateString()]];
+        $this->vehiculo->saveQuietly();
+        $fecha = now()->subDays(5)->toDateString();
+
+        // Por defecto el día inactivo parte de "no trabajó" y sin valores.
+        $component = Livewire::actingAs($this->owner)
+            ->test(ControlSemanal::class)
+            ->call('openRegistroModal', $this->vehiculo->id, $fecha)
+            ->assertSet('isModalOpen', true)
+            ->assertSet('modalForm.trabajo', false);
+
+        $component->set('modalForm.trabajo', true)
+            ->set('modalForm.valor_generado', 30000)
+            ->call('saveRegistro')
+            ->assertHasNoErrors();
+
+        $registro = ControlDiario::withoutGlobalScopes()->where('vehiculo_id', $this->vehiculo->id)->first();
+        $this->assertNotNull($registro);
+        $this->assertEquals(30000, (float) $registro->valor_generado);
+        $this->assertTrue($registro->tieneActividad());
+    }
+
     public function test_locked_properties_cannot_be_tampered_with(): void
     {
         $this->expectException(CannotUpdateLockedPropertyException::class);

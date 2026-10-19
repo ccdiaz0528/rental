@@ -265,10 +265,15 @@ class Vehiculo extends Model
 
     public function estaBloqueadoEn(Carbon $fecha): bool
     {
+        return $this->inactivoEn($fecha) || $this->edicionBloqueadaEn($fecha);
+    }
+
+    /** Bloqueo que impide editar el día (mantenimiento o eliminado); los días inactivos sí se pueden editar. */
+    public function edicionBloqueadaEn(Carbon $fecha): bool
+    {
         $diaStr = $fecha->toDateString();
 
         return $this->estado === 'mantenimiento'
-            || $this->inactivoEn($fecha)
             || ($this->trashed()
                 && $this->deleted_at
                 && $diaStr >= $this->deleted_at->toDateString())
