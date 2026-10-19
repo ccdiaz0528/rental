@@ -447,7 +447,7 @@ class ControlSemanal extends Page
                                 ->where('deleted_at', '>', $oldestWeek);
                         });
                 })
-        )->get(['id', 'cuota_diaria', 'administracion', 'created_at', 'estado', 'fecha_inactivacion', 'deleted_at', 'fecha_eliminacion', 'restored_at']);
+        )->get(['id', 'cuota_diaria', 'administracion', 'created_at', 'estado', 'fecha_inactivacion', 'periodos_inactivo', 'deleted_at', 'fecha_eliminacion', 'restored_at']);
 
         $allRegistros = $vehiculos->isEmpty()
             ? collect()

@@ -26,6 +26,7 @@ use Spatie\Activitylog\Support\LogOptions;
     'administracion',
     'estado',
     'fecha_inactivacion',
+    'periodos_inactivo',
     'restored_at',
     'fecha_eliminacion',
     'observaciones',
@@ -47,6 +48,7 @@ class Vehiculo extends Model
             'fecha_vencimiento_soat' => 'date',
             'fecha_vencimiento_tecnomecanico' => 'date',
             'fecha_inactivacion' => 'datetime',
+            'periodos_inactivo' => 'array',
             'restored_at' => 'datetime',
             'fecha_eliminacion' => 'datetime',
             'administracion' => 'decimal:2',
@@ -61,6 +63,17 @@ class Vehiculo extends Model
                 if ($vehiculo->estado === 'inactivo') {
                     $vehiculo->fecha_inactivacion = now();
                 } elseif ($vehiculo->getOriginal('estado') === 'inactivo') {
+                    $desde = $vehiculo->getOriginal('fecha_inactivacion');
+
+                    if ($desde) {
+                        $periodos = $vehiculo->periodos_inactivo ?? [];
+                        $periodos[] = [
+                            'desde' => Carbon::parse($desde)->toDateString(),
+                            'hasta' => now()->toDateString(),
+                        ];
+                        $vehiculo->periodos_inactivo = $periodos;
+                    }
+
                     $vehiculo->fecha_inactivacion = null;
                 }
             }
@@ -230,14 +243,32 @@ class Vehiculo extends Model
         return $colors[$index];
     }
 
+    /** Estuvo inactivo ese día (periodo abierto o periodos ya cerrados por reactivación). */
+    public function inactivoEn(Carbon $fecha): bool
+    {
+        $diaStr = $fecha->toDateString();
+
+        if ($this->estado === 'inactivo'
+            && $this->fecha_inactivacion
+            && $diaStr >= $this->fecha_inactivacion->toDateString()) {
+            return true;
+        }
+
+        foreach ($this->periodos_inactivo ?? [] as $p) {
+            if ($diaStr >= $p['desde'] && $diaStr < $p['hasta']) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function estaBloqueadoEn(Carbon $fecha): bool
     {
         $diaStr = $fecha->toDateString();
 
         return $this->estado === 'mantenimiento'
-            || ($this->estado === 'inactivo'
-                && $this->fecha_inactivacion
-                && $diaStr >= $this->fecha_inactivacion->toDateString())
+            || $this->inactivoEn($fecha)
             || ($this->trashed()
                 && $this->deleted_at
                 && $diaStr >= $this->deleted_at->toDateString())

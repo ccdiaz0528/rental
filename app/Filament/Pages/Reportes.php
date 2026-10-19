@@ -136,9 +136,8 @@ class Reportes extends Page
             return (bool) $this->getRegistrosEnRango()->get($fecha->toDateString().'-'.$vehiculo->id);
         }
 
-        return $vehiculo->estado === 'inactivo'
-            && $vehiculo->fecha_inactivacion
-            && $fecha->copy()->startOfDay()->lt($vehiculo->fecha_inactivacion->copy()->startOfDay());
+        return ($vehiculo->estado !== 'inactivo' || $vehiculo->fecha_inactivacion)
+            && ! $vehiculo->inactivoEn($fecha);
     }
 
     private function getVehiculosDelPeriodo(): Collection
