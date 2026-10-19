@@ -52,10 +52,10 @@ class ControlDiario extends Model
         ];
     }
 
-    /** Registro de un día en que la moto trabajó; los "no trabajó" no cuentan en días inactivos. */
+    /** Registro manual con actividad (trabajó o tuvo gasto); los "no trabajó" en cero no cuentan en días inactivos. */
     public function tieneActividad(): bool
     {
-        return (bool) $this->trabajo;
+        return $this->trabajo || (float) $this->gasto > 0;
     }
 
     public function user()

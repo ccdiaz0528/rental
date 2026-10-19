@@ -278,7 +278,7 @@ class Vehiculo extends Model
                 && $diaStr < $this->restored_at->toDateString());
     }
 
-    /** El día cuenta en los totales: no está bloqueado, o tiene un registro donde la moto trabajó. */
+    /** El día cuenta en los totales: no está bloqueado, o tiene un registro con actividad (trabajó o hubo gasto). */
     public function cuentaEn(Carbon $fecha, ?ControlDiario $registro): bool
     {
         if (! $this->estaBloqueadoEn($fecha)) {

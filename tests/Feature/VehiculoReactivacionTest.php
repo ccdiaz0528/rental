@@ -30,7 +30,7 @@ class VehiculoReactivacionTest extends TestCase
         $this->assertFalse($v->estaBloqueadoEn(Carbon::parse('2026-10-05')));
     }
 
-    public function test_dia_inactivo_solo_cuenta_si_trabajo(): void
+    public function test_dia_inactivo_solo_cuenta_con_trabajo_o_gasto(): void
     {
         $v = new Vehiculo(['estado' => 'activo']);
         $v->periodos_inactivo = [['desde' => '2026-10-05', 'hasta' => '2026-10-19']];
@@ -39,7 +39,7 @@ class VehiculoReactivacionTest extends TestCase
         $this->assertFalse($v->cuentaEn($dia, null));
         $this->assertFalse($v->cuentaEn($dia, new ControlDiario(['trabajo' => false, 'gasto' => 0])));
         $this->assertTrue($v->cuentaEn($dia, new ControlDiario(['trabajo' => true, 'gasto' => 0])));
-        $this->assertFalse($v->cuentaEn($dia, new ControlDiario(['trabajo' => false, 'gasto' => 20000])));
+        $this->assertTrue($v->cuentaEn($dia, new ControlDiario(['trabajo' => false, 'gasto' => 20000])));
         $this->assertTrue($v->cuentaEn(Carbon::parse('2026-10-19'), null));
     }
 }
