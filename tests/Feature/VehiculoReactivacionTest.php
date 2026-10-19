@@ -116,4 +116,16 @@ class VehiculoReactivacionTest extends TestCase
         $this->assertFalse($v->soloGastoEn($antes, new ControlDiario(['trabajo' => true, 'valor_generado' => 25000, 'gasto' => 55000])));
         $this->assertTrue($v->cuentaEn(Carbon::parse('2026-05-15'), null));
     }
+
+    public function test_ningun_dia_anterior_a_la_salida_a_produccion_cuenta(): void
+    {
+        config(['rental.fecha_salida_produccion' => '2026-05-10']);
+        $v = new Vehiculo(['estado' => 'activo']);
+        $v->created_at = Carbon::parse('2026-01-15');
+
+        $this->assertTrue($v->antesDeInicioEn(Carbon::parse('2026-05-09')));
+        $this->assertFalse($v->cuentaEn(Carbon::parse('2026-05-09'), null));
+        $this->assertFalse($v->antesDeInicioEn(Carbon::parse('2026-05-10')));
+        $this->assertTrue($v->cuentaEn(Carbon::parse('2026-05-10'), null));
+    }
 }

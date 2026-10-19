@@ -338,7 +338,10 @@ class Vehiculo extends Model
             $fecha = $this->contratos()->min('fecha_inicio');
         }
 
-        return $this->effectiveStartDateCache = ($fecha ? Carbon::parse($fecha)->startOfDay() : $this->created_at->copy()->startOfDay());
+        $inicio = $fecha ? Carbon::parse($fecha)->startOfDay() : $this->created_at->copy()->startOfDay();
+        $salida = Carbon::parse(config('rental.fecha_salida_produccion'))->startOfDay();
+
+        return $this->effectiveStartDateCache = $inicio->lt($salida) ? $salida : $inicio;
     }
 
     public function getActivitylogOptions(): LogOptions
