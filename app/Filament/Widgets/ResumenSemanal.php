@@ -65,8 +65,10 @@ class ResumenSemanal extends BaseWidget
                         continue;
                     }
 
+                    $registro = $registrosIndexed->get($v->id.'-'.$key);
+
                     $activo = ($v->estado === 'activo' || ($v->estado === 'inactivo' && $v->fecha_inactivacion))
-                        && ! $v->inactivoEn($dia);
+                        && (! $v->inactivoEn($dia) || $registro?->tieneActividad());
 
                     if (! $activo) {
                         continue;
@@ -76,7 +78,6 @@ class ResumenSemanal extends BaseWidget
                     $adminBase = $v->administracionEn($dia);
                     $esperadoSemana += $cuotaBase;
 
-                    $registro = $registrosIndexed->get($v->id.'-'.$key);
                     $gastosSemana += (float) ($registro->gasto ?? 0);
                     $adminSemana += (float) ($registro->administracion ?? $adminBase);
 

@@ -52,6 +52,12 @@ class ControlDiario extends Model
         ];
     }
 
+    /** Registro con actividad real (trabajó o tuvo gasto); los "no trabajó" en cero no cuentan. */
+    public function tieneActividad(): bool
+    {
+        return $this->trabajo || (float) $this->gasto > 0;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

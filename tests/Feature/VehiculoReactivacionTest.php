@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ControlDiario;
 use App\Models\Vehiculo;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,5 +28,18 @@ class VehiculoReactivacionTest extends TestCase
         $v->fecha_inactivacion = null;
         $this->assertTrue($v->estaBloqueadoEn(Carbon::parse('2026-09-10')));
         $this->assertFalse($v->estaBloqueadoEn(Carbon::parse('2026-10-05')));
+    }
+
+    public function test_dia_inactivo_solo_cuenta_con_registro_real(): void
+    {
+        $v = new Vehiculo(['estado' => 'activo']);
+        $v->periodos_inactivo = [['desde' => '2026-10-05', 'hasta' => '2026-10-19']];
+        $dia = Carbon::parse('2026-10-18');
+
+        $this->assertFalse($v->cuentaEn($dia, null));
+        $this->assertFalse($v->cuentaEn($dia, new ControlDiario(['trabajo' => false, 'gasto' => 0])));
+        $this->assertTrue($v->cuentaEn($dia, new ControlDiario(['trabajo' => true, 'gasto' => 0])));
+        $this->assertTrue($v->cuentaEn($dia, new ControlDiario(['trabajo' => false, 'gasto' => 20000])));
+        $this->assertTrue($v->cuentaEn(Carbon::parse('2026-10-19'), null));
     }
 }

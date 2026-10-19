@@ -329,7 +329,7 @@ class ControlSemanal extends Page
 
                 $cellDisabled = $vehiculo->estaBloqueadoEn($fecha);
 
-                if ($cellDisabled && ! $registro) {
+                if (! $vehiculo->cuentaEn($fecha, $registro)) {
                     $row['cells'][] = [
                         'vehiculo_id' => $vehiculo->id,
                         'fecha' => $fecha->toDateString(),
@@ -544,14 +544,15 @@ class ControlSemanal extends Page
                     continue;
                 }
 
-                if ($vehiculo->estaBloqueadoEn($fecha)) {
+                $registro = $registrosByKey->get($vehiculo->id.'-'.$key);
+
+                if (! $vehiculo->cuentaEn($fecha, $registro)) {
                     continue;
                 }
 
                 $valorBase = $vehiculo->cuotaDiariaEn($fecha);
                 $esperado += $valorBase;
 
-                $registro = $registrosByKey->get($vehiculo->id.'-'.$key);
                 $trabajo = $registro?->trabajo ?? true;
                 $ingreso = $trabajo ? (float) ($registro?->valor_generado ?? $valorBase) : 0;
                 $gasto = (float) ($registro?->gasto ?? 0);

@@ -128,16 +128,17 @@ class Reportes extends Page
                 && $fecha->copy()->startOfDay()->lt($vehiculo->deleted_at->copy()->startOfDay());
         }
 
-        if ($vehiculo->estado === 'activo') {
-            return true;
-        }
+        $registro = $this->getRegistrosEnRango()->get($fecha->toDateString().'-'.$vehiculo->id);
 
         if ($vehiculo->estado === 'mantenimiento') {
-            return (bool) $this->getRegistrosEnRango()->get($fecha->toDateString().'-'.$vehiculo->id);
+            return (bool) $registro;
         }
 
-        return ($vehiculo->estado !== 'inactivo' || $vehiculo->fecha_inactivacion)
-            && ! $vehiculo->inactivoEn($fecha);
+        if ($vehiculo->estado === 'inactivo' && ! $vehiculo->fecha_inactivacion) {
+            return false;
+        }
+
+        return ! $vehiculo->inactivoEn($fecha) || $registro?->tieneActividad();
     }
 
     private function getVehiculosDelPeriodo(): Collection

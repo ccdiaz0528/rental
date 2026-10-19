@@ -64,8 +64,11 @@ class ResumenMensual extends BaseWidget
                         continue;
                     }
 
+                    $key = $v->id.'-'.$dia->format('Y-m-d');
+                    $registro = $registrosIndexed->get($key);
+
                     $activo = ($v->estado === 'activo' || ($v->estado === 'inactivo' && $v->fecha_inactivacion))
-                        && ! $v->inactivoEn($dia);
+                        && (! $v->inactivoEn($dia) || $registro?->tieneActividad());
 
                     if (! $activo) {
                         continue;
@@ -75,8 +78,6 @@ class ResumenMensual extends BaseWidget
                     $adminBase = $v->administracionEn($dia);
                     $esperadoMes += $cuotaBase;
 
-                    $key = $v->id.'-'.$dia->format('Y-m-d');
-                    $registro = $registrosIndexed->get($key);
                     $gastosMes += (float) ($registro->gasto ?? 0);
                     $adminMes += (float) ($registro->administracion ?? $adminBase);
 
