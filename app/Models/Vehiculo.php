@@ -288,6 +288,12 @@ class Vehiculo extends Model
         return $registro !== null && (! $this->inactivoEn($fecha) || $registro->tieneActividad());
     }
 
+    /** Día inactivo con registro de solo gasto: cuenta el gasto, no la cuota esperada. */
+    public function soloGastoEn(Carbon $fecha, ?ControlDiario $registro): bool
+    {
+        return $registro !== null && ! $registro->trabajo && $this->inactivoEn($fecha);
+    }
+
     public function motivoBloqueo(): string
     {
         return match (true) {

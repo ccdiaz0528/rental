@@ -74,6 +74,13 @@ class ResumenMensual extends BaseWidget
                         continue;
                     }
 
+                    if ($v->soloGastoEn($dia, $registro)) {
+                        $gastosMes += (float) $registro->gasto;
+                        $adminMes += (float) ($registro->administracion ?? 0);
+
+                        continue;
+                    }
+
                     $cuotaBase = $v->cuotaDiariaEn($dia);
                     $adminBase = $v->administracionEn($dia);
                     $esperadoMes += $cuotaBase;

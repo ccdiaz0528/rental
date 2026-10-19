@@ -74,6 +74,13 @@ class ResumenSemanal extends BaseWidget
                         continue;
                     }
 
+                    if ($v->soloGastoEn($dia, $registro)) {
+                        $gastosSemana += (float) $registro->gasto;
+                        $adminSemana += (float) ($registro->administracion ?? 0);
+
+                        continue;
+                    }
+
                     $cuotaBase = $v->cuotaDiariaEn($dia);
                     $adminBase = $v->administracionEn($dia);
                     $esperadoSemana += $cuotaBase;

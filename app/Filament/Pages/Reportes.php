@@ -188,12 +188,19 @@ class Reportes extends Page
                     continue;
                 }
 
+                $fechaStr = $fecha->toDateString();
+                $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
+
+                if ($vehiculo->soloGastoEn($fecha, $registro)) {
+                    $totalGastos += (float) $registro->gasto;
+                    $totalAdmin += (float) ($registro->administracion ?? 0);
+
+                    continue;
+                }
+
                 $cuotaDia = $vehiculo->cuotaDiariaEn($fecha);
                 $adminDia = $vehiculo->administracionEn($fecha);
                 $totalEsperado += $cuotaDia;
-
-                $fechaStr = $fecha->toDateString();
-                $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
 
                 if ($registro) {
                     $realDia = $registro->trabajo ? (float) $registro->valor_generado : 0;
@@ -283,12 +290,20 @@ class Reportes extends Page
                     continue;
                 }
 
+                $fechaStr = $fecha->toDateString();
+                $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
+
+                if ($vehiculo->soloGastoEn($fecha, $registro)) {
+                    $gastos += (float) $registro->gasto;
+                    $admin += (float) ($registro->administracion ?? 0);
+                    $diasModificados++;
+
+                    continue;
+                }
+
                 $cuotaDia = $vehiculo->cuotaDiariaEn($fecha);
                 $adminDia = $vehiculo->administracionEn($fecha);
                 $esperado += $cuotaDia;
-
-                $fechaStr = $fecha->toDateString();
-                $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
 
                 if ($registro) {
                     $real += $registro->trabajo ? (float) $registro->valor_generado : 0;
@@ -351,7 +366,11 @@ class Reportes extends Page
 
                 $registro = $registrosEnRango->get($fechaStr.'-'.$vehiculo->id);
 
-                if ($registro) {
+                if ($vehiculo->soloGastoEn($current, $registro)) {
+                    $gastos += (float) $registro->gasto;
+                    $admin += (float) ($registro->administracion ?? 0);
+                    $registros++;
+                } elseif ($registro) {
                     $real += $registro->trabajo ? (float) $registro->valor_generado : 0;
                     $gastos += (float) $registro->gasto;
                     $admin += (float) ($registro->administracion ?? $vehiculo->administracionEn($current));
@@ -387,6 +406,10 @@ class Reportes extends Page
         foreach ($registros as $registro) {
             $vehiculo = $vehiculos->get($registro->vehiculo_id);
             if (! $vehiculo || ! $this->vehiculoActivoEnFecha($vehiculo, $registro->fecha)) {
+                continue;
+            }
+
+            if ($vehiculo->soloGastoEn($registro->fecha, $registro)) {
                 continue;
             }
 

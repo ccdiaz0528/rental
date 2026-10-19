@@ -42,4 +42,15 @@ class VehiculoReactivacionTest extends TestCase
         $this->assertTrue($v->cuentaEn($dia, new ControlDiario(['trabajo' => false, 'gasto' => 20000])));
         $this->assertTrue($v->cuentaEn(Carbon::parse('2026-10-19'), null));
     }
+
+    public function test_dia_inactivo_con_solo_gasto_no_suma_cuota(): void
+    {
+        $v = new Vehiculo(['estado' => 'activo']);
+        $v->periodos_inactivo = [['desde' => '2026-10-05', 'hasta' => '2026-10-19']];
+        $dia = Carbon::parse('2026-10-12');
+
+        $this->assertTrue($v->soloGastoEn($dia, new ControlDiario(['trabajo' => false, 'gasto' => 20000])));
+        $this->assertFalse($v->soloGastoEn($dia, new ControlDiario(['trabajo' => true, 'gasto' => 20000])));
+        $this->assertFalse($v->soloGastoEn(Carbon::parse('2026-10-19'), new ControlDiario(['trabajo' => false, 'gasto' => 20000])));
+    }
 }

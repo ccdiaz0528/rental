@@ -348,8 +348,9 @@ class ControlSemanal extends Page
                     continue;
                 }
 
-                $valorBase = $vehiculo->cuotaDiariaEn($fecha);
-                $adminBase = $vehiculo->administracionEn($fecha);
+                $soloGasto = $vehiculo->soloGastoEn($fecha, $registro);
+                $valorBase = $soloGasto ? 0 : $vehiculo->cuotaDiariaEn($fecha);
+                $adminBase = $soloGasto ? 0 : $vehiculo->administracionEn($fecha);
                 $trabajo = $registro?->trabajo ?? true;
                 $ingreso = $trabajo
                     ? (float) ($registro?->valor_generado ?? $valorBase)
@@ -382,7 +383,7 @@ class ControlSemanal extends Page
                 $vehicleTotals[$vehiculo->id]['gastos'] += $gasto;
                 $vehicleTotals[$vehiculo->id]['neto'] += $ingreso - $gasto - $adminDia;
 
-                if (! $trabajo) {
+                if (! $trabajo && ! $soloGasto) {
                     $diasSinTrabajo++;
                 }
             }
@@ -550,19 +551,20 @@ class ControlSemanal extends Page
                     continue;
                 }
 
-                $valorBase = $vehiculo->cuotaDiariaEn($fecha);
+                $soloGasto = $vehiculo->soloGastoEn($fecha, $registro);
+                $valorBase = $soloGasto ? 0 : $vehiculo->cuotaDiariaEn($fecha);
                 $esperado += $valorBase;
 
                 $trabajo = $registro?->trabajo ?? true;
                 $ingreso = $trabajo ? (float) ($registro?->valor_generado ?? $valorBase) : 0;
                 $gasto = (float) ($registro?->gasto ?? 0);
-                $adminDia = $registro?->administracion ?? $vehiculo->administracionEn($fecha);
+                $adminDia = $registro?->administracion ?? ($soloGasto ? 0 : $vehiculo->administracionEn($fecha));
 
                 $real += $ingreso;
                 $gastos += $gasto;
                 $adminTotal += $adminDia;
 
-                if (! $trabajo) {
+                if (! $trabajo && ! $soloGasto) {
                     $diasSinTrabajo++;
                 }
             }
