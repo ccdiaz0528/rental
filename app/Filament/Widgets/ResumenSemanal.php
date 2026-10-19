@@ -61,14 +61,10 @@ class ResumenSemanal extends BaseWidget
                 $key = $dia->format('Y-m-d');
 
                 foreach ($vehiculosSemana as $v) {
-                    if ($v->getEffectiveStartDate()->gt($dia)) {
-                        continue;
-                    }
-
                     $registro = $registrosIndexed->get($v->id.'-'.$key);
 
                     $activo = ($v->estado === 'activo' || ($v->estado === 'inactivo' && $v->fecha_inactivacion))
-                        && (! $v->inactivoEn($dia) || $registro?->tieneActividad());
+                        && (! $v->noOperativoEn($dia) || $registro?->tieneActividad());
 
                     if (! $activo) {
                         continue;

@@ -52,10 +52,15 @@ class ControlDiario extends Model
         ];
     }
 
-    /** Registro manual con actividad (trabajó, tuvo gasto o administración); los "no trabajó" en cero no cuentan en días inactivos. */
+    public function generoIngreso(): bool
+    {
+        return $this->trabajo && (float) $this->valor_generado > 0;
+    }
+
+    /** Registro manual con actividad (ingreso, gasto o administración); los ceros no cuentan en días sin operación. */
     public function tieneActividad(): bool
     {
-        return $this->trabajo || (float) $this->gasto > 0 || (float) $this->administracion > 0;
+        return $this->generoIngreso() || (float) $this->gasto > 0 || (float) $this->administracion > 0;
     }
 
     public function user()

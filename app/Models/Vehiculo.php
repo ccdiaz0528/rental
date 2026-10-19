@@ -286,20 +286,34 @@ class Vehiculo extends Model
                 && $diaStr < $this->restored_at->toDateString());
     }
 
-    /** El día cuenta en los totales: no está bloqueado, o tiene un registro con actividad (trabajó, gasto o administración). */
+    /** Antes del primer contrato del vehículo (aún no operaba). */
+    public function antesDeInicioEn(Carbon $fecha): bool
+    {
+        return $fecha->copy()->startOfDay()->lt($this->getEffectiveStartDate());
+    }
+
+    /** Día sin operación: antes del inicio o durante un periodo inactivo. */
+    public function noOperativoEn(Carbon $fecha): bool
+    {
+        return $this->antesDeInicioEn($fecha) || $this->inactivoEn($fecha);
+    }
+
+    /** El día cuenta en los totales: opera con normalidad, o es un día sin operación con registro manual con actividad. */
     public function cuentaEn(Carbon $fecha, ?ControlDiario $registro): bool
     {
-        if (! $this->estaBloqueadoEn($fecha)) {
+        $noOperativo = $this->noOperativoEn($fecha);
+
+        if (! $noOperativo && ! $this->estaBloqueadoEn($fecha)) {
             return true;
         }
 
-        return $registro !== null && (! $this->inactivoEn($fecha) || $registro->tieneActividad());
+        return $registro !== null && (! $noOperativo || $registro->tieneActividad());
     }
 
-    /** Día inactivo con registro manual sin trabajo: cuenta su gasto y administración, no la cuota esperada. */
+    /** Día sin operación con registro manual sin ingreso: cuenta su gasto y administración, no la cuota esperada. */
     public function soloGastoEn(Carbon $fecha, ?ControlDiario $registro): bool
     {
-        return $registro !== null && ! $registro->trabajo && $this->inactivoEn($fecha);
+        return $registro !== null && ! $registro->generoIngreso() && $this->noOperativoEn($fecha);
     }
 
     public function motivoBloqueo(): string

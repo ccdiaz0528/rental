@@ -548,10 +548,6 @@ class ControlSemanal extends Page
                 $fecha = $weekStart->copy()->addDays($offset);
                 $fechaDia = $fecha->copy()->startOfDay();
 
-                if ($fechaDia->lt($vehiculo->getEffectiveStartDate())) {
-                    continue;
-                }
-
                 $registro = $registrosByKey->get($vehiculo->id.'-'.$key);
 
                 if (! $vehiculo->cuentaEn($fecha, $registro)) {

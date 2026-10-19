@@ -60,15 +60,11 @@ class ResumenMensual extends BaseWidget
                 for ($d = 1; $d <= $diasMes; $d++) {
                     $dia = $inicioMes->copy()->addDays($d - 1);
 
-                    if ($v->getEffectiveStartDate()->gt($dia)) {
-                        continue;
-                    }
-
                     $key = $v->id.'-'.$dia->format('Y-m-d');
                     $registro = $registrosIndexed->get($key);
 
                     $activo = ($v->estado === 'activo' || ($v->estado === 'inactivo' && $v->fecha_inactivacion))
-                        && (! $v->inactivoEn($dia) || $registro?->tieneActividad());
+                        && (! $v->noOperativoEn($dia) || $registro?->tieneActividad());
 
                     if (! $activo) {
                         continue;

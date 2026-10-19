@@ -123,12 +123,16 @@ class Reportes extends Page
 
     private function vehiculoActivoEnFecha(Vehiculo $vehiculo, Carbon $fecha): bool
     {
+        $registro = $this->getRegistrosEnRango()->get($fecha->toDateString().'-'.$vehiculo->id);
+
+        if ($vehiculo->antesDeInicioEn($fecha) && ! $registro?->tieneActividad()) {
+            return false;
+        }
+
         if ($vehiculo->trashed()) {
             return $vehiculo->deleted_at
                 && $fecha->copy()->startOfDay()->lt($vehiculo->deleted_at->copy()->startOfDay());
         }
-
-        $registro = $this->getRegistrosEnRango()->get($fecha->toDateString().'-'.$vehiculo->id);
 
         if ($vehiculo->estado === 'mantenimiento') {
             return (bool) $registro;
@@ -138,7 +142,7 @@ class Reportes extends Page
             return false;
         }
 
-        return ! $vehiculo->inactivoEn($fecha) || $registro?->tieneActividad();
+        return ! $vehiculo->noOperativoEn($fecha) || $registro?->tieneActividad();
     }
 
     private function getVehiculosDelPeriodo(): Collection
@@ -181,9 +185,6 @@ class Reportes extends Page
             for ($d = 0; $d < $diasEnRango; $d++) {
                 $fecha = $start->copy()->addDays($d);
                 $fechaDia = $fecha->copy()->startOfDay();
-                if ($fechaDia->lt($vehiculo->getEffectiveStartDate())) {
-                    continue;
-                }
                 if (! $this->vehiculoActivoEnFecha($vehiculo, $fecha)) {
                     continue;
                 }
@@ -283,9 +284,6 @@ class Reportes extends Page
             for ($d = 0; $d < $diasEnRango; $d++) {
                 $fecha = $start->copy()->addDays($d);
                 $fechaDia = $fecha->copy()->startOfDay();
-                if ($fechaDia->lt($vehiculo->getEffectiveStartDate())) {
-                    continue;
-                }
                 if (! $this->vehiculoActivoEnFecha($vehiculo, $fecha)) {
                     continue;
                 }
@@ -357,9 +355,6 @@ class Reportes extends Page
             $registros = 0;
 
             foreach ($vehiculos as $vehiculo) {
-                if ($current->copy()->startOfDay()->lt($vehiculo->getEffectiveStartDate())) {
-                    continue;
-                }
                 if (! $this->vehiculoActivoEnFecha($vehiculo, $current)) {
                     continue;
                 }
