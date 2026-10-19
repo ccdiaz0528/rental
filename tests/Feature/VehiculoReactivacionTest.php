@@ -40,6 +40,7 @@ class VehiculoReactivacionTest extends TestCase
         $this->assertFalse($v->cuentaEn($dia, new ControlDiario(['trabajo' => false, 'gasto' => 0])));
         $this->assertTrue($v->cuentaEn($dia, new ControlDiario(['trabajo' => true, 'gasto' => 0])));
         $this->assertTrue($v->cuentaEn($dia, new ControlDiario(['trabajo' => false, 'gasto' => 20000])));
+        $this->assertTrue($v->cuentaEn($dia, new ControlDiario(['trabajo' => false, 'gasto' => 0, 'administracion' => 5000])));
         $this->assertTrue($v->cuentaEn(Carbon::parse('2026-10-19'), null));
     }
 

@@ -278,7 +278,7 @@ class Vehiculo extends Model
                 && $diaStr < $this->restored_at->toDateString());
     }
 
-    /** El día cuenta en los totales: no está bloqueado, o tiene un registro con actividad (trabajó o hubo gasto). */
+    /** El día cuenta en los totales: no está bloqueado, o tiene un registro con actividad (trabajó, gasto o administración). */
     public function cuentaEn(Carbon $fecha, ?ControlDiario $registro): bool
     {
         if (! $this->estaBloqueadoEn($fecha)) {
@@ -288,7 +288,7 @@ class Vehiculo extends Model
         return $registro !== null && (! $this->inactivoEn($fecha) || $registro->tieneActividad());
     }
 
-    /** Día inactivo con registro de solo gasto: cuenta el gasto, no la cuota esperada. */
+    /** Día inactivo con registro manual sin trabajo: cuenta su gasto y administración, no la cuota esperada. */
     public function soloGastoEn(Carbon $fecha, ?ControlDiario $registro): bool
     {
         return $registro !== null && ! $registro->trabajo && $this->inactivoEn($fecha);
