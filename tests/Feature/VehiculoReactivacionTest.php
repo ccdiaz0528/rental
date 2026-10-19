@@ -2,10 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\Vehiculos\Pages\EditVehiculo;
 use App\Models\ControlDiario;
+use App\Models\User;
 use App\Models\Vehiculo;
 use Carbon\Carbon;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class VehiculoReactivacionTest extends TestCase
@@ -53,5 +58,43 @@ class VehiculoReactivacionTest extends TestCase
         $this->assertTrue($v->soloGastoEn($dia, new ControlDiario(['trabajo' => false, 'gasto' => 20000])));
         $this->assertFalse($v->soloGastoEn($dia, new ControlDiario(['trabajo' => true, 'gasto' => 20000])));
         $this->assertFalse($v->soloGastoEn(Carbon::parse('2026-10-19'), new ControlDiario(['trabajo' => false, 'gasto' => 20000])));
+    }
+
+    public function test_formulario_permite_desactivar_con_fecha_anterior_y_editar_periodos(): void
+    {
+        Role::create(['name' => 'user']);
+        $user = User::factory()->create();
+        $user->assignRole('user');
+        $v = Vehiculo::create(['user_id' => $user->id, 'placa' => 'FORM01', 'cuota_diaria' => 80000, 'estado' => 'activo']);
+        $this->actingAs($user);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+        $hace3 = now()->subDays(3)->startOfDay();
+
+        Livewire::test(EditVehiculo::class, ['record' => $v->getKey()])
+            ->fillForm(['estado' => 'inactivo', 'fecha_inactivacion' => $hace3->toDateTimeString()])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $v->refresh();
+        $this->assertSame('inactivo', $v->estado);
+        $this->assertSame($hace3->toDateString(), $v->fecha_inactivacion->toDateString());
+
+        Livewire::test(EditVehiculo::class, ['record' => $v->getKey()])
+            ->fillForm(['estado' => 'activo'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $v->refresh();
+        $this->assertNull($v->fecha_inactivacion);
+        $this->assertSame($hace3->toDateString(), $v->periodos_inactivo[0]['desde']);
+        $this->assertSame(now()->toDateString(), $v->periodos_inactivo[0]['hasta']);
+
+        Livewire::test(EditVehiculo::class, ['record' => $v->getKey()])
+            ->fillForm(['periodos_inactivo' => [['desde' => $hace3->toDateString(), 'hasta' => now()->subDay()->toDateString()]]])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(now()->subDay()->toDateString(), $v->fresh()->periodos_inactivo[0]['hasta']);
     }
 }

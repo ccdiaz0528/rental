@@ -61,7 +61,10 @@ class Vehiculo extends Model
         static::updating(function (Vehiculo $vehiculo) {
             if ($vehiculo->isDirty('estado')) {
                 if ($vehiculo->estado === 'inactivo') {
-                    $vehiculo->fecha_inactivacion = now();
+                    // Si el usuario eligió una fecha (p. ej. anterior), se respeta.
+                    if (! $vehiculo->isDirty('fecha_inactivacion') || ! $vehiculo->fecha_inactivacion) {
+                        $vehiculo->fecha_inactivacion = now();
+                    }
                 } elseif ($vehiculo->getOriginal('estado') === 'inactivo') {
                     $desde = $vehiculo->getOriginal('fecha_inactivacion');
 
